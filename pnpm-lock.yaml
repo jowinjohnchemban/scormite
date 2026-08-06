@@ -32,6 +32,9 @@ importers:
       react-dom:
         specifier: ^19.2.8
         version: 19.2.8(react@19.2.8)
+      scorm-again:
+        specifier: ^3.2.0
+        version: 3.2.0
       tailwind-merge:
         specifier: ^3.6.0
         version: 3.6.0
@@ -2038,6 +2041,10 @@ packages:
 
   scheduler@0.27.0:
     resolution: {integrity: sha512-eNv+WrVbKu1f3vbYJT/xtiF5syA5HPIMtf9IgY/nKg0sWqzAUEvqY/xm7OcZc/qafLx/iO9FgOmeSAp4v5ti/Q==}
+
+  scorm-again@3.2.0:
+    resolution: {integrity: sha512-DWiVf0GMY+m7+HBdZHfZc/DRNwtAo2ZaZTehAhhpGuJ8TSLVyRUCsdFsZFYkuITOfoGddWOkK2KOB41wGOI39w==}
+    engines: {node: '>=20.19.0'}
 
   semver@6.3.1:
     resolution: {integrity: sha512-BR7VvDCVHO+q2xBEWskxS6DJE1qRnb7DxzUrogb71CWoSficBxYsiAGd+Kl0mmq/MprG9yArRkyrQxTO6XjMzA==}
@@ -4415,6 +4422,8 @@ snapshots:
       xmlchars: 2.2.0
 
   scheduler@0.27.0: {}
+
+  scorm-again@3.2.0: {}
 
   semver@6.3.1: {}
 

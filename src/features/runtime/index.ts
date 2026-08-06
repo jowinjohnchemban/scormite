@@ -1,10 +1,11 @@
 /**
  * Public surface of the "runtime" feature.
- *
- * Only export what other features are allowed to depend on. Everything else
- * in this folder is an implementation detail.
- *
- * Populated incrementally — see /docs/ROADMAP.md for which milestone fills
- * this in.
+ * Only src/features/runtime may import scorm-again — enforced by ESLint.
  */
-export {};
+export { ScormRuntimeAdapter } from './adapter/ScormRuntimeAdapter'
+export { Scorm12Adapter } from './adapter/Scorm12Adapter'
+export { Scorm2004Adapter } from './adapter/Scorm2004Adapter'
+export { recordingMiddleware } from './adapter/middleware/recordingMiddleware'
+export { runtimeEvents } from './events/RuntimeEventEmitter'
+export { useRuntimeStore } from './state/runtimeStore'
+export type { RuntimeMiddleware, ApiCallContext, ApiCallResult } from './types';
