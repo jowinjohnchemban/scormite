@@ -1,9 +1,9 @@
 ---
 name: scorm-studio-conventions
-description: Architecture, folder, and workflow conventions for the SCORM Studio codebase. Use this whenever adding a feature, touching src/features/runtime or anything that talks to scorm-again, adding a new UI primitive, writing a new ESLint/architecture rule, or picking up the next roadmap milestone. Also use when the user mentions SCORM Studio, scorm-again, CMI inspector, API monitor, breakpoints, runtime profiles, or asks "what's next" / "which milestone" for this project.
+description: Architecture, folder, and workflow conventions for the Scormite codebase. Use this whenever adding a feature, touching src/features/runtime or anything that talks to scorm-again, adding a new UI primitive, writing a new ESLint/architecture rule, or picking up the next roadmap milestone. Also use when the user mentions Scormite, SCORM Studio, scorm-again, CMI inspector, API monitor, breakpoints, runtime profiles, or asks "what's next" / "which milestone" for this project.
 ---
 
-# SCORM Studio Conventions
+# Scormite Conventions
 
 This skill captures the operating rules for this specific codebase, distinct
 from general React/TypeScript best practice. Read `/CLAUDE.md` at the repo

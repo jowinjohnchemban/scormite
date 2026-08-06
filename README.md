@@ -1,11 +1,11 @@
-# SCORM Studio
+# Scormite
 
 An offline-first, browser-based developer toolkit for inspecting, debugging,
 validating, and testing SCORM packages. Not an LMS, not an authoring tool —
 think Chrome DevTools / VS Code / Postman, but for SCORM.
 
 Built on [scorm-again](https://github.com/jcputney/scorm-again) as the
-runtime; SCORM Studio wraps it with an adapter + middleware layer rather
+runtime; Scormite wraps it with an adapter + middleware layer rather
 than reimplementing any SCORM protocol logic.
 
 ## Status
