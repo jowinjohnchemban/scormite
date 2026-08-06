@@ -24,6 +24,13 @@ export default mergeConfig(
       setupFiles: ['./src/shared/testing/setup.ts'],
       globals: false,
       css: true,
+      // Force Vite to bundle these packages in the test environment rather
+      // than importing them as bare ESM, which breaks in jsdom.
+      server: {
+        deps: {
+          inline: ['react-resizable-panels'],
+        },
+      },
       coverage: {
         provider: 'v8',
         reporter: ['text', 'html'],
