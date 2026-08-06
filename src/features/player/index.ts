@@ -1,10 +1,13 @@
 /**
  * Public surface of the "player" feature.
- *
- * Only export what other features are allowed to depend on. Everything else
- * in this folder is an implementation detail.
- *
- * Populated incrementally — see /docs/ROADMAP.md for which milestone fills
- * this in.
  */
-export {};
+export { PlayerFrame } from './components/PlayerFrame'
+export { PlayerToolbar } from './components/PlayerToolbar'
+export {
+  registerServiceWorker,
+  cachePackageFiles,
+  clearSessionCache,
+  packageLaunchUrl,
+  injectApiProxy,
+  removeApiProxy,
+} from './services/PlayerBridgeService';

@@ -26,6 +26,11 @@ export interface RawPackageData {
   manifestXml: string
   /** All file paths found in the ZIP, normalised to forward-slashes. */
   filePaths: string[]
+  /**
+   * Read any file from the ZIP by its normalised path.
+   * The returned Uint8Array is decoded from the ZIP entry.
+   */
+  getFile: (path: string) => Promise<Uint8Array>
 }
 
 /**
@@ -73,5 +78,10 @@ export async function loadZip(file: File): Promise<RawPackageData> {
     ...(detected.edition !== undefined ? { scormEdition: detected.edition } : {}),
     manifestXml,
     filePaths,
+    getFile: async (path: string) => {
+      const entry = zip.file(path) ?? zip.file(path.replace(/\//g, '\\'))
+      if (!entry) throw new Error(`File not found in package: ${path}`)
+      return entry.async('uint8array')
+    },
   }
 }
