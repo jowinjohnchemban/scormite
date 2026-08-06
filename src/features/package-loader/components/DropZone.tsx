@@ -99,10 +99,13 @@ export function DropZone({ onFile, loading = false, error = null }: DropZoneProp
             </svg>
             <div>
               <p className="text-sm font-medium text-slate-200">
-                Drop a SCORM ZIP here
+                Drop a SCORM package here
               </p>
               <p className="mt-1 text-xs text-slate-500">
-                or click to browse — SCORM 1.2 and SCORM 2004 supported
+                or click to browse
+              </p>
+              <p className="mt-2 text-[10px] tracking-wide text-slate-600">
+                .zip &middot; SCORM 1.2 &amp; 2004 &middot; runs locally &mdash; your package never leaves this tab
               </p>
             </div>
           </>
