@@ -1,4 +1,4 @@
-# Scormite
+# **SCORMITE** <br> SCORM Interactive Testing Environment
 
 **DevTools for your SCORM package.** Drop a `.zip` and Scormite runs it locally — surfacing a live API transcript, the full CMI data model, sequencing logic, validation findings, and session replay. No LMS. No upload. No black box.
 
