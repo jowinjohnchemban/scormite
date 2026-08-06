@@ -30,7 +30,58 @@ implementation.
 | A new Zustand store | Inside the feature that owns that data — see `docs/DOMAIN_MODEL.md` for current ownership |
 | A shared, dumb UI primitive (button, dialog, etc.) | `src/components/ui/`, following the shadcn/ui file shape (cva variants + `cn()`) |
 | A cross-feature utility with no UI | `src/shared/lib/` |
+| **A shared entity type** (`Package`, `Manifest`, `Session`, …) | **`src/shared/types/`** — see the type-sharing pattern below |
 | A new SCORM runtime profile (Moodle, Canvas, etc.) | `src/features/settings/profiles/` |
+| Cross-feature orchestration (calling two feature services together) | The `app/` layer — it is the only layer allowed to import from multiple features simultaneously |
+
+## The type-sharing pattern (established in Milestone 3)
+
+The ESLint `boundaries/dependencies` rule currently blocks all
+feature-to-feature imports — a feature cannot import another feature's
+`types/` even through the barrel. Until the plugin adds a barrel-only
+selector, **shared entity types live in `src/shared/types/`**, not in
+individual feature `types/` folders.
+
+```
+src/shared/types/
+  manifest.ts   ← Manifest, ManifestOrganization, ManifestItem, ManifestResource, ManifestMetadata
+  package.ts    ← Package, ScormVersion, ScormEdition
+  index.ts      ← re-exports all of the above
+```
+
+Features import from `@/shared/types`; the owning feature's `types/`
+folder can remain empty or act as a thin re-export. The **service that
+constructs or mutates** the entity stays in the owning feature — only the
+type definition moves to shared.
+
+## The app-layer orchestration pattern (established in Milestone 3)
+
+When completing a user action requires calling services from two or more
+features (e.g. load a ZIP *and* parse its manifest), the orchestration
+belongs in `app/` — the only layer allowed to import from any feature.
+
+```tsx
+// In a BasicModeShell or app-level hook:
+const raw = await loadZip(file)              // from @/features/package-loader
+const manifest = parseManifest(raw.manifestXml)  // from @/features/manifest
+setPackage({ ...raw, manifest })             // into packageStore
+setManifest(manifest)                        // into manifestStore (feature-owned)
+```
+
+Both stores get populated separately so that each feature's components can
+read their own store without importing from a sibling.
+
+## Key libraries added in Milestone 3
+
+| Library | Used for |
+|---|---|
+| `jszip` | Reading ZIP archives in the browser (`PackageLoaderService`) |
+| `fast-xml-parser` | Parsing `imsmanifest.xml` (`ManifestParserService`) |
+
+`fast-xml-parser` config gotchas:
+- **`parseTagValue: false`** — without this, `<schemaversion>1.2</schemaversion>` is parsed as the number `1.2`, not the string `"1.2"`. Always set it.
+- **`parseAttributeValue: false`** — keeps attribute values as strings (SCORM identifiers can look like numbers).
+- **`isArray`** — always register `organization`, `item`, `resource`, `file` so you never have to branch on object-vs-array downstream.
 
 ## Before writing code: check the roadmap
 
@@ -62,6 +113,37 @@ architectural rule, prove it fires**: write a deliberate one-line violation
 in a scratch file, run `pnpm run lint`, confirm it fails, then delete the
 scratch file. Do not consider a new rule done until you've watched it
 reject something.
+
+## TypeScript strictness gotcha: `exactOptionalPropertyTypes`
+
+`tsconfig.app.json` enables `exactOptionalPropertyTypes: true`. This means
+`prop?: T` is strictly `T`, not `T | undefined` — you **cannot** assign
+`{ prop: value | undefined }` to a type with `prop?: T`.
+
+Use conditional spreads for optional properties:
+```ts
+// ✗ fails
+return { scormEdition: detected.edition }   // detected.edition may be undefined
+
+// ✓ correct
+return { ...(detected.edition !== undefined ? { scormEdition: detected.edition } : {}) }
+```
+
+## Testing gotcha: RTL cleanup with `globals: false`
+
+`vitest.config.ts` sets `globals: false`. With this setting,
+`@testing-library/react` does **not** auto-register `afterEach(cleanup)` —
+each test file that calls `render()` must do it explicitly:
+
+```ts
+import { afterEach } from 'vitest'
+import { cleanup } from '@testing-library/react'
+
+afterEach(cleanup)
+```
+
+Without this, a second `render()` in the same file sees the previous test's
+DOM, causing spurious "multiple elements found" failures.
 
 ## Definition of done for any change here
 
