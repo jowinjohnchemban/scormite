@@ -5,7 +5,7 @@ computer use) working in this repository. Read this before making changes.
 
 ## What this project is
 
-SCORM Studio: an offline-first, browser-based developer toolkit for
+Scormite: an offline-first, browser-based developer toolkit for
 inspecting, debugging, validating, and testing SCORM packages. It is
 explicitly **not** an LMS and **not** an authoring tool — think Chrome
 DevTools / VS Code / Postman, but for SCORM packages. SCORM Cloud is the
