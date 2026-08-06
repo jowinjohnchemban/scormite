@@ -83,7 +83,7 @@ export default tseslint.config(
             },
             {
               from: { element: { type: 'app' } },
-              allow: { to: { element: { types: { anyOf: ['feature', 'shared', 'components'] } } } },
+              allow: { to: { element: { types: { anyOf: ['app', 'feature', 'shared', 'components'] } } } },
             },
             {
               from: { element: { type: 'components' } },

@@ -19,12 +19,12 @@ build (`pnpm run build`), lint clean (`pnpm run lint`), and pass its tests
       ingestion, SCORM version detection, manifest tree parse
       (fast-xml-parser). *Exit criteria:* load a real SCORM 1.2 and a real
       SCORM 2004 sample package; manifest tree renders correctly for both.
-- [ ] **Milestone 4 — Runtime adapter core.** `ScormRuntimeAdapter`,
+- [x] **Milestone 4 — Runtime adapter core.** `ScormRuntimeAdapter`,
       `Scorm12Adapter`, `Scorm2004Adapter`, middleware pipeline, event bus —
       wired to real scorm-again, no UI yet. *Exit criteria:* headless test
       drives a package via the adapter; recorded `ApiCallRecord[]` matches
       the expected call sequence.
-- [ ] **Milestone 5 — Player + Basic Mode.** Sandboxed iframe player, Basic
+- [x] **Milestone 5 — Player + Basic Mode.** Sandboxed iframe player, Basic
       Mode shell, progress/score/objectives display. *Exit criteria:* a
       sample course can be launched, completed, and its final state shown
       correctly in Basic Mode.

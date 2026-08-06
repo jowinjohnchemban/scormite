@@ -19,8 +19,10 @@ describe('App shell', () => {
 
     await userEvent.click(screen.getByRole('button', { name: 'Advanced' }))
 
+    // Advanced mode renders the DockLayout — the drop zone is still visible
+    // (no package loaded yet) and the panel toggle strips are present.
     expect(
-      screen.getByText(/Advanced Mode — load a package/i),
+      screen.getByRole('button', { name: /drop scorm zip here/i }),
     ).toBeInTheDocument()
   })
 })
