@@ -1,4 +1,4 @@
-# SCORM Studio — Milestone 1: Architecture & Design
+# SCORMite — Milestone 1: Architecture & Design
 
 **Status:** Foundational design milestone (no application code yet — this is the blueprint the code will be built against). Nothing below "compiles" because nothing is code; the exit criterion for this milestone is that the design is internally consistent and unambiguous enough that Milestone 2 (project scaffold) can be built from it without re-litigating decisions.
 
@@ -63,7 +63,7 @@ Every call is intercepted twice: once before it reaches scorm-again (for breakpo
 ## 2. Folder Structure
 
 ```
-scorm-studio/
+scormite/
 ├── src/
 │   ├── app/                          # App shell, routing, mode switch, providers
 │   │   ├── App.tsx
@@ -182,7 +182,7 @@ scorm-studio/
 
 ## 3. Technical Design Notes
 
-- **Why scorm-again stays untouched:** it's the compatibility-critical piece. Any local patch becomes a merge-conflict liability against upstream and a compatibility risk against SCORM Cloud (the stated benchmark). All customization happens through the adapter/middleware, which is designed specifically so nothing SCORM-Studio-specific ever needs to live inside scorm-again.
+- **Why scorm-again stays untouched:** it's the compatibility-critical piece. Any local patch becomes a merge-conflict liability against upstream and a compatibility risk against SCORM Cloud (the stated benchmark). All customization happens through the adapter/middleware, which is designed specifically so nothing SCORMite-specific ever needs to live inside scorm-again.
 - **Why middleware, not subclassing:** scorm-again exposes an API-call surface (Initialize/GetValue/SetValue/Commit/Finish/Terminate). Wrapping that surface with a pipeline of pre/post hooks (breakpoint → call → record → validate → emit) is more composable than subclassing, and it's how new capabilities (e.g., a future "throttle simulator" middleware) get added without touching existing middleware.
 - **Why Zustand over Redux:** many small, feature-owned stores map cleanly onto the feature-first folder structure; no single global reducer to coordinate across 15+ panels. Cross-store reads happen via selectors, not shared reducers.
 - **Why the event bus is separate from the stores:** the middleware layer has no React dependency and must be usable/testable headlessly (e.g., in a future CLI or Playwright fixture that drives a package with no UI at all). Stores subscribe to the bus; they don't own it.
@@ -267,7 +267,7 @@ Plugin
 
 ```
 ┌───────────────────────────────────────────────────────────────┐
-│ SCORM Studio            [Basic ▾]        Open Package  Export  │
+│ SCORMite            [Basic ▾]        Open Package     Export  │
 ├───────────────────────────────────────────────────────────────┤
 │                        │                                       │
 │                        │        ┌─────────────────────┐        │
@@ -290,7 +290,7 @@ No developer panels. No dockable layout — fixed two-column layout to keep it s
 
 ```
 ┌────────────────────────────────────────────────────────────────────┐
-│ SCORM Studio  [Advanced ▾]  File Edit View Run Plugins   ⚙ Profile ▾│
+│  SCORMite  [Advanced ▾]  File Edit View Run Plugins   ⚙ Profile ▾ │
 ├───────────┬────────────────────────────────────┬───────────────────┤
 │ Package   │                                    │  CMI Inspector    │
 │ Explorer  │            Player (iframe)         │  ▸ cmi.core       │
