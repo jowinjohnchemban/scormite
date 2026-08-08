@@ -29,8 +29,10 @@ const buttonVariants = cva(
   },
 )
 
+// `React.ComponentProps<'button'>` rather than `ButtonHTMLAttributes` so that
+// `ref` is part of the props type — React 19 passes it as an ordinary prop.
 export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+  extends React.ComponentProps<'button'>,
     VariantProps<typeof buttonVariants> {}
 
 export function Button({ className, variant, size, ...props }: ButtonProps) {

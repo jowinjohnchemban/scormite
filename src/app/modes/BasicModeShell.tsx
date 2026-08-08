@@ -3,27 +3,11 @@
  * Left: package summary + manifest tree.  Right: sandboxed iframe player.
  */
 
-import { useState, useCallback } from 'react'
-import { DropZone, loadZip, usePackageStore, PackageLoadError } from '@/features/package-loader'
-import { ManifestExplorer, parseManifest, useManifestStore, ManifestParseError } from '@/features/manifest'
-import {
-  PlayerFrame,
-  PlayerToolbar,
-  registerServiceWorker,
-  cachePackageFiles,
-  packageLaunchUrl,
-  injectApiProxy,
-  removeApiProxy,
-  clearSessionCache,
-} from '@/features/player'
-import { Scorm12Adapter, Scorm2004Adapter, recordingMiddleware, useRuntimeStore } from '@/features/runtime'
-import { useLogStore } from '@/features/logging'
-import { runtimeEvents } from '@/features/runtime'
+import { DropZone } from '@/features/package-loader'
+import { ManifestExplorer } from '@/features/manifest'
+import { PlayerFrame, PlayerToolbar } from '@/features/player'
 import { useCmiState } from '@/app/hooks/useCmiState'
-import type { Package } from '@/shared/types'
-
-// Register service worker once at module load.
-void registerServiceWorker()
+import { usePackageSession } from '@/app/hooks/usePackageSession'
 
 // ---------------------------------------------------------------------------
 // CMI summary panel
@@ -55,101 +39,10 @@ function CmiSummaryPanel() {
 // ---------------------------------------------------------------------------
 
 export function BasicModeShell() {
-  const pkg = usePackageStore((s) => s.package)
-  const setPackage = usePackageStore((s) => s.setPackage)
-  const setManifest = useManifestStore((s) => s.setManifest)
-  const setAdapter = useRuntimeStore((s) => s.setAdapter)
-  const resetRuntime = useRuntimeStore((s) => s.reset)
-  const clearLogs = useLogStore((s) => s.clearRecords)
-  const addLog = useLogStore((s) => s.addRecord)
-
-  const [loading, setLoading] = useState(false)
-  const [loadError, setLoadError] = useState<string | null>(null)
-  const [sessionId, setSessionId] = useState<string | null>(null)
-  const [launchUrl, setLaunchUrl] = useState<string | null>(null)
-
-  // ---- package loading ----
-
-  const handleFile = useCallback(
-    async (file: File) => {
-      setLoading(true)
-      setLoadError(null)
-      try {
-        const raw = await loadZip(file)
-        const manifest = parseManifest(raw.manifestXml)
-
-        const resourceLaunch =
-          manifest.resources.find((r) => r.scormType === 'sco')?.href ??
-          manifest.resources[0]?.href ??
-          ''
-
-        const assembled: Package = {
-          id: crypto.randomUUID(),
-          name: raw.name,
-          sourceType: 'zip',
-          scormVersion: raw.scormVersion,
-          ...(raw.scormEdition !== undefined ? { scormEdition: raw.scormEdition } : {}),
-          manifest,
-          launchUrl: resourceLaunch,
-          loadedAt: new Date(),
-        }
-
-        setManifest(manifest)
-        setPackage(assembled)
-
-        // Cache files for the player.
-        const sid = assembled.id
-        await cachePackageFiles(sid, raw.filePaths, raw.getFile)
-
-        // Create runtime adapter.
-        const adapter =
-          raw.scormVersion === '1.2'
-            ? new Scorm12Adapter(sid)
-            : new Scorm2004Adapter(sid)
-        adapter.addMiddleware(recordingMiddleware)
-
-        // Wire api-call events to logStore.
-        runtimeEvents.on('api-call', addLog)
-
-        setAdapter(adapter, raw.scormVersion)
-        injectApiProxy(adapter, raw.scormVersion)
-
-        setSessionId(sid)
-        setLaunchUrl(packageLaunchUrl(sid, resourceLaunch))
-      } catch (e) {
-        if (e instanceof PackageLoadError || e instanceof ManifestParseError) {
-          setLoadError(e.message)
-        } else {
-          setLoadError('An unexpected error occurred while loading the package.')
-        }
-      } finally {
-        setLoading(false)
-      }
-    },
-    [setPackage, setManifest, setAdapter, addLog],
-  )
-
-  // ---- player controls ----
-
-  const handleReload = useCallback(() => {
-    if (!sessionId || !pkg) return
-    setLaunchUrl(null)
-    setTimeout(() => setLaunchUrl(packageLaunchUrl(sessionId, pkg.launchUrl)), 50)
-  }, [sessionId, pkg])
-
-  const handleReset = useCallback(() => {
-    if (sessionId) clearSessionCache(sessionId)
-    removeApiProxy()
-    resetRuntime()
-    clearLogs()
-    setSessionId(null)
-    setLaunchUrl(null)
-  }, [sessionId, resetRuntime, clearLogs])
-
-  // ---- no package loaded ----
+  const { pkg, loading, error, launchUrl, loadFile, reload, reset } = usePackageSession()
 
   if (!pkg) {
-    return <DropZone onFile={handleFile} loading={loading} error={loadError} />
+    return <DropZone onFile={loadFile} loading={loading} error={error} />
   }
 
   return (
@@ -176,11 +69,7 @@ export function BasicModeShell() {
         <div className="min-h-0 flex-1">
           <PlayerFrame src={launchUrl} />
         </div>
-        <PlayerToolbar
-          onReload={handleReload}
-          onReset={handleReset}
-          disabled={!launchUrl}
-        />
+        <PlayerToolbar onReload={reload} onReset={reset} disabled={!launchUrl} />
       </main>
     </div>
   )

@@ -1,0 +1,107 @@
+/**
+ * The Advanced Mode panel set.
+ *
+ * Declared as data so the dock has its full complement of panels from
+ * Milestone 6 onward; each entry's `component` is swapped from a placeholder
+ * to the real feature component as that feature's milestone lands. Order here
+ * is the first-run docking order — after that the user's layout wins.
+ */
+
+import {
+  Activity,
+  Bug,
+  Clock,
+  FileCode,
+  FileText,
+  Gauge,
+  ListTree,
+  Package,
+  ShieldCheck,
+  Terminal,
+} from 'lucide-react'
+import { ManifestExplorer } from '@/features/manifest'
+import { makePlaceholderPanel } from './PlaceholderPanel'
+import type { PanelDef } from './PanelRegistry'
+
+export const ADVANCED_PANELS: readonly PanelDef[] = [
+  {
+    id: 'manifest-explorer',
+    title: 'Manifest',
+    defaultRegion: 'left',
+    defaultOpen: true,
+    icon: FileCode,
+    component: ManifestExplorer,
+  },
+  {
+    id: 'package-explorer',
+    title: 'Package',
+    defaultRegion: 'left',
+    defaultOpen: false,
+    icon: Package,
+    component: makePlaceholderPanel('Package Explorer', 'Milestone 14'),
+  },
+  {
+    id: 'cmi-inspector',
+    title: 'CMI Inspector',
+    defaultRegion: 'right',
+    defaultOpen: true,
+    icon: ListTree,
+    component: makePlaceholderPanel('CMI Inspector', 'Milestone 7'),
+  },
+  {
+    id: 'validation',
+    title: 'Validation',
+    defaultRegion: 'right',
+    defaultOpen: false,
+    icon: ShieldCheck,
+    component: makePlaceholderPanel('Validation', 'Milestone 10'),
+  },
+  {
+    id: 'api-monitor',
+    title: 'API Monitor',
+    defaultRegion: 'bottom',
+    defaultOpen: true,
+    icon: Activity,
+    component: makePlaceholderPanel('API Monitor', 'Milestone 7'),
+  },
+  {
+    id: 'console',
+    title: 'Console',
+    defaultRegion: 'bottom',
+    defaultOpen: true,
+    icon: Terminal,
+    component: makePlaceholderPanel('Console', 'Milestone 7'),
+  },
+  {
+    id: 'timeline',
+    title: 'Timeline',
+    defaultRegion: 'bottom',
+    defaultOpen: false,
+    icon: Clock,
+    component: makePlaceholderPanel('Timeline', 'Milestone 8'),
+  },
+  {
+    id: 'breakpoints',
+    title: 'Breakpoints',
+    defaultRegion: 'bottom',
+    defaultOpen: false,
+    icon: Bug,
+    component: makePlaceholderPanel('Breakpoints', 'Milestone 9'),
+  },
+  {
+    id: 'performance',
+    title: 'Performance',
+    defaultRegion: 'bottom',
+    defaultOpen: false,
+    icon: Gauge,
+    component: makePlaceholderPanel('Performance', 'Milestone 14'),
+  },
+  {
+    id: 'reports',
+    title: 'Reports',
+    defaultRegion: 'bottom',
+    defaultOpen: false,
+    icon: FileText,
+    component: makePlaceholderPanel('Reports', 'Milestone 12'),
+  },
+]
