@@ -17,3 +17,17 @@ function makeStorage(): Storage {
 
 Object.defineProperty(window, 'localStorage', { value: makeStorage(), writable: true })
 Object.defineProperty(window, 'sessionStorage', { value: makeStorage(), writable: true })
+
+// jsdom has no layout engine, so it ships no ResizeObserver. react-resizable-panels
+// observes every Group to recompute sizes; a no-op keeps it from throwing on mount.
+if (!('ResizeObserver' in globalThis)) {
+  class ResizeObserverStub implements ResizeObserver {
+    observe(): void {}
+    unobserve(): void {}
+    disconnect(): void {}
+  }
+  Object.defineProperty(globalThis, 'ResizeObserver', {
+    value: ResizeObserverStub,
+    writable: true,
+  })
+}
