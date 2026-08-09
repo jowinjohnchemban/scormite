@@ -28,6 +28,7 @@ import {
 import { useLogStore } from '@/features/logging'
 import { useInspectorStore } from '@/features/inspector'
 import type { ApiCallRecord, Package } from '@/shared/types'
+import { logDevDiagnostic } from '@/shared/lib/devDiagnostics'
 
 // The player serves package files through a service worker; registering is
 // idempotent and only needs to happen once per document.
@@ -53,7 +54,7 @@ export interface PackageSession {
   reset: () => void
 }
 
-export function usePackageSession(): PackageSession {
+export function usePackageSession(owner: 'basic' | 'advanced'): PackageSession {
   const pkg = usePackageStore((s) => s.package)
   const setPackage = usePackageStore((s) => s.setPackage)
   const setManifest = useManifestStore((s) => s.setManifest)
@@ -76,6 +77,22 @@ export function usePackageSession(): PackageSession {
       ? packageLaunchUrl(runtimeSessionId, pkg.launchUrl)
       : null
 
+  useEffect(() => {
+    logDevDiagnostic('session.shell.mounted', { owner })
+    return () => logDevDiagnostic('session.shell.unmounted', { owner })
+  }, [owner])
+
+  useEffect(() => {
+    logDevDiagnostic('session.launch-state', {
+      owner,
+      packageId: pkg?.id ?? null,
+      packageName: pkg?.name ?? null,
+      runtimeSessionId,
+      launchUrl,
+      reloading,
+    })
+  }, [owner, pkg, runtimeSessionId, launchUrl, reloading])
+
   // Subscribed once for the lifetime of the shell. Doing this per-load (as the
   // shells used to) stacked a fresh listener on every package, duplicating
   // every subsequent log record.
@@ -84,6 +101,13 @@ export function usePackageSession(): PackageSession {
       runtimeEvents.on('api-call', (record) => {
         addLog(record)
         logDevelopmentApiCall(record)
+        logDevDiagnostic('runtime.api-call', {
+          owner,
+          method: record.method,
+          element: record.element ?? null,
+          returnValue: record.returnValue,
+          errorCode: record.errorCode ?? null,
+        })
         const adapter = useRuntimeStore.getState().adapter
         if (!adapter) return
         try {
@@ -99,8 +123,15 @@ export function usePackageSession(): PackageSession {
     async (file: File) => {
       setLoading(true)
       setError(null)
+      logDevDiagnostic('package.load.started', { owner, name: file.name, size: file.size })
       try {
         const raw = await loadZip(file)
+        logDevDiagnostic('package.load.parsed', {
+          owner,
+          name: raw.name,
+          scormVersion: raw.scormVersion,
+          files: raw.filePaths.length,
+        })
         const manifest = parseManifest(raw.manifestXml)
 
         const resourceLaunch =
@@ -124,6 +155,7 @@ export function usePackageSession(): PackageSession {
 
         const sid = assembled.id
         await cachePackageFiles(sid, raw.filePaths, raw.getFile)
+        logDevDiagnostic('package.cache.ready', { owner, sessionId: sid, files: raw.filePaths.length })
 
         const adapter =
           raw.scormVersion === '1.2' ? new Scorm12Adapter(sid) : new Scorm2004Adapter(sid)
@@ -132,6 +164,12 @@ export function usePackageSession(): PackageSession {
         setAdapter(adapter, raw.scormVersion)
         setCmiBaseline(adapter.getFlattenedCmi())
         injectApiProxy(adapter, raw.scormVersion)
+        logDevDiagnostic('runtime.adapter.ready', {
+          owner,
+          sessionId: sid,
+          scormVersion: raw.scormVersion,
+          launchPath: resourceLaunch,
+        })
 
         if (import.meta.env.DEV) {
           console.info('[Scormite session] Package loaded', {
@@ -142,6 +180,10 @@ export function usePackageSession(): PackageSession {
         }
 
       } catch (e) {
+        logDevDiagnostic('package.load.failed', {
+          owner,
+          error: e instanceof Error ? e.message : String(e),
+        })
         if (import.meta.env.DEV) {
           console.error('[Scormite session] Failed to load package', e)
         }
@@ -162,17 +204,19 @@ export function usePackageSession(): PackageSession {
     // Blanking the src first forces the iframe to remount rather than
     // re-navigating, so the SCO starts from a clean document.
     setReloading(true)
+    logDevDiagnostic('session.reload.requested', { owner, sessionId: runtimeSessionId })
     setTimeout(() => setReloading(false), 50)
-  }, [runtimeSessionId, pkg])
+  }, [runtimeSessionId, pkg, owner])
 
   const reset = useCallback(() => {
+    logDevDiagnostic('session.reset.requested', { owner, sessionId: runtimeSessionId })
     if (runtimeSessionId) clearSessionCache(runtimeSessionId)
     removeApiProxy()
     resetRuntime()
     clearLogs()
     resetInspector()
     setReloading(false)
-  }, [runtimeSessionId, resetRuntime, clearLogs, resetInspector])
+  }, [runtimeSessionId, resetRuntime, clearLogs, resetInspector, owner])
 
   return { pkg, loading, error, launchUrl, loadFile, reload, reset }
 }
