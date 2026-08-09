@@ -38,9 +38,12 @@ build (`pnpm run build`), lint clean (`pnpm run lint`), and pass its tests
 - [x] **Milestone 8 — Timeline + Session Replay.** `TimelinePanel`,
       scrubbing, snapshot restore. *Exit criteria:* scrub to any point in a
       completed session and see the CMI state at that instant.
-- [ ] **Milestone 9 — Breakpoints.** Breakpoint CRUD + pause/resume gate in
+- [x] **Milestone 9 — Breakpoints.** Breakpoint CRUD + pause/resume gate in
       the adapter. *Exit criteria:* a breakpoint on a specific `SetValue`
-      element reliably pauses execution before the value is applied.
+      element reliably pauses execution before the value is applied — proven
+      by `src/features/runtime/tests/breakpointPause.test.ts` (matching
+      `SetValue` parks before the value is applied; reads keep working while
+      paused; resume drains parked calls in order).
 - [ ] **Milestone 10 — Validation engine.** Static (manifest) + runtime
       validators, `ValidationPanel`. *Exit criteria:* known-bad sample
       packages (missing resource, broken suspend_data, out-of-range score)

@@ -17,12 +17,19 @@ export interface ApiCallResult extends ApiCallContext {
 }
 
 /**
+ * What a pre-call hook wants the pipeline to do with the call.
+ * - `continue`: proceed with the call (default when a hook returns nothing).
+ * - `pause`: hold execution — the call is parked and only runs on resume.
+ */
+export type MiddlewareDecision = 'continue' | 'pause'
+
+/**
  * Middleware participates in the pre/post pipeline around every SCORM API
  * call.  Both hooks are optional — implement only what you need.
  */
 export interface RuntimeMiddleware {
   /** Called before the underlying scorm-again method is invoked. */
-  pre?(ctx: ApiCallContext): void
+  pre?(ctx: ApiCallContext): MiddlewareDecision | void
   /** Called after the underlying scorm-again method returns. */
   post?(result: ApiCallResult): void
 }
