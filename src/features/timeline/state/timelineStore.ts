@@ -22,11 +22,12 @@ export const useTimelineStore = create<TimelineState>((set) => ({
   captureSnapshot: (snapshot) =>
     set((state) => {
       const previous = state.snapshots.at(-1)?.data ?? {}
+      const changed = changedPaths(previous, snapshot.data)
+      // Ignore no-op calls (e.g. GetValue) so every snapshot marks a real
+      // state change — that keeps each scrub point meaningful.
+      if (changed.length === 0) return state
       return {
-        snapshots: [
-          ...state.snapshots,
-          { ...snapshot, changedPaths: changedPaths(previous, snapshot.data) },
-        ],
+        snapshots: [...state.snapshots, { ...snapshot, changedPaths: changed }],
       }
     }),
   scrubTo: (index) =>

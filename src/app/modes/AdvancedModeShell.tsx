@@ -12,6 +12,7 @@ import { TopToolbar } from '@/app/layout/TopToolbar'
 import { ADVANCED_PANELS } from '@/app/layout/panels'
 import { usePanelRegistry } from '@/app/layout/PanelRegistry'
 import { usePackageSession } from '@/app/hooks/usePackageSession'
+import { useTimelineReplay } from '@/app/hooks/useTimelineReplay'
 import { DropZone } from '@/features/package-loader'
 import { PlayerFrame, PlayerToolbar } from '@/features/player'
 import type { Package } from '@/shared/types'
@@ -42,6 +43,7 @@ function PackageStatus({ pkg }: { pkg: Package | null }) {
 
 export function AdvancedModeShell() {
   useRegisterAdvancedPanels()
+  useTimelineReplay()
   const { pkg, loading, error, launchUrl, loadFile, reload, reset } = usePackageSession('advanced')
 
   const center = pkg ? (

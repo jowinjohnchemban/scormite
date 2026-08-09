@@ -35,7 +35,7 @@ build (`pnpm run build`), lint clean (`pnpm run lint`), and pass its tests
       panels wired to `logStore`/`runtimeStore`. *Exit criteria:* every
       SCORM API call appears in the monitor within one frame; CMI tree
       reflects live state with diff highlighting.
-- [ ] **Milestone 8 — Timeline + Session Replay.** `TimelinePanel`,
+- [x] **Milestone 8 — Timeline + Session Replay.** `TimelinePanel`,
       scrubbing, snapshot restore. *Exit criteria:* scrub to any point in a
       completed session and see the CMI state at that instant.
 - [ ] **Milestone 9 — Breakpoints.** Breakpoint CRUD + pause/resume gate in
