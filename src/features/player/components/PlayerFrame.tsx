@@ -17,8 +17,9 @@ export function PlayerFrame({ src, className, onLoad }: PlayerFrameProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null)
 
   const handleLoad = useCallback(() => {
+    if (import.meta.env.DEV) console.debug('[Scormite player] iframe loaded', { src })
     onLoad?.()
-  }, [onLoad])
+  }, [onLoad, src])
 
   // Reload when src changes.
   useEffect(() => {
@@ -48,6 +49,9 @@ export function PlayerFrame({ src, className, onLoad }: PlayerFrameProps) {
       sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
       className={cn('h-full w-full border-0 bg-white', className)}
       onLoad={handleLoad}
+      onError={() => {
+        if (import.meta.env.DEV) console.error('[Scormite player] iframe failed to load', { src })
+      }}
     />
   )
 }

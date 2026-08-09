@@ -7,4 +7,5 @@
  * Populated incrementally — see /docs/ROADMAP.md for which milestone fills
  * this in.
  */
-export {};
+export { TimelinePanel } from './components'
+export { useTimelineStore } from './state/timelineStore'

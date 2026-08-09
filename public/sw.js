@@ -8,14 +8,21 @@
  */
 
 const CACHE_PREFIX = 'scormite-pkg-'
+let debug = false
 
 self.addEventListener('message', (event) => {
   const data = event.data
   if (!data || typeof data.type !== 'string') return
 
+  if (data.type === 'SET_DEBUG') {
+    debug = data.enabled === true
+    return
+  }
+
   if (data.type === 'CACHE_FILE') {
     const { sessionId, path, buffer, mimeType } = data
     const url = `/scorm-files/${sessionId}/${path}`
+    if (debug) console.debug('[Scormite service worker] caching', url)
     event.waitUntil(
       caches.open(CACHE_PREFIX + sessionId).then((cache) => {
         const response = new Response(buffer, {
@@ -40,7 +47,10 @@ self.addEventListener('fetch', (event) => {
 
   event.respondWith(
     caches.match(event.request).then(
-      (cached) => cached ?? new Response('Not found', { status: 404 }),
+      (cached) => {
+        if (debug) console.debug(`[Scormite service worker] ${cached ? 'hit' : 'miss'}`, url.pathname)
+        return cached ?? new Response('Not found', { status: 404 })
+      },
     ),
   )
 })
