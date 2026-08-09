@@ -28,7 +28,7 @@ build (`pnpm run build`), lint clean (`pnpm run lint`), and pass its tests
       Mode shell, progress/score/objectives display. *Exit criteria:* a
       sample course can be launched, completed, and its final state shown
       correctly in Basic Mode.
-- [ ] **Milestone 6 — Advanced Mode shell + Dock layout.** `DockLayout`,
+- [x] **Milestone 6 — Advanced Mode shell + Dock layout.** `DockLayout`,
       `PanelRegistry`, persistent layout, top toolbar. *Exit criteria:*
       panels can be dragged/resized/closed/reopened; layout survives reload.
 - [ ] **Milestone 7 — API Monitor, CMI Inspector, Console.** Live-updating
