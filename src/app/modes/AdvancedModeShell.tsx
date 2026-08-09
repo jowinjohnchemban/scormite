@@ -42,7 +42,7 @@ function PackageStatus({ pkg }: { pkg: Package | null }) {
 
 export function AdvancedModeShell() {
   useRegisterAdvancedPanels()
-  const { pkg, loading, error, launchUrl, loadFile, reload, reset } = usePackageSession()
+  const { pkg, loading, error, launchUrl, loadFile, reload, reset } = usePackageSession('advanced')
 
   const center = pkg ? (
     <div className="flex h-full flex-col overflow-hidden">

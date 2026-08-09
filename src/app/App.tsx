@@ -3,6 +3,7 @@ import { BasicModeShell } from '@/app/modes/BasicModeShell'
 import { AdvancedModeShell } from '@/app/modes/AdvancedModeShell'
 import { Button } from '@/components/ui/button'
 import logo from '@/assets/hero.png'
+import { logDevDiagnostic } from '@/shared/lib/devDiagnostics'
 
 export function App() {
   const mode = useAppModeStore((s) => s.mode)
@@ -19,14 +20,20 @@ export function App() {
           <Button
             size="sm"
             variant={mode === 'basic' ? 'default' : 'ghost'}
-            onClick={() => setMode('basic')}
+            onClick={() => {
+              logDevDiagnostic('mode.change.requested', { from: mode, to: 'basic' })
+              setMode('basic')
+            }}
           >
             Basic
           </Button>
           <Button
             size="sm"
             variant={mode === 'advanced' ? 'default' : 'ghost'}
-            onClick={() => setMode('advanced')}
+            onClick={() => {
+              logDevDiagnostic('mode.change.requested', { from: mode, to: 'advanced' })
+              setMode('advanced')
+            }}
           >
             Advanced
           </Button>

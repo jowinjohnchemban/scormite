@@ -39,7 +39,7 @@ function CmiSummaryPanel() {
 // ---------------------------------------------------------------------------
 
 export function BasicModeShell() {
-  const { pkg, loading, error, launchUrl, loadFile, reload, reset } = usePackageSession()
+  const { pkg, loading, error, launchUrl, loadFile, reload, reset } = usePackageSession('basic')
 
   if (!pkg) {
     return <DropZone onFile={loadFile} loading={loading} error={error} />
