@@ -8,17 +8,24 @@ export class Scorm12Adapter extends ScormRuntimeAdapter {
   readonly api: Scorm12API
 
   constructor(sessionId: string, settings?: Partial<Settings>) {
-    super(sessionId)
-    this.api = new Scorm12API({
-      // Disable HTTP commits — Scormite manages persistence itself.
+    // Disable HTTP commits — Scormite manages persistence itself.
+    const apiSettings: Partial<Settings> = {
       lmsCommitUrl: false,
       autocommit: false,
       ...settings,
-    })
+    }
+    super(sessionId, apiSettings)
+    this.api = new Scorm12API(apiSettings)
   }
 
   initialize(): string {
-    const result = this.runCall('Initialize', () => this.api.LMSInitialize(''))
+    const result = this.runCall('Initialize', () => {
+      // The adapter outlives the SCO iframe (mode switches remount it); reset
+      // the single-session scorm-again state machine so a restarting course
+      // can initialize again instead of failing with error 101.
+      this.resetApiIfNeeded(this.api)
+      return this.api.LMSInitialize('')
+    })
     if (result === 'true') runtimeEvents.emit('initialized', { sessionId: this.sessionId })
     return result
   }
