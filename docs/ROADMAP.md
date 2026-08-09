@@ -44,10 +44,14 @@ build (`pnpm run build`), lint clean (`pnpm run lint`), and pass its tests
       by `src/features/runtime/tests/breakpointPause.test.ts` (matching
       `SetValue` parks before the value is applied; reads keep working while
       paused; resume drains parked calls in order).
-- [ ] **Milestone 10 — Validation engine.** Static (manifest) + runtime
+- [x] **Milestone 10 — Validation engine.** Static (manifest) + runtime
       validators, `ValidationPanel`. *Exit criteria:* known-bad sample
       packages (missing resource, broken suspend_data, out-of-range score)
-      produce the expected issues.
+      produce the expected issues — proven by
+      `src/features/validation/tests/ValidationService.test.ts` (missing
+      launch file, missing resource file, broken item reference) and
+      `src/features/runtime/tests/validationMiddleware.test.ts`
+      (out-of-range score, oversized suspend_data, missing Commit).
 - [ ] **Milestone 11 — Runtime Profiles.** Strict ADL / SCORM Cloud /
       Moodle / Canvas / SuccessFactors / Cornerstone / Custom. *Exit
       criteria:* switching profile visibly changes adapter behavior against

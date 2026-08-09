@@ -3,8 +3,15 @@
  *
  * Only export what other features are allowed to depend on. Everything else
  * in this folder is an implementation detail.
- *
- * Populated incrementally — see /docs/ROADMAP.md for which milestone fills
- * this in.
  */
-export {};
+export { ValidationPanel } from './components'
+export { useValidationStore } from './state/validationStore'
+export {
+  ValidationService,
+  validateManifest,
+  countBySeverity,
+  normalizePackagePath,
+  type ManifestValidationContext,
+  type StaticFinding,
+  type StaticValidator,
+} from './services/ValidationService'
