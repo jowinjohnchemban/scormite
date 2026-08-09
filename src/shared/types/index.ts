@@ -2,4 +2,5 @@ export type { Manifest, ManifestMetadata, ManifestItem, ManifestOrganization, Ma
 export type { Package, ScormVersion, ScormEdition } from './package'
 export type { ApiCallRecord, CmiSnapshot, Session, ScormApiMethod } from './session'
 export type { Breakpoint, BreakpointHit, BreakpointKind } from './breakpoint'
+export type { ValidationIssue, ValidationSeverity, ValidationSource } from './validation'
 export type { IScormAdapter } from './adapter'

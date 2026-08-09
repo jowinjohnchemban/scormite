@@ -11,6 +11,15 @@ export {
   matchesBreakpoint,
   type BreakpointMiddlewareOptions,
 } from './adapter/middleware/breakpointMiddleware'
+export {
+  createValidationMiddleware,
+  outOfRangeScoreValidator,
+  oversizedSuspendDataValidator,
+  missingCommitValidator,
+  type RuntimeValidator,
+  type RuntimeValidatorContext,
+  type ValidationMiddlewareOptions,
+} from './adapter/middleware/validationMiddleware'
 export { runtimeEvents } from './events/RuntimeEventEmitter'
 export { useRuntimeStore } from './state/runtimeStore'
 export type { RuntimeMiddleware, ApiCallContext, ApiCallResult, MiddlewareDecision } from './types';

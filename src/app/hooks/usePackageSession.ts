@@ -20,6 +20,10 @@ import {
 } from '@/features/player'
 import {
   createBreakpointMiddleware,
+  createValidationMiddleware,
+  missingCommitValidator,
+  outOfRangeScoreValidator,
+  oversizedSuspendDataValidator,
   recordingMiddleware,
   runtimeEvents,
   Scorm12Adapter,
@@ -30,6 +34,7 @@ import { useLogStore } from '@/features/logging'
 import { useInspectorStore } from '@/features/inspector'
 import { useTimelineStore } from '@/features/timeline'
 import { useBreakpointStore } from '@/features/session'
+import { ValidationService, useValidationStore } from '@/features/validation'
 import type { ApiCallRecord, Package } from '@/shared/types'
 import { logDevDiagnostic } from '@/shared/lib/devDiagnostics'
 
@@ -72,6 +77,7 @@ export function usePackageSession(owner: 'basic' | 'advanced'): PackageSession {
   const captureSnapshot = useTimelineStore((s) => s.captureSnapshot)
   const resetTimeline = useTimelineStore((s) => s.reset)
   const resetBreakpoints = useBreakpointStore((s) => s.reset)
+  const resetValidation = useValidationStore((s) => s.reset)
 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -167,6 +173,10 @@ export function usePackageSession(owner: 'basic' | 'advanced'): PackageSession {
         setManifest(manifest)
         setPackage(assembled)
 
+        // Static validation: manifest-vs-package-file consistency. Runtime
+        // issues stream in live from the validation middleware below.
+        ValidationService.validateManifest(manifest, raw.filePaths)
+
         const sid = assembled.id
         await cachePackageFiles(sid, raw.filePaths, raw.getFile)
         logDevDiagnostic('package.cache.ready', { owner, sessionId: sid, files: raw.filePaths.length })
@@ -187,6 +197,20 @@ export function usePackageSession(owner: 'basic' | 'advanced'): PackageSession {
           useBreakpointStore.getState().setPausedFlag(paused),
         )
         useBreakpointStore.getState().setResumeHandler(() => adapter.resume())
+
+        // Runtime validation runs on every completed call. The rule list is
+        // re-read per call so runtime profiles (Milestone 11) can toggle
+        // which validators apply without rebuilding the pipeline.
+        adapter.addMiddleware(
+          createValidationMiddleware({
+            getValidators: () => [
+              outOfRangeScoreValidator,
+              oversizedSuspendDataValidator,
+              missingCommitValidator,
+            ],
+            onIssue: (issue) => useValidationStore.getState().addIssue(issue),
+          }),
+        )
 
         setAdapter(adapter, raw.scormVersion)
         setCmiBaseline(adapter.getFlattenedCmi())
@@ -244,7 +268,8 @@ export function usePackageSession(owner: 'basic' | 'advanced'): PackageSession {
     resetInspector()
     resetTimeline()
     resetBreakpoints()
+    resetValidation()
     setReloading(false)
-  }, [runtimeSessionId, resetRuntime, clearLogs, resetInspector, resetTimeline, resetBreakpoints, owner])
+  }, [runtimeSessionId, resetRuntime, clearLogs, resetInspector, resetTimeline, resetBreakpoints, resetValidation, owner])
   return { pkg, loading, error, launchUrl, loadFile, reload, reset }
 }
