@@ -16,16 +16,21 @@ self.addEventListener('message', (event) => {
   if (data.type === 'CACHE_FILE') {
     const { sessionId, path, buffer, mimeType } = data
     const url = `/scorm-files/${sessionId}/${path}`
-    caches.open(CACHE_PREFIX + sessionId).then((cache) => {
-      const response = new Response(buffer, {
-        headers: { 'Content-Type': mimeType || 'application/octet-stream' },
-      })
-      cache.put(url, response)
-    })
+    event.waitUntil(
+      caches.open(CACHE_PREFIX + sessionId).then((cache) => {
+        const response = new Response(buffer, {
+          headers: { 'Content-Type': mimeType || 'application/octet-stream' },
+        })
+        return cache.put(url, response)
+      }).then(
+        () => event.ports[0]?.postMessage({ ok: true }),
+        (error) => event.ports[0]?.postMessage({ ok: false, error: String(error) }),
+      ),
+    )
   }
 
   if (data.type === 'CLEAR_SESSION') {
-    caches.delete(CACHE_PREFIX + data.sessionId)
+    event.waitUntil(caches.delete(CACHE_PREFIX + data.sessionId))
   }
 })
 

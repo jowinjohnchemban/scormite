@@ -45,6 +45,11 @@ pnpm run format     # Prettier
 
 Requires pnpm (see `packageManager` in `package.json`).
 
+## Deployment
+
+Deploy to Vercel, Cloudflare, or any Docker-compatible host using the checked-in
+configuration files. See [deployment instructions](docs/DEPLOYMENT.md).
+
 ---
 
 ## Documentation
@@ -70,4 +75,3 @@ Two rules enforced by ESLint (not just convention):
 2. Features cannot reach into another feature's internals — only `app`, `shared`, `components`, and same-feature imports are allowed across feature boundaries.
 
 See `docs/adr/0001-eslint-architecture-boundaries.md` for how these work and one gotcha worth knowing if you touch that config.
-

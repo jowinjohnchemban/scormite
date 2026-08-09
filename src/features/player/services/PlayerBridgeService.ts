@@ -54,8 +54,25 @@ export async function registerServiceWorker(): Promise<void> {
   }
 }
 
-function swPost(message: unknown): void {
-  navigator.serviceWorker.controller?.postMessage(message)
+function activeServiceWorker(): ServiceWorker | null {
+  // On a first visit the newly installed worker is active but does not yet
+  // control this page. Sending to the registration avoids dropping package
+  // files before the iframe asks the worker for them.
+  return navigator.serviceWorker.controller ?? _swRegistration?.active ?? null
+}
+
+function swPost(message: unknown): Promise<void> {
+  const worker = activeServiceWorker()
+  if (!worker) return Promise.reject(new Error('Scormite service worker is not active.'))
+
+  return new Promise((resolve, reject) => {
+    const channel = new MessageChannel()
+    channel.port1.onmessage = (event: MessageEvent<{ ok?: boolean; error?: string }>) => {
+      if (event.data.ok) resolve()
+      else reject(new Error(event.data.error ?? 'Service worker failed to cache package file.'))
+    }
+    worker.postMessage(message, [channel.port2])
+  })
 }
 
 // ---------------------------------------------------------------------------
@@ -75,14 +92,22 @@ export async function cachePackageFiles(
     await Promise.all(
       filePaths.slice(i, i + BATCH).map(async (path) => {
         const bytes = await getFile(path)
-        swPost({ type: 'CACHE_FILE', sessionId, path, buffer: bytes.buffer, mimeType: mime(path) })
+        await swPost({
+          type: 'CACHE_FILE',
+          sessionId,
+          path,
+          buffer: bytes.buffer,
+          mimeType: mime(path),
+        })
       }),
     )
   }
 }
 
 export function clearSessionCache(sessionId: string): void {
-  swPost({ type: 'CLEAR_SESSION', sessionId })
+  void swPost({ type: 'CLEAR_SESSION', sessionId }).catch(() => {
+    // A reset is still valid when there is no worker cache to clear.
+  })
 }
 
 export function packageLaunchUrl(sessionId: string, launchPath: string): string {
