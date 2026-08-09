@@ -101,6 +101,15 @@ describe('Scorm12Adapter', () => {
     expect(typeof cmi).toBe('object')
     expect(Object.keys(cmi).length).toBeGreaterThan(0)
   })
+
+  it('getFlattenedCmi values are all strings (normalized at the adapter boundary)', () => {
+    ctx.adapter.initialize()
+    ctx.adapter.setValue('cmi.core.score.raw', '80')
+    const cmi = ctx.adapter.getFlattenedCmi()
+    for (const value of Object.values(cmi)) {
+      expect(typeof value).toBe('string')
+    }
+  })
 })
 
 // ---------------------------------------------------------------------------
