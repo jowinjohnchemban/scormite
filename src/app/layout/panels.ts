@@ -23,6 +23,7 @@ import { ManifestExplorer } from '@/features/manifest'
 import { CmiInspectorPanel } from '@/features/inspector'
 import { ApiMonitorPanel, ConsolePanel } from '@/features/logging'
 import { TimelinePanel } from '@/features/timeline'
+import { BreakpointsPanel } from '@/features/session'
 import { makePlaceholderPanel } from './PlaceholderPanel'
 import type { PanelDef } from './PanelRegistry'
 
@@ -89,7 +90,7 @@ export const ADVANCED_PANELS: readonly PanelDef[] = [
     defaultRegion: 'bottom',
     defaultOpen: false,
     icon: Bug,
-    component: makePlaceholderPanel('Breakpoints', 'Milestone 9'),
+    component: BreakpointsPanel,
   },
   {
     id: 'performance',

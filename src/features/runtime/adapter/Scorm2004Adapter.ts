@@ -19,20 +19,30 @@ export class Scorm2004Adapter extends ScormRuntimeAdapter {
   }
 
   initialize(): string {
-    const result = this.runCall('Initialize', () => {
-      // The adapter outlives the SCO iframe (mode switches remount it); reset
-      // the single-session scorm-again state machine so a restarting course
-      // can initialize again instead of failing with error 101.
-      this.resetApiIfNeeded(this.api)
-      return this.api.Initialize('')
-    })
-    if (result === 'true') runtimeEvents.emit('initialized', { sessionId: this.sessionId })
+    const result = this.runCall(
+      'Initialize',
+      () => {
+        // The adapter outlives the SCO iframe (mode switches remount it); reset
+        // the single-session scorm-again state machine so a restarting course
+        // can initialize again instead of failing with error 101.
+        this.resetApiIfNeeded(this.api)
+        return this.api.Initialize('')
+      },
+      undefined,
+      undefined,
+      (r) => {
+        // Runs on the real execution — immediately, or on resume if a
+        // breakpoint parked the Initialize call.
+        if (r === 'true') runtimeEvents.emit('initialized', { sessionId: this.sessionId })
+      },
+    )
     return result
   }
 
   terminate(): string {
-    const result = this.runCall('Terminate', () => this.api.Terminate(''))
-    if (result === 'true') runtimeEvents.emit('terminated', { sessionId: this.sessionId })
+    const result = this.runCall('Terminate', () => this.api.Terminate(''), undefined, undefined, (r) => {
+      if (r === 'true') runtimeEvents.emit('terminated', { sessionId: this.sessionId })
+    })
     return result
   }
 

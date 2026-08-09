@@ -1,6 +1,14 @@
 import type { Settings } from 'scorm-again'
 import type { ApiCallContext, ApiCallResult, RuntimeMiddleware } from '../types'
 
+/** A call parked while a breakpoint holds execution. */
+interface PendingCall {
+  ctx: ApiCallContext
+  invoke: () => string
+  /** Runs with the result once the call actually executes (immediately or on resume). */
+  settle?: (result: string) => void
+}
+
 /**
  * Abstract base class for SCORM runtime adapters.
  *
@@ -12,6 +20,9 @@ export abstract class ScormRuntimeAdapter {
   /** The settings the concrete adapter passed to its scorm-again API instance. */
   protected readonly apiSettings: Partial<Settings>
   private readonly _middleware: RuntimeMiddleware[] = []
+  private _paused = false
+  private readonly _pendingCalls: PendingCall[] = []
+  private readonly _pauseListeners = new Set<(paused: boolean) => void>()
 
   constructor(sessionId: string, apiSettings?: Partial<Settings>) {
     this.sessionId = sessionId
@@ -20,6 +31,40 @@ export abstract class ScormRuntimeAdapter {
 
   addMiddleware(mw: RuntimeMiddleware): void {
     this._middleware.push(mw)
+  }
+
+  /** True while a breakpoint is holding execution. */
+  get isPaused(): boolean {
+    return this._paused
+  }
+
+  /** Number of calls parked while paused, awaiting resume. */
+  get pendingCallCount(): number {
+    return this._pendingCalls.length
+  }
+
+  /** Subscribe to pause-state changes; returns an unsubscribe function. */
+  onPauseChange(listener: (paused: boolean) => void): () => void {
+    this._pauseListeners.add(listener)
+    return () => this._pauseListeners.delete(listener)
+  }
+
+  /**
+   * Apply every parked call, in order, and clear the paused state.
+   *
+   * Parked calls run through the same pipeline as normal ones (post hooks
+   * fire, records emit) so the API monitor / timeline see the call at the
+   * moment its value is actually applied.
+   */
+  resume(): void {
+    if (!this._paused) return
+    this._paused = false
+    for (const listener of this._pauseListeners) listener(false)
+    const pending = this._pendingCalls.splice(0)
+    for (const call of pending) {
+      const result = this.execute(call.ctx, call.invoke)
+      call.settle?.(result)
+    }
   }
 
   /**
@@ -48,11 +93,22 @@ export abstract class ScormRuntimeAdapter {
   // Template: wrap any API call through the middleware pipeline
   // ---------------------------------------------------------------------------
 
+  /**
+   * Runs `fn` through the middleware pipeline.
+   *
+   * When a pre-hook returns `pause` (or execution is already paused), the
+   * call is parked instead of invoked — the value is NOT applied yet. The SCO
+   * still gets a synchronous answer (SetValue/Commit are optimistic `'true'`
+   * since they succeed on resume; reads return `'false'` because they have
+   * genuinely not happened). `settle` runs with the real result once the call
+   * executes, whether that is now or after `resume()`.
+   */
   protected runCall(
     method: ApiCallContext['method'],
     fn: () => string,
     element?: string,
     value?: string,
+    settle?: (result: string) => void,
   ): string {
     const ctx: ApiCallContext = {
       sessionId: this.sessionId,
@@ -61,8 +117,59 @@ export abstract class ScormRuntimeAdapter {
       ...(value !== undefined ? { value } : {}),
     }
 
-    for (const mw of this._middleware) mw.pre?.(ctx)
+    // Execution is suspended by a breakpoint: park mutating calls so the SCO
+    // cannot sneak a mutation past the pause. Reads execute immediately — they
+    // have no side effect, and the SCO needs real values to render the
+    // (frozen) state the breakpoint paused.
+    if (this._paused && this.isMutating(ctx.method)) {
+      this.park(ctx, fn, settle)
+      return this.pausedAnswer(ctx)
+    }
 
+    for (const mw of this._middleware) {
+      if (mw.pre?.(ctx) === 'pause') {
+        this._paused = true
+        for (const listener of this._pauseListeners) listener(true)
+        this.park(ctx, fn, settle)
+        return this.pausedAnswer(ctx)
+      }
+    }
+
+    return this.execute(ctx, fn, settle)
+  }
+
+  /** Queue a call to run on resume (exactOptionalPropertyTypes-safe). */
+  private park(
+    ctx: ApiCallContext,
+    invoke: () => string,
+    settle?: (result: string) => void,
+  ): void {
+    this._pendingCalls.push(
+      settle ? { ctx, invoke, settle } : { ctx, invoke },
+    )
+  }
+
+  /** Mutating calls are deferred while paused; read-only calls pass through. */
+  private isMutating(method: ApiCallContext['method']): boolean {
+    return (
+      method === 'SetValue' ||
+      method === 'Commit' ||
+      method === 'Initialize' ||
+      method === 'Terminate'
+    )
+  }
+
+  /** What the SCO-facing method returns while the call is parked. */
+  private pausedAnswer(ctx: ApiCallContext): string {
+    return ctx.method === 'SetValue' || ctx.method === 'Commit' ? 'true' : 'false'
+  }
+
+  /** Invoke `fn`, run post hooks, then hand the result to `settle`. */
+  private execute(
+    ctx: ApiCallContext,
+    fn: () => string,
+    settle?: (result: string) => void,
+  ): string {
     const t0 = performance.now()
     const returnValue = fn()
     const durationMs = performance.now() - t0
@@ -78,6 +185,8 @@ export abstract class ScormRuntimeAdapter {
     }
 
     for (const mw of this._middleware) mw.post?.(result)
+
+    settle?.(returnValue)
 
     return returnValue
   }

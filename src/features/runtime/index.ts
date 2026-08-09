@@ -6,6 +6,11 @@ export { ScormRuntimeAdapter } from './adapter/ScormRuntimeAdapter'
 export { Scorm12Adapter } from './adapter/Scorm12Adapter'
 export { Scorm2004Adapter } from './adapter/Scorm2004Adapter'
 export { recordingMiddleware } from './adapter/middleware/recordingMiddleware'
+export {
+  createBreakpointMiddleware,
+  matchesBreakpoint,
+  type BreakpointMiddlewareOptions,
+} from './adapter/middleware/breakpointMiddleware'
 export { runtimeEvents } from './events/RuntimeEventEmitter'
 export { useRuntimeStore } from './state/runtimeStore'
-export type { RuntimeMiddleware, ApiCallContext, ApiCallResult } from './types';
+export type { RuntimeMiddleware, ApiCallContext, ApiCallResult, MiddlewareDecision } from './types';

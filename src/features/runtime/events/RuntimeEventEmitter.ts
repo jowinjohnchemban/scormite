@@ -1,8 +1,10 @@
-import type { ApiCallRecord } from '@/shared/types'
+import type { ApiCallRecord, BreakpointHit } from '@/shared/types'
 
 type RuntimeEventMap = {
   /** Fired after every SCORM API call completes (post-recording-middleware). */
   'api-call': ApiCallRecord
+  /** Fired when a breakpoint pauses execution. */
+  'breakpoint:hit': BreakpointHit
   /** Fired when Initialize succeeds. */
   initialized: { sessionId: string }
   /** Fired when Terminate/Finish succeeds. */

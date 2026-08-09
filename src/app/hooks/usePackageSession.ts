@@ -19,6 +19,7 @@ import {
   removeApiProxy,
 } from '@/features/player'
 import {
+  createBreakpointMiddleware,
   recordingMiddleware,
   runtimeEvents,
   Scorm12Adapter,
@@ -28,6 +29,7 @@ import {
 import { useLogStore } from '@/features/logging'
 import { useInspectorStore } from '@/features/inspector'
 import { useTimelineStore } from '@/features/timeline'
+import { useBreakpointStore } from '@/features/session'
 import type { ApiCallRecord, Package } from '@/shared/types'
 import { logDevDiagnostic } from '@/shared/lib/devDiagnostics'
 
@@ -69,6 +71,7 @@ export function usePackageSession(owner: 'basic' | 'advanced'): PackageSession {
   const resetInspector = useInspectorStore((s) => s.reset)
   const captureSnapshot = useTimelineStore((s) => s.captureSnapshot)
   const resetTimeline = useTimelineStore((s) => s.reset)
+  const resetBreakpoints = useBreakpointStore((s) => s.reset)
 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -171,6 +174,19 @@ export function usePackageSession(owner: 'basic' | 'advanced'): PackageSession {
         const adapter =
           raw.scormVersion === '1.2' ? new Scorm12Adapter(sid) : new Scorm2004Adapter(sid)
         adapter.addMiddleware(recordingMiddleware)
+        // Breakpoints pause matching calls *before* they reach scorm-again.
+        // The middleware only signals; the adapter owns the gate, and the
+        // breakpoint store mirrors the pause state for the UI.
+        adapter.addMiddleware(
+          createBreakpointMiddleware({
+            getBreakpoints: () => useBreakpointStore.getState().breakpoints,
+            onHit: (hit) => useBreakpointStore.getState().recordHit(hit),
+          }),
+        )
+        adapter.onPauseChange((paused) =>
+          useBreakpointStore.getState().setPausedFlag(paused),
+        )
+        useBreakpointStore.getState().setResumeHandler(() => adapter.resume())
 
         setAdapter(adapter, raw.scormVersion)
         setCmiBaseline(adapter.getFlattenedCmi())
@@ -227,7 +243,8 @@ export function usePackageSession(owner: 'basic' | 'advanced'): PackageSession {
     clearLogs()
     resetInspector()
     resetTimeline()
+    resetBreakpoints()
     setReloading(false)
-  }, [runtimeSessionId, resetRuntime, clearLogs, resetInspector, resetTimeline, owner])
+  }, [runtimeSessionId, resetRuntime, clearLogs, resetInspector, resetTimeline, resetBreakpoints, owner])
   return { pkg, loading, error, launchUrl, loadFile, reload, reset }
 }
