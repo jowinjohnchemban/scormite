@@ -1,5 +1,16 @@
 import { useInspectorStore } from '@/features/inspector/state/inspectorStore'
 
+/**
+ * Defense in depth: values are normalized to strings at the adapter boundary,
+ * but never render a non-string raw — React throws on object children.
+ */
+function formatValue(value: unknown): string {
+  if (typeof value === 'string') return value || '—'
+  if (value === null || value === undefined) return '—'
+  if (typeof value === 'object') return JSON.stringify(value)
+  return String(value)
+}
+
 /** A live flattened CMI model with paths changed by the most recent API call. */
 export function CmiInspectorPanel() {
   const values = useInspectorStore((state) => state.values)
@@ -41,7 +52,7 @@ export function CmiInspectorPanel() {
                 >
                   {path}
                 </span>
-                <span className="min-w-40 break-all pr-2">{value || '—'}</span>
+                <span className="min-w-40 break-all pr-2">{formatValue(value)}</span>
               </div>
             )
           })}

@@ -1,6 +1,7 @@
 import { Scorm12API } from 'scorm-again'
 import type { Settings } from 'scorm-again'
 import { ScormRuntimeAdapter } from './ScormRuntimeAdapter'
+import { normalizeFlattenedCmi } from './normalizeFlattenedCmi'
 import { runtimeEvents } from '../events/RuntimeEventEmitter'
 
 export class Scorm12Adapter extends ScormRuntimeAdapter {
@@ -53,6 +54,8 @@ export class Scorm12Adapter extends ScormRuntimeAdapter {
   }
 
   getFlattenedCmi(): Record<string, string> {
-    return this.api.getFlattenedCMI() as Record<string, string>
+    // scorm-again can emit non-string leaves (numbers, booleans, empty objects);
+    // normalize so every consumer sees only strings.
+    return normalizeFlattenedCmi(this.api.getFlattenedCMI())
   }
 }
