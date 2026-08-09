@@ -46,7 +46,8 @@ export abstract class ScormRuntimeAdapter {
       ...ctx,
       returnValue,
       durationMs,
-      ...(rawError ? { errorCode: rawError } : {}),
+      // SCORM returns the string "0" when no error has occurred.
+      ...(rawError && rawError !== '0' ? { errorCode: rawError } : {}),
       timestamp: Date.now(),
     }
 

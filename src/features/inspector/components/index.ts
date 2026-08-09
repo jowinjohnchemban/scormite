@@ -1,0 +1,1 @@
+export { CmiInspectorPanel } from './CmiInspectorPanel'
