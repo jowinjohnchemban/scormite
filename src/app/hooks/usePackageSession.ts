@@ -27,6 +27,7 @@ import {
 } from '@/features/runtime'
 import { useLogStore } from '@/features/logging'
 import { useInspectorStore } from '@/features/inspector'
+import { useTimelineStore } from '@/features/timeline'
 import type { ApiCallRecord, Package } from '@/shared/types'
 import { logDevDiagnostic } from '@/shared/lib/devDiagnostics'
 
@@ -66,6 +67,8 @@ export function usePackageSession(owner: 'basic' | 'advanced'): PackageSession {
   const setCmiBaseline = useInspectorStore((s) => s.setBaseline)
   const updateCmi = useInspectorStore((s) => s.updateValues)
   const resetInspector = useInspectorStore((s) => s.reset)
+  const captureSnapshot = useTimelineStore((s) => s.captureSnapshot)
+  const resetTimeline = useTimelineStore((s) => s.reset)
 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -109,14 +112,22 @@ export function usePackageSession(owner: 'basic' | 'advanced'): PackageSession {
           errorCode: record.errorCode ?? null,
         })
         const adapter = useRuntimeStore.getState().adapter
-        if (!adapter) return
+        const sessionId = useRuntimeStore.getState().sessionId
+        if (!adapter || !sessionId) return
         try {
-          updateCmi(adapter.getFlattenedCmi())
+          const flattened = adapter.getFlattenedCmi()
+          captureSnapshot({ timestamp: record.timestamp, sessionId, data: flattened })
+          // While the timeline is scrubbing a historical snapshot the
+          // inspector keeps showing that instant; only live updates while
+          // following the running session.
+          if (useTimelineStore.getState().cursor === null) {
+            updateCmi(flattened)
+          }
         } catch {
           // The player may have navigated away while the event was being handled.
         }
       }),
-    [addLog, updateCmi],
+    [addLog, updateCmi, captureSnapshot, owner],
   )
 
   const loadFile = useCallback(
@@ -196,7 +207,7 @@ export function usePackageSession(owner: 'basic' | 'advanced'): PackageSession {
         setLoading(false)
       }
     },
-    [setPackage, setManifest, setAdapter, setCmiBaseline],
+    [setPackage, setManifest, setAdapter, setCmiBaseline, owner],
   )
 
   const reload = useCallback(() => {
@@ -215,8 +226,8 @@ export function usePackageSession(owner: 'basic' | 'advanced'): PackageSession {
     resetRuntime()
     clearLogs()
     resetInspector()
+    resetTimeline()
     setReloading(false)
-  }, [runtimeSessionId, resetRuntime, clearLogs, resetInspector, owner])
-
+  }, [runtimeSessionId, resetRuntime, clearLogs, resetInspector, resetTimeline, owner])
   return { pkg, loading, error, launchUrl, loadFile, reload, reset }
 }

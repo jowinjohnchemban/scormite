@@ -4,12 +4,18 @@ import { useInspectorStore } from '@/features/inspector/state/inspectorStore'
 export function CmiInspectorPanel() {
   const values = useInspectorStore((state) => state.values)
   const changedPaths = useInspectorStore((state) => state.changedPaths)
+  const isReplay = useInspectorStore((state) => state.isReplay)
   const entries = Object.entries(values).sort(([a], [b]) => a.localeCompare(b))
 
   return (
     <section className="flex h-full min-h-0 flex-col" aria-label="CMI Inspector">
       <header className="flex h-8 shrink-0 items-center border-b border-border-subtle px-2">
         <span className="text-[11px] text-slate-500">{entries.length} CMI fields</span>
+        {isReplay && (
+          <span className="ml-2 rounded-sm bg-amber-400/15 px-1.5 py-0.5 text-[10px] font-medium text-amber-300">
+            Replay
+          </span>
+        )}
       </header>
       {entries.length === 0 ? (
         <p className="p-3 text-xs text-slate-600">Launch a course to inspect its CMI data model.</p>
