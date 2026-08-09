@@ -59,6 +59,7 @@ export function usePackageSession(): PackageSession {
   const setManifest = useManifestStore((s) => s.setManifest)
   const setAdapter = useRuntimeStore((s) => s.setAdapter)
   const resetRuntime = useRuntimeStore((s) => s.reset)
+  const runtimeSessionId = useRuntimeStore((s) => s.sessionId)
   const clearLogs = useLogStore((s) => s.clearRecords)
   const addLog = useLogStore((s) => s.addRecord)
   const setCmiBaseline = useInspectorStore((s) => s.setBaseline)
@@ -67,8 +68,13 @@ export function usePackageSession(): PackageSession {
 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [sessionId, setSessionId] = useState<string | null>(null)
-  const [launchUrl, setLaunchUrl] = useState<string | null>(null)
+  const [reloading, setReloading] = useState(false)
+  // Package and runtime state outlive either mode shell. Deriving the launch
+  // URL from both lets a running SCO survive a Basic ↔ Advanced mode switch.
+  const launchUrl =
+    pkg && runtimeSessionId && !reloading
+      ? packageLaunchUrl(runtimeSessionId, pkg.launchUrl)
+      : null
 
   // Subscribed once for the lifetime of the shell. Doing this per-load (as the
   // shells used to) stacked a fresh listener on every package, duplicating
@@ -135,8 +141,6 @@ export function usePackageSession(): PackageSession {
           })
         }
 
-        setSessionId(sid)
-        setLaunchUrl(packageLaunchUrl(sid, resourceLaunch))
       } catch (e) {
         if (import.meta.env.DEV) {
           console.error('[Scormite session] Failed to load package', e)
@@ -154,22 +158,21 @@ export function usePackageSession(): PackageSession {
   )
 
   const reload = useCallback(() => {
-    if (!sessionId || !pkg) return
+    if (!runtimeSessionId || !pkg) return
     // Blanking the src first forces the iframe to remount rather than
     // re-navigating, so the SCO starts from a clean document.
-    setLaunchUrl(null)
-    setTimeout(() => setLaunchUrl(packageLaunchUrl(sessionId, pkg.launchUrl)), 50)
-  }, [sessionId, pkg])
+    setReloading(true)
+    setTimeout(() => setReloading(false), 50)
+  }, [runtimeSessionId, pkg])
 
   const reset = useCallback(() => {
-    if (sessionId) clearSessionCache(sessionId)
+    if (runtimeSessionId) clearSessionCache(runtimeSessionId)
     removeApiProxy()
     resetRuntime()
     clearLogs()
     resetInspector()
-    setSessionId(null)
-    setLaunchUrl(null)
-  }, [sessionId, resetRuntime, clearLogs, resetInspector])
+    setReloading(false)
+  }, [runtimeSessionId, resetRuntime, clearLogs, resetInspector])
 
   return { pkg, loading, error, launchUrl, loadFile, reload, reset }
 }
