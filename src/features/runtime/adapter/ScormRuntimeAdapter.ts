@@ -1,3 +1,4 @@
+import type { Settings } from 'scorm-again'
 import type { ApiCallContext, ApiCallResult, RuntimeMiddleware } from '../types'
 
 /**
@@ -8,14 +9,39 @@ import type { ApiCallContext, ApiCallResult, RuntimeMiddleware } from '../types'
  */
 export abstract class ScormRuntimeAdapter {
   protected readonly sessionId: string
+  /** The settings the concrete adapter passed to its scorm-again API instance. */
+  protected readonly apiSettings: Partial<Settings>
   private readonly _middleware: RuntimeMiddleware[] = []
 
-  constructor(sessionId: string) {
+  constructor(sessionId: string, apiSettings?: Partial<Settings>) {
     this.sessionId = sessionId
+    this.apiSettings = apiSettings ?? {}
   }
 
   addMiddleware(mw: RuntimeMiddleware): void {
     this._middleware.push(mw)
+  }
+
+  /**
+   * scorm-again API instances are single-session state machines: once the SCO
+   * finishes (or is torn down without finishing), later Initialize calls fail
+   * with error 101 ("LMS is already finished!").
+   *
+   * In Scormite the adapter outlives the SCO iframe — e.g. switching Basic ↔
+   * Advanced mode unmounts the iframe (the SCO's onunload calls Finish) and a
+   * fresh iframe then restarts the same course against the same adapter. Before
+   * delegating Initialize we bring the API back to the NOT_INITIALIZED state
+   * using scorm-again's own reset(settings). That keeps CMI values intact
+   * (suspend_data, lesson_status, …), so the restart resumes like a real LMS
+   * session instead of crashing on error 101.
+   */
+  protected resetApiIfNeeded(api: {
+    isNotInitialized(): boolean
+    reset(settings?: Partial<Settings>): void
+  }): void {
+    if (!api.isNotInitialized()) {
+      api.reset(this.apiSettings)
+    }
   }
 
   // ---------------------------------------------------------------------------

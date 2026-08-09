@@ -110,6 +110,38 @@ describe('Scorm12Adapter', () => {
       expect(typeof value).toBe('string')
     }
   })
+
+  it('Initialize succeeds again after Terminate (iframe remount on mode switch)', () => {
+    const { adapter } = ctx
+    adapter.initialize()
+    adapter.terminate()
+
+    // Before the fix this returned "false" with error 101 (LMS is already finished).
+    expect(adapter.initialize()).toBe('true')
+    expect(adapter.terminate()).toBe('true')
+  })
+
+  it('suspend_data survives a re-initialize after Terminate (course can resume)', () => {
+    const { adapter } = ctx
+    adapter.initialize()
+    adapter.setValue('cmi.suspend_data', '{"page":3}')
+    adapter.terminate()
+
+    // scorm-again reset() keeps suspend_data + lesson_status for SCORM 1.2,
+    // so a restarted course (iframe remount) can restore its state.
+    adapter.initialize()
+    expect(adapter.getValue('cmi.suspend_data')).toBe('{"page":3}')
+  })
+
+  it('re-initialize after Terminate does not record an error code', () => {
+    const { adapter, records } = ctx
+    adapter.initialize()
+    adapter.terminate()
+    adapter.initialize()
+
+    const secondInit = records.find((r) => r.method === 'Initialize' && r.returnValue === 'true')
+    expect(secondInit?.errorCode).toBeUndefined()
+  })
 })
 
 // ---------------------------------------------------------------------------
@@ -145,6 +177,29 @@ describe('Scorm2004Adapter', () => {
     const setRecord = records.find((r) => r.method === 'SetValue')
     expect(setRecord?.element).toBe('cmi.score.raw')
     expect(setRecord?.value).toBe('85')
+  })
+
+  it('Initialize succeeds again after Terminate (iframe remount on mode switch)', () => {
+    const { adapter } = ctx
+    adapter.initialize()
+    adapter.terminate()
+
+    // Before the fix this returned "false" with error 101 (LMS is already finished).
+    expect(adapter.initialize()).toBe('true')
+    expect(adapter.terminate()).toBe('true')
+  })
+
+  it('re-initialize after Terminate starts a fresh attempt (2004 semantics)', () => {
+    const { adapter } = ctx
+    adapter.initialize()
+    adapter.setValue('cmi.completion_status', 'completed')
+    adapter.terminate()
+
+    // SCORM 2004 reset() clears SCO-specific data: entry becomes "ab-initio"
+    // and completion_status returns to "unknown".
+    adapter.initialize()
+    expect(adapter.getValue('cmi.completion_status')).toBe('unknown')
+    expect(adapter.getValue('cmi.entry')).toBe('ab-initio')
   })
 })
 
