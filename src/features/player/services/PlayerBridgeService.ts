@@ -41,17 +41,34 @@ function mime(path: string): string {
 // ---------------------------------------------------------------------------
 
 let _swRegistration: ServiceWorkerRegistration | null = null
+let _swReady: Promise<ServiceWorkerRegistration | null> | null = null
+
+function debug(...args: unknown[]): void {
+  if (import.meta.env.DEV) console.debug('[Scormite service worker]', ...args)
+}
 
 export async function registerServiceWorker(): Promise<void> {
   if (!('serviceWorker' in navigator)) return
-  if (_swRegistration) return
-  try {
-    _swRegistration = await navigator.serviceWorker.register('/sw.js', { scope: '/' })
-    // Wait until the SW is active before we start caching files.
-    await navigator.serviceWorker.ready
-  } catch (e) {
-    console.warn('[PlayerBridgeService] SW registration failed:', e)
+  if (!_swReady) {
+    _swReady = navigator.serviceWorker
+      .register('/sw.js', { scope: '/' })
+      .then(async (registration) => {
+        _swRegistration = registration
+        // `register()` resolving does not mean the worker can receive package
+        // files yet. `ready` waits for an activated worker on the scope.
+        const ready = await navigator.serviceWorker.ready
+        _swRegistration = ready
+        if (import.meta.env.DEV) ready.active?.postMessage({ type: 'SET_DEBUG', enabled: true })
+        debug('ready', { scope: ready.scope, hasController: navigator.serviceWorker.controller !== null })
+        return ready
+      })
+      .catch((error: unknown) => {
+        _swReady = null
+        console.warn('[Scormite service worker] Registration failed', error)
+        return null
+      })
   }
+  await _swReady
 }
 
 function activeServiceWorker(): ServiceWorker | null {
@@ -68,9 +85,14 @@ function swPost(message: unknown): Promise<void> {
   return new Promise((resolve, reject) => {
     const channel = new MessageChannel()
     channel.port1.onmessage = (event: MessageEvent<{ ok?: boolean; error?: string }>) => {
-      if (event.data.ok) resolve()
-      else reject(new Error(event.data.error ?? 'Service worker failed to cache package file.'))
+      if (event.data.ok) {
+        debug('message acknowledged', message)
+        resolve()
+      } else {
+        reject(new Error(event.data.error ?? 'Service worker failed to cache package file.'))
+      }
     }
+    debug('posting message', message)
     worker.postMessage(message, [channel.port2])
   })
 }
@@ -85,6 +107,10 @@ export async function cachePackageFiles(
   getFile: (path: string) => Promise<Uint8Array>,
 ): Promise<void> {
   await registerServiceWorker()
+  if (!activeServiceWorker()) {
+    throw new Error('The package service worker did not become active.')
+  }
+  debug('caching package files', { sessionId, count: filePaths.length })
 
   // Cache all files concurrently, in batches to avoid memory spikes.
   const BATCH = 20
@@ -102,6 +128,7 @@ export async function cachePackageFiles(
       }),
     )
   }
+  debug('package files cached', { sessionId, count: filePaths.length })
 }
 
 export function clearSessionCache(sessionId: string): void {

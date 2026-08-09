@@ -24,8 +24,9 @@ pnpm run build
 pnpm dlx wrangler deploy
 ```
 
-The `_headers` and `_redirects` files in `public/` are also emitted to `dist/`,
-so Cloudflare Pages deployments receive equivalent cache and SPA settings:
+The `_headers` file in `public/` is also emitted to `dist/`, so Cloudflare Pages
+deployments receive the same cache policy. Cloudflare Pages provides SPA fallback
+when no top-level `404.html` is deployed:
 
 ```bash
 pnpm run build
