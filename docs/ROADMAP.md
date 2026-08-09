@@ -31,7 +31,7 @@ build (`pnpm run build`), lint clean (`pnpm run lint`), and pass its tests
 - [x] **Milestone 6 — Advanced Mode shell + Dock layout.** `DockLayout`,
       `PanelRegistry`, persistent layout, top toolbar. *Exit criteria:*
       panels can be dragged/resized/closed/reopened; layout survives reload.
-- [ ] **Milestone 7 — API Monitor, CMI Inspector, Console.** Live-updating
+- [x] **Milestone 7 — API Monitor, CMI Inspector, Console.** Live-updating
       panels wired to `logStore`/`runtimeStore`. *Exit criteria:* every
       SCORM API call appears in the monitor within one frame; CMI tree
       reflects live state with diff highlighting.

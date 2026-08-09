@@ -26,11 +26,21 @@ import {
   useRuntimeStore,
 } from '@/features/runtime'
 import { useLogStore } from '@/features/logging'
-import type { Package } from '@/shared/types'
+import { useInspectorStore } from '@/features/inspector'
+import type { ApiCallRecord, Package } from '@/shared/types'
 
 // The player serves package files through a service worker; registering is
 // idempotent and only needs to happen once per document.
 void registerServiceWorker()
+
+function logDevelopmentApiCall(record: ApiCallRecord): void {
+  if (!import.meta.env.DEV) return
+  if (record.errorCode) {
+    console.warn('[Scormite runtime] SCORM API call failed', record)
+    return
+  }
+  console.debug('[Scormite runtime] SCORM API call', record)
+}
 
 export interface PackageSession {
   pkg: Package | null
@@ -51,6 +61,9 @@ export function usePackageSession(): PackageSession {
   const resetRuntime = useRuntimeStore((s) => s.reset)
   const clearLogs = useLogStore((s) => s.clearRecords)
   const addLog = useLogStore((s) => s.addRecord)
+  const setCmiBaseline = useInspectorStore((s) => s.setBaseline)
+  const updateCmi = useInspectorStore((s) => s.updateValues)
+  const resetInspector = useInspectorStore((s) => s.reset)
 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -60,7 +73,21 @@ export function usePackageSession(): PackageSession {
   // Subscribed once for the lifetime of the shell. Doing this per-load (as the
   // shells used to) stacked a fresh listener on every package, duplicating
   // every subsequent log record.
-  useEffect(() => runtimeEvents.on('api-call', addLog), [addLog])
+  useEffect(
+    () =>
+      runtimeEvents.on('api-call', (record) => {
+        addLog(record)
+        logDevelopmentApiCall(record)
+        const adapter = useRuntimeStore.getState().adapter
+        if (!adapter) return
+        try {
+          updateCmi(adapter.getFlattenedCmi())
+        } catch {
+          // The player may have navigated away while the event was being handled.
+        }
+      }),
+    [addLog, updateCmi],
+  )
 
   const loadFile = useCallback(
     async (file: File) => {
@@ -97,11 +124,23 @@ export function usePackageSession(): PackageSession {
         adapter.addMiddleware(recordingMiddleware)
 
         setAdapter(adapter, raw.scormVersion)
+        setCmiBaseline(adapter.getFlattenedCmi())
         injectApiProxy(adapter, raw.scormVersion)
+
+        if (import.meta.env.DEV) {
+          console.info('[Scormite session] Package loaded', {
+            name: assembled.name,
+            scormVersion: assembled.scormVersion,
+            sessionId: sid,
+          })
+        }
 
         setSessionId(sid)
         setLaunchUrl(packageLaunchUrl(sid, resourceLaunch))
       } catch (e) {
+        if (import.meta.env.DEV) {
+          console.error('[Scormite session] Failed to load package', e)
+        }
         if (e instanceof PackageLoadError || e instanceof ManifestParseError) {
           setError(e.message)
         } else {
@@ -111,7 +150,7 @@ export function usePackageSession(): PackageSession {
         setLoading(false)
       }
     },
-    [setPackage, setManifest, setAdapter],
+    [setPackage, setManifest, setAdapter, setCmiBaseline],
   )
 
   const reload = useCallback(() => {
@@ -127,9 +166,10 @@ export function usePackageSession(): PackageSession {
     removeApiProxy()
     resetRuntime()
     clearLogs()
+    resetInspector()
     setSessionId(null)
     setLaunchUrl(null)
-  }, [sessionId, resetRuntime, clearLogs])
+  }, [sessionId, resetRuntime, clearLogs, resetInspector])
 
   return { pkg, loading, error, launchUrl, loadFile, reload, reset }
 }

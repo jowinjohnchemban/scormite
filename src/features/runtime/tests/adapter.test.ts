@@ -90,6 +90,11 @@ describe('Scorm12Adapter', () => {
     }
   })
 
+  it('does not classify the SCORM success code 0 as an error', () => {
+    ctx.adapter.initialize()
+    expect(ctx.records[0]?.errorCode).toBeUndefined()
+  })
+
   it('getFlattenedCmi returns a non-empty object after initialize', () => {
     ctx.adapter.initialize()
     const cmi = ctx.adapter.getFlattenedCmi()

@@ -20,6 +20,8 @@ import {
   Terminal,
 } from 'lucide-react'
 import { ManifestExplorer } from '@/features/manifest'
+import { CmiInspectorPanel } from '@/features/inspector'
+import { ApiMonitorPanel, ConsolePanel } from '@/features/logging'
 import { makePlaceholderPanel } from './PlaceholderPanel'
 import type { PanelDef } from './PanelRegistry'
 
@@ -46,7 +48,7 @@ export const ADVANCED_PANELS: readonly PanelDef[] = [
     defaultRegion: 'right',
     defaultOpen: true,
     icon: ListTree,
-    component: makePlaceholderPanel('CMI Inspector', 'Milestone 7'),
+    component: CmiInspectorPanel,
   },
   {
     id: 'validation',
@@ -62,7 +64,7 @@ export const ADVANCED_PANELS: readonly PanelDef[] = [
     defaultRegion: 'bottom',
     defaultOpen: true,
     icon: Activity,
-    component: makePlaceholderPanel('API Monitor', 'Milestone 7'),
+    component: ApiMonitorPanel,
   },
   {
     id: 'console',
@@ -70,7 +72,7 @@ export const ADVANCED_PANELS: readonly PanelDef[] = [
     defaultRegion: 'bottom',
     defaultOpen: true,
     icon: Terminal,
-    component: makePlaceholderPanel('Console', 'Milestone 7'),
+    component: ConsolePanel,
   },
   {
     id: 'timeline',
