@@ -41,6 +41,14 @@ src/
 truth for Basic vs. Advanced mode. Components read this store; nothing
 branches on route or URL for mode switching.
 
+The two mode shells are chrome only. `App` owns the single
+`usePackageSession` subscription and renders a persistent player layer (the
+SCO iframe) that is never unmounted, positioned behind whichever shell is
+active — so switching Basic ↔ Advanced swaps the surrounding chrome without
+detaching the iframe, which would destroy its browsing context and restart
+the running course. The shells receive the session as a prop and never
+render a second iframe.
+
 ## State
 
 One Zustand store per feature — see `docs/DOMAIN_MODEL.md` for what each

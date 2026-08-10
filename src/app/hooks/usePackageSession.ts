@@ -3,8 +3,10 @@
  *
  * Lives in `app/` because completing it needs four features at once
  * (package-loader, manifest, player, runtime) and no single feature is
- * allowed to reach across to the others. Both mode shells consume this
- * rather than each re-implementing the sequence.
+ * allowed to reach across to the others. `App` subscribes exactly once for
+ * the lifetime of the app (with the current mode as owner) and passes the
+ * resulting session down to the active mode shell, so a running SCO survives
+ * a Basic ↔ Advanced switch without a second concurrent subscription.
  */
 
 import { useCallback, useEffect, useState } from 'react'
@@ -105,9 +107,8 @@ export function usePackageSession(owner: 'basic' | 'advanced'): PackageSession {
     })
   }, [owner, pkg, runtimeSessionId, launchUrl, reloading])
 
-  // Subscribed once for the lifetime of the shell. Doing this per-load (as the
-  // shells used to) stacked a fresh listener on every package, duplicating
-  // every subsequent log record.
+  // Subscribed once for the lifetime of the App. Doing this per-load stacked
+  // a fresh listener on every package, duplicating every subsequent log record.
   useEffect(
     () =>
       runtimeEvents.on('api-call', (record) => {
