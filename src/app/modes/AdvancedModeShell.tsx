@@ -4,6 +4,9 @@
  *
  * The panels themselves are declared in `app/layout/panels.ts`; this shell
  * only registers them and supplies the center region.
+ *
+ * The iframe lives in `App` (persistent player layer) so a running SCO
+ * survives mode switches; this shell provides the dock chrome on top.
  */
 
 import { useEffect } from 'react'
@@ -11,10 +14,10 @@ import { DockLayout } from '@/app/layout/DockLayout'
 import { TopToolbar } from '@/app/layout/TopToolbar'
 import { ADVANCED_PANELS } from '@/app/layout/panels'
 import { usePanelRegistry } from '@/app/layout/PanelRegistry'
-import { usePackageSession } from '@/app/hooks/usePackageSession'
 import { useTimelineReplay } from '@/app/hooks/useTimelineReplay'
+import type { PackageSession } from '@/app/hooks/usePackageSession'
 import { DropZone } from '@/features/package-loader'
-import { PlayerFrame, PlayerToolbar } from '@/features/player'
+import { PlayerToolbar } from '@/features/player'
 import type { Package } from '@/shared/types'
 
 function useRegisterAdvancedPanels(): void {
@@ -41,24 +44,26 @@ function PackageStatus({ pkg }: { pkg: Package | null }) {
   )
 }
 
-export function AdvancedModeShell() {
+export function AdvancedModeShell({ session }: { session: PackageSession }) {
   useRegisterAdvancedPanels()
   useTimelineReplay()
-  const { pkg, loading, error, launchUrl, loadFile, reload, reset } = usePackageSession('advanced')
+  const { pkg, loading, error, launchUrl, reload, reset } = session
 
   const center = pkg ? (
+    /* Transparent center: the persistent player layer shows through. */
     <div className="flex h-full flex-col overflow-hidden">
-      <div className="min-h-0 flex-1">
-        <PlayerFrame src={launchUrl} />
-      </div>
+      <div className="min-h-0 flex-1" />
       <PlayerToolbar onReload={reload} onReset={reset} disabled={!launchUrl} />
     </div>
   ) : (
-    <DropZone onFile={loadFile} loading={loading} error={error} />
+    /* Opaque backdrop so the empty-state drop zone covers the player layer. */
+    <div className="h-full bg-[var(--color-surface-950)]">
+      <DropZone onFile={session.loadFile} loading={loading} error={error} />
+    </div>
   )
 
   return (
-    <div className="flex h-full min-h-0 flex-col">
+    <div className="absolute inset-0 flex min-h-0 flex-col overflow-hidden">
       <TopToolbar>
         <PackageStatus pkg={pkg} />
       </TopToolbar>

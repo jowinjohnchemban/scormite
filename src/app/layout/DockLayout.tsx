@@ -82,7 +82,8 @@ export function DockLayout({ center }: DockLayoutProps) {
               {hasLeft && <ResizeHandle orientation="horizontal" />}
 
               <Panel id="center" minSize="25%">
-                <div className="h-full overflow-hidden bg-surface-950">{center}</div>
+                {/* Transparent so the persistent player layer (App) shows through. */}
+                <div className="h-full overflow-hidden">{center}</div>
               </Panel>
 
               {hasRight && <ResizeHandle orientation="horizontal" />}
