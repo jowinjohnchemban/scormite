@@ -56,7 +56,7 @@ export function ActivityBar({ side }: { side: Extract<DockRegion, 'left' | 'righ
       {...dropProps}
       data-testid={`activity-bar-${side}`}
       className={cn(
-        'flex w-10 shrink-0 flex-col items-center bg-[var(--color-surface-900)] py-1',
+        'pointer-events-auto flex w-10 shrink-0 flex-col items-center bg-[var(--color-surface-900)] py-1',
         side === 'left'
           ? 'border-r border-[var(--color-border-subtle)]'
           : 'border-l border-[var(--color-border-subtle)]',

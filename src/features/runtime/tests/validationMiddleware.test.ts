@@ -3,9 +3,11 @@ import { Scorm12Adapter } from '../adapter/Scorm12Adapter'
 import { Scorm2004Adapter } from '../adapter/Scorm2004Adapter'
 import {
   createValidationMiddleware,
+  getRuntimeValidator,
   missingCommitValidator,
   outOfRangeScoreValidator,
   oversizedSuspendDataValidator,
+  RUNTIME_VALIDATOR_BY_ID,
   type RuntimeValidator,
 } from '../adapter/middleware/validationMiddleware'
 import { runtimeEvents } from '../events/RuntimeEventEmitter'
@@ -191,5 +193,38 @@ describe('createValidationMiddleware', () => {
     adapter.setValue('cmi.core.score.raw', '999')
 
     expect(issues[0]?.sessionId).toBe('validation-test')
+  })
+})
+
+describe('RUNTIME_VALIDATOR_BY_ID / getRuntimeValidator', () => {
+  it('registers every validator under its rule id', () => {
+    expect(RUNTIME_VALIDATOR_BY_ID['runtime.score-out-of-range']).toBe(
+      outOfRangeScoreValidator,
+    )
+    expect(RUNTIME_VALIDATOR_BY_ID['runtime.suspend-data-oversized']).toBe(
+      oversizedSuspendDataValidator,
+    )
+    expect(RUNTIME_VALIDATOR_BY_ID['runtime.missing-commit']).toBe(missingCommitValidator)
+  })
+
+  it('resolves known rule ids', () => {
+    expect(getRuntimeValidator('runtime.score-out-of-range')).toBe(outOfRangeScoreValidator)
+    expect(getRuntimeValidator('runtime.suspend-data-oversized')).toBe(
+      oversizedSuspendDataValidator,
+    )
+    expect(getRuntimeValidator('runtime.missing-commit')).toBe(missingCommitValidator)
+  })
+
+  it('returns undefined for an unknown rule id', () => {
+    expect(getRuntimeValidator('runtime.not-a-rule')).toBeUndefined()
+  })
+
+  it('the registry covers every rule id used by runtime profiles', () => {
+    // Kept in the runtime half so this test needs no settings import. The
+    // app-layer integration test (src/app/profileRuntime.test.ts) verifies
+    // the full profile → validator resolution end to end.
+    for (const ruleId of Object.keys(RUNTIME_VALIDATOR_BY_ID)) {
+      expect(getRuntimeValidator(ruleId)).toBeDefined()
+    }
   })
 })

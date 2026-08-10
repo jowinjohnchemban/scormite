@@ -14,7 +14,7 @@ export function ResizeHandle({
   return (
     <PanelResizeHandle
       className={cn(
-        'group relative shrink-0 bg-[var(--color-border-subtle)] transition-colors',
+        'pointer-events-auto group relative shrink-0 bg-[var(--color-border-subtle)] transition-colors',
         'data-[state=drag]:bg-[var(--color-accent)] hover:bg-[var(--color-accent)]',
         // A 1px seam with a larger invisible hit area, DevTools-style.
         orientation === 'horizontal'

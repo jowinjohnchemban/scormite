@@ -10,6 +10,24 @@ interface PendingCall {
 }
 
 /**
+ * scorm-again `Settings` keys that runtime profiles are allowed to tune.
+ *
+ * Verified against scorm-again 3.2.0's compiled output: `mastery_override`,
+ * `score_overrides_status`, and `autoCompleteLessonStatus` are all read at
+ * terminate time in scorm12.js (lesson_status derivation, stages 1–2) and
+ * `mastery_override` is read by both constructors.
+ *
+ * `strict_errors` is deliberately absent — it appears only in DefaultSettings
+ * in 3.2.0 and is never read by the API, so configuring it would silently do
+ * nothing. Profiles must not be built on knobs that don't exist.
+ */
+export const PROFILE_SETTING_KEYS: readonly (keyof Settings)[] = [
+  'mastery_override',
+  'score_overrides_status',
+  'autoCompleteLessonStatus',
+]
+
+/**
  * Abstract base class for SCORM runtime adapters.
  *
  * Subclasses implement the scorm-again wiring; this class owns the middleware
@@ -18,7 +36,7 @@ interface PendingCall {
 export abstract class ScormRuntimeAdapter {
   protected readonly sessionId: string
   /** The settings the concrete adapter passed to its scorm-again API instance. */
-  protected readonly apiSettings: Partial<Settings>
+  protected apiSettings: Partial<Settings>
   private readonly _middleware: RuntimeMiddleware[] = []
   private _paused = false
   private readonly _pendingCalls: PendingCall[] = []
@@ -32,6 +50,30 @@ export abstract class ScormRuntimeAdapter {
   addMiddleware(mw: RuntimeMiddleware): void {
     this._middleware.push(mw)
   }
+
+  /**
+   * Apply a runtime profile's scorm-again overrides.
+   *
+   * Only `PROFILE_SETTING_KEYS` are applied — unknown keys are ignored, so a
+   * profile cannot corrupt the API with a typo or an unsupported knob. The
+   * overrides go to the live scorm-again instance (which reads them at call
+   * time, e.g. status derivation at Terminate) and into `apiSettings` so a
+   * later `resetApiIfNeeded` keeps the profile across SCO restarts.
+   */
+  configure(overrides: Record<string, unknown>): void {
+    const next: Partial<Settings> = {}
+    for (const key of PROFILE_SETTING_KEYS) {
+      const value = overrides[key]
+      if (value !== undefined) {
+        ;(next as Record<string, unknown>)[key] = value
+      }
+    }
+    this.apiSettings = { ...this.apiSettings, ...next }
+    this.applyApiSettings(next)
+  }
+
+  /** Push settings onto the concrete scorm-again API instance. */
+  protected abstract applyApiSettings(settings: Partial<Settings>): void
 
   /** True while a breakpoint is holding execution. */
   get isPaused(): boolean {

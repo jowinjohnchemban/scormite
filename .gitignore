@@ -43,3 +43,7 @@ desktop.ini
 # Misc
 *.local
 *.pem
+
+# Temporary files
+.tmp-scorm
+
