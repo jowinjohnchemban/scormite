@@ -40,7 +40,7 @@ export function DockRegionStack({ region }: { region: DockRegion }) {
       {...dropProps}
       data-testid={`dock-region-${region}`}
       className={cn(
-        'h-full overflow-hidden',
+        'pointer-events-auto h-full overflow-hidden',
         isActive && 'ring-1 ring-inset ring-[var(--color-border-subtle)]',
         isOver && 'ring-2 ring-[var(--color-accent)]',
       )}

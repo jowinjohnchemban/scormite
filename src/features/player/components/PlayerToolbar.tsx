@@ -8,7 +8,7 @@ interface PlayerToolbarProps {
 
 export function PlayerToolbar({ onReload, onReset, disabled = false }: PlayerToolbarProps) {
   return (
-    <div className="flex shrink-0 items-center gap-1 border-t border-[var(--color-border-subtle)] bg-[var(--color-surface-900)] px-2 py-1">
+    <div className="pointer-events-auto flex shrink-0 items-center gap-1 border-t border-[var(--color-border-subtle)] bg-[var(--color-surface-900)] px-2 py-1">
       <Button size="sm" variant="ghost" onClick={onReload} disabled={disabled}>
         Reload
       </Button>

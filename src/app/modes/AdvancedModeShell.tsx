@@ -51,19 +51,19 @@ export function AdvancedModeShell({ session }: { session: PackageSession }) {
 
   const center = pkg ? (
     /* Transparent center: the persistent player layer shows through. */
-    <div className="flex h-full flex-col overflow-hidden">
+    <div className="pointer-events-none flex h-full flex-col overflow-hidden">
       <div className="min-h-0 flex-1" />
       <PlayerToolbar onReload={reload} onReset={reset} disabled={!launchUrl} />
     </div>
   ) : (
     /* Opaque backdrop so the empty-state drop zone covers the player layer. */
-    <div className="h-full bg-[var(--color-surface-950)]">
+    <div className="pointer-events-auto h-full bg-[var(--color-surface-950)]">
       <DropZone onFile={session.loadFile} loading={loading} error={error} />
     </div>
   )
 
   return (
-    <div className="absolute inset-0 flex min-h-0 flex-col overflow-hidden">
+    <div className="pointer-events-none absolute inset-0 flex min-h-0 flex-col overflow-hidden">
       <TopToolbar>
         <PackageStatus pkg={pkg} />
       </TopToolbar>

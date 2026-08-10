@@ -247,3 +247,92 @@ describe('runtimeEvents', () => {
     expect(received).toEqual(['Initialize'])
   })
 })
+
+// ---------------------------------------------------------------------------
+// Runtime profile application — the Milestone 11 exit criteria (adapter half)
+// ---------------------------------------------------------------------------
+
+describe('configure (runtime profile overrides)', () => {
+  afterEach(() => runtimeEvents.clear())
+
+  it('applies whitelisted knobs to the live scorm-again settings (1.2)', () => {
+    const adapter = new Scorm12Adapter('configure-12')
+
+    adapter.configure({
+      mastery_override: false,
+      score_overrides_status: true,
+      autoCompleteLessonStatus: true,
+    })
+
+    expect(adapter.api.settings.mastery_override).toBe(false)
+    expect(adapter.api.settings.score_overrides_status).toBe(true)
+    expect(adapter.api.settings.autoCompleteLessonStatus).toBe(true)
+  })
+
+  it('applies whitelisted knobs to the live scorm-again settings (2004)', () => {
+    const adapter = new Scorm2004Adapter('configure-2004')
+
+    adapter.configure({
+      mastery_override: true,
+      score_overrides_status: false,
+      autoCompleteLessonStatus: true,
+    })
+
+    expect(adapter.api.settings.mastery_override).toBe(true)
+    expect(adapter.api.settings.score_overrides_status).toBe(false)
+    expect(adapter.api.settings.autoCompleteLessonStatus).toBe(true)
+  })
+
+  it('applies explicit false values (a value of false is not undefined)', () => {
+    const adapter = new Scorm12Adapter('configure-false')
+    adapter.configure({ score_overrides_status: false })
+
+    expect(adapter.api.settings.score_overrides_status).toBe(false)
+  })
+
+  it('ignores unknown keys instead of throwing or applying them', () => {
+    const adapter = new Scorm12Adapter('configure-unknown')
+    const before = { ...adapter.api.settings }
+
+    // strict_errors is NOT whitelisted — passing it must leave it untouched,
+    // and an outright unknown key must never reach the settings object.
+    adapter.configure({ strict_errors: !before.strict_errors, not_a_real_setting: 42 })
+
+    expect(adapter.api.settings.strict_errors).toBe(before.strict_errors)
+    expect(adapter.api.settings).not.toHaveProperty('not_a_real_setting')
+    // No whitelisted knob was touched.
+    expect(adapter.api.settings.mastery_override).toBeDefined()
+  })
+
+  it('is a no-op for empty overrides', () => {
+    const adapter = new Scorm12Adapter('configure-empty')
+    const before = { ...adapter.api.settings }
+
+    adapter.configure({})
+
+    expect(adapter.api.settings.mastery_override).toBe(before.mastery_override)
+  })
+
+  it('merges over a previous configure call instead of replacing it', () => {
+    const adapter = new Scorm12Adapter('configure-merge')
+
+    adapter.configure({ mastery_override: false })
+    adapter.configure({ autoCompleteLessonStatus: true })
+
+    expect(adapter.api.settings.mastery_override).toBe(false)
+    expect(adapter.api.settings.autoCompleteLessonStatus).toBe(true)
+  })
+
+  it('keeps the profile across a terminate → re-initialize cycle (reset keeps overrides)', () => {
+    const adapter = new Scorm12Adapter('configure-reset')
+    adapter.configure({ mastery_override: false })
+
+    adapter.initialize()
+    adapter.terminate()
+    adapter.initialize()
+
+    // resetApiIfNeeded passes apiSettings (which includes the profile) to
+    // scorm-again's reset(), so a remounted SCO runs under the same profile.
+    expect(adapter.api.settings.mastery_override).toBe(false)
+  })
+})

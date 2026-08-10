@@ -47,16 +47,16 @@ export function BasicModeShell({ session }: { session: PackageSession }) {
   const { pkg, loading, error, launchUrl, reload, reset } = session
 
   return (
-    <div className="absolute inset-0 flex overflow-hidden">
+    <div className="pointer-events-none absolute inset-0 flex overflow-hidden">
       {!pkg ? (
         /* Opaque backdrop so the empty-state drop zone covers the player layer. */
-        <div className="h-full w-full bg-[var(--color-surface-950)]">
+        <div className="pointer-events-auto h-full w-full bg-[var(--color-surface-950)]">
           <DropZone onFile={session.loadFile} loading={loading} error={error} />
         </div>
       ) : (
         <>
           {/* Left: package info + CMI summary + manifest tree */}
-          <aside className="flex w-64 shrink-0 flex-col overflow-hidden border-r border-[var(--color-border-subtle)] bg-[var(--color-surface-900)]">
+          <aside className="pointer-events-auto flex w-64 shrink-0 flex-col overflow-hidden border-r border-[var(--color-border-subtle)] bg-[var(--color-surface-900)]">
             <div className="shrink-0 border-b border-[var(--color-border-subtle)] px-3 py-2">
               <p className="truncate text-sm font-medium text-slate-200" title={pkg.name}>
                 {pkg.name}
@@ -73,7 +73,7 @@ export function BasicModeShell({ session }: { session: PackageSession }) {
           </aside>
 
           {/* Right: transparent space over the persistent player + toolbar */}
-          <main className="flex min-w-0 flex-1 flex-col overflow-hidden">
+          <main className="pointer-events-none flex min-w-0 flex-1 flex-col overflow-hidden">
             <div className="min-h-0 flex-1" />
             <PlayerToolbar onReload={reload} onReset={reset} disabled={!launchUrl} />
           </main>

@@ -23,15 +23,14 @@ import {
 import {
   createBreakpointMiddleware,
   createValidationMiddleware,
-  missingCommitValidator,
-  outOfRangeScoreValidator,
-  oversizedSuspendDataValidator,
   recordingMiddleware,
   runtimeEvents,
   Scorm12Adapter,
   Scorm2004Adapter,
   useRuntimeStore,
 } from '@/features/runtime'
+import { getRuntimeProfile, useSettingsStore } from '@/features/settings'
+import { validatorsForProfile } from '@/app/profileRuntime'
 import { useLogStore } from '@/features/logging'
 import { useInspectorStore } from '@/features/inspector'
 import { useTimelineStore } from '@/features/timeline'
@@ -140,6 +139,26 @@ export function usePackageSession(owner: 'basic' | 'advanced'): PackageSession {
     [addLog, updateCmi, captureSnapshot, owner],
   )
 
+  // A runtime profile switch applies its scorm-again knobs to the live
+  // adapter immediately. Validators need no handling here — the validation
+  // middleware re-reads the profile from the store on every call.
+  useEffect(
+    () =>
+      useSettingsStore.subscribe((state, previous) => {
+        if (state.activeProfileId === previous.activeProfileId) return
+        const adapter = useRuntimeStore.getState().adapter
+        if (!adapter) return
+        const profile = getRuntimeProfile(state.activeProfileId)
+        adapter.configure(profile.scormAgainOverrides)
+        logDevDiagnostic('settings.profile.changed', {
+          owner,
+          profileId: profile.id,
+          label: profile.label,
+        })
+      }),
+    [owner],
+  )
+
   const loadFile = useCallback(
     async (file: File) => {
       setLoading(true)
@@ -184,6 +203,11 @@ export function usePackageSession(owner: 'basic' | 'advanced'): PackageSession {
 
         const adapter =
           raw.scormVersion === '1.2' ? new Scorm12Adapter(sid) : new Scorm2004Adapter(sid)
+        // Apply the active runtime profile's scorm-again knobs up front so the
+        // first Initialize already runs under the profile.
+        adapter.configure(
+          getRuntimeProfile(useSettingsStore.getState().activeProfileId).scormAgainOverrides,
+        )
         adapter.addMiddleware(recordingMiddleware)
         // Breakpoints pause matching calls *before* they reach scorm-again.
         // The middleware only signals; the adapter owns the gate, and the
@@ -200,15 +224,14 @@ export function usePackageSession(owner: 'basic' | 'advanced'): PackageSession {
         useBreakpointStore.getState().setResumeHandler(() => adapter.resume())
 
         // Runtime validation runs on every completed call. The rule list is
-        // re-read per call so runtime profiles (Milestone 11) can toggle
-        // which validators apply without rebuilding the pipeline.
+        // re-read from the active runtime profile per call, so switching
+        // profile changes which issues appear without rebuilding the pipeline.
         adapter.addMiddleware(
           createValidationMiddleware({
-            getValidators: () => [
-              outOfRangeScoreValidator,
-              oversizedSuspendDataValidator,
-              missingCommitValidator,
-            ],
+            getValidators: () =>
+              validatorsForProfile(
+                getRuntimeProfile(useSettingsStore.getState().activeProfileId),
+              ),
             onIssue: (issue) => useValidationStore.getState().addIssue(issue),
           }),
         )

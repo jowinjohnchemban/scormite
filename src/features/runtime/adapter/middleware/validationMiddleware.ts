@@ -104,6 +104,23 @@ export const missingCommitValidator: RuntimeValidator = {
 }
 
 /**
+ * Registry of every runtime validator, keyed by `ruleId`. Runtime profiles
+ * (Milestone 11) reference rules by id; the app layer resolves ids to
+ * implementations through this map, keeping profile data (settings feature)
+ * free of any runtime import.
+ */
+export const RUNTIME_VALIDATOR_BY_ID: Readonly<Record<string, RuntimeValidator>> = {
+  [outOfRangeScoreValidator.ruleId]: outOfRangeScoreValidator,
+  [oversizedSuspendDataValidator.ruleId]: oversizedSuspendDataValidator,
+  [missingCommitValidator.ruleId]: missingCommitValidator,
+}
+
+/** Resolve a validator by rule id; `undefined` for unknown ids. */
+export function getRuntimeValidator(ruleId: string): RuntimeValidator | undefined {
+  return RUNTIME_VALIDATOR_BY_ID[ruleId]
+}
+
+/**
  * Runs the configured runtime validators against every completed API call
  * and pushes a `ValidationIssue` for each violation. Tracks the
  * session-scoped Commit state needed by the missing-commit rule.

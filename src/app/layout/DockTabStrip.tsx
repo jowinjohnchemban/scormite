@@ -122,7 +122,7 @@ export function DockTabStrip() {
       {...dropProps}
       data-testid={`dock-region-${REGION}`}
       className={cn(
-        'flex h-full flex-col overflow-hidden',
+        'pointer-events-auto flex h-full flex-col overflow-hidden',
         isActive && 'ring-1 ring-inset ring-[var(--color-border-subtle)]',
         isOver && 'ring-2 ring-[var(--color-accent)]',
       )}

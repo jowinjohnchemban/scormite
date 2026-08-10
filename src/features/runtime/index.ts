@@ -16,6 +16,8 @@ export {
   outOfRangeScoreValidator,
   oversizedSuspendDataValidator,
   missingCommitValidator,
+  getRuntimeValidator,
+  RUNTIME_VALIDATOR_BY_ID,
   type RuntimeValidator,
   type RuntimeValidatorContext,
   type ValidationMiddlewareOptions,

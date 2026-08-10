@@ -18,6 +18,15 @@ export class Scorm12Adapter extends ScormRuntimeAdapter {
     this.api = new Scorm12API(apiSettings)
   }
 
+  /**
+   * scorm-again's `settings` setter merges into the live instance, so a
+   * profile switch mid-session reaches every setting that is read at call
+   * time (e.g. mastery/status derivation at Terminate).
+   */
+  protected applyApiSettings(settings: Partial<Settings>): void {
+    this.api.settings = { ...this.api.settings, ...settings }
+  }
+
   initialize(): string {
     const result = this.runCall(
       'Initialize',
