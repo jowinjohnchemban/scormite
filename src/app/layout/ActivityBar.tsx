@@ -28,13 +28,13 @@ function ActivityBarButton({ panelId, side }: { panelId: string; side: DockRegio
       onClick={() => toggle(panelId)}
       className={cn(
         'relative flex size-9 items-center justify-center transition-colors',
-        'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-[var(--color-accent)]',
+          'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-accent',
         isOpen
           ? 'text-slate-100'
           : 'text-slate-600 hover:text-slate-300',
         // Active indicator strip on the outer edge, VS Code style.
         isOpen && [
-          'before:absolute before:inset-y-1 before:w-0.5 before:bg-[var(--color-accent)] before:content-[""]',
+          'before:absolute before:inset-y-1 before:w-0.5 before:bg-accent before:content-[""]',
           side === 'left' ? 'before:left-0' : 'before:right-0',
         ],
       )}
@@ -56,10 +56,10 @@ export function ActivityBar({ side }: { side: Extract<DockRegion, 'left' | 'righ
       {...dropProps}
       data-testid={`activity-bar-${side}`}
       className={cn(
-        'pointer-events-auto flex w-10 shrink-0 flex-col items-center bg-[var(--color-surface-900)] py-1',
+        'pointer-events-auto flex w-10 shrink-0 flex-col items-center bg-surface-900 py-1',
         side === 'left'
-          ? 'border-r border-[var(--color-border-subtle)]'
-          : 'border-l border-[var(--color-border-subtle)]',
+          ? 'border-r border-border-subtle'
+          : 'border-l border-border-subtle',
         isActive && 'bg-[var(--color-surface-800)]',
         isOver && 'ring-2 ring-inset ring-[var(--color-accent)]',
       )}

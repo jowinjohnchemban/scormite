@@ -7,4 +7,6 @@
  * Populated incrementally — see /docs/ROADMAP.md for which milestone fills
  * this in.
  */
-export {};
+export { ReportsPanel } from './components/ReportsPanel'
+export { ReportBuilderService } from './services/ReportBuilderService'
+export type { ReportData, ReportFormat } from './services/ReportBuilderService'
