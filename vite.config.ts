@@ -19,7 +19,24 @@ function escapeHtml(value: string): string {
 function createSeoPlugin(config: typeof siteSeoConfig): Plugin {
   const canonicalUrl = config.siteUrl.replace(/\/$/, '')
   const robotsTxt = `User-agent: *\nAllow: /\nSitemap: ${canonicalUrl}/sitemap.xml\nHost: ${canonicalUrl}\n`
-  const llmsTxt = config.llms.join('\n') + '\n'
+  const llmsTxt = (() => {
+    const header = `# llms.txt
+
+This file lists a curated set of Large Language Models recommended by the site owner.\n\n`;
+
+    const models = config.llms
+      .map((m: any) => {
+        const id = m.id || ''
+        const name = m.name ? `- Name: ${m.name}\n` : ''
+        const desc = m.description ? `- Description: ${m.description}\n` : ''
+        const url = m.url ? `- URL: ${m.url}\n` : ''
+
+        return `## ${id}\n\n${name}${desc}${url}`
+      })
+      .join('\n')
+
+    return header + models + '\n'
+  })()
   const sitemapXml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${config.routes
     .map((route: string) => {
       const path = route.startsWith('/') ? route : `/${route}`
@@ -87,7 +104,7 @@ function createSeoPlugin(config: typeof siteSeoConfig): Plugin {
 
         if (req.url === '/llms.txt') {
           res.statusCode = 200
-          res.setHeader('Content-Type', 'text/plain; charset=utf-8')
+          res.setHeader('Content-Type', 'text/markdown; charset=utf-8')
           res.end(llmsTxt)
           return
         }
