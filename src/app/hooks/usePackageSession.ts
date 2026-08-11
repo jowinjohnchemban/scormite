@@ -31,6 +31,7 @@ import {
 } from '@/features/runtime'
 import { getRuntimeProfile, useSettingsStore } from '@/features/settings'
 import { validatorsForProfile } from '@/app/profileRuntime'
+import { pluginRuntimeValidators } from '@/app/plugins/pluginHostBridge'
 import { useLogStore } from '@/features/logging'
 import { useInspectorStore } from '@/features/inspector'
 import { useTimelineStore } from '@/features/timeline'
@@ -226,12 +227,16 @@ export function usePackageSession(owner: 'basic' | 'advanced'): PackageSession {
         // Runtime validation runs on every completed call. The rule list is
         // re-read from the active runtime profile per call, so switching
         // profile changes which issues appear without rebuilding the pipeline.
+        // Plugin-contributed validators ride the same pipeline, live — a
+        // plugin registered mid-session takes effect on the next call.
         adapter.addMiddleware(
           createValidationMiddleware({
-            getValidators: () =>
-              validatorsForProfile(
+            getValidators: () => [
+              ...validatorsForProfile(
                 getRuntimeProfile(useSettingsStore.getState().activeProfileId),
               ),
+              ...pluginRuntimeValidators(),
+            ],
             onIssue: (issue) => useValidationStore.getState().addIssue(issue),
           }),
         )

@@ -15,6 +15,7 @@ import { TopToolbar } from '@/app/layout/TopToolbar'
 import { ADVANCED_PANELS } from '@/app/layout/panels'
 import { usePanelRegistry } from '@/app/layout/PanelRegistry'
 import { useTimelineReplay } from '@/app/hooks/useTimelineReplay'
+import { useRegisterPluginPanels } from '@/app/plugins/usePluginPanels'
 import type { PackageSession } from '@/app/hooks/usePackageSession'
 import { DropZone } from '@/features/package-loader'
 import { PlayerToolbar } from '@/features/player'
@@ -52,6 +53,7 @@ export function AdvancedModeShell({
   onCenterRegionRectChange?: (rect: DOMRect | null) => void
 }) {
   useRegisterAdvancedPanels()
+  useRegisterPluginPanels()
   useTimelineReplay()
   const { pkg, loading, error, launchUrl, reload, reset } = session
 

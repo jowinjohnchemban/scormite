@@ -12,6 +12,7 @@ import { Check, LayoutGrid, RotateCcw } from 'lucide-react'
 import { Menu, MenuItem, MenuLabel, MenuSeparator } from '@/components/ui/menu'
 import { cn } from '@/shared/lib/utils'
 import { ProfileMenu } from '@/features/settings'
+import { PluginMenu } from '@/app/plugins/PluginMenu'
 import {
   DOCK_REGIONS,
   usePanelRegistry,
@@ -112,6 +113,7 @@ export function TopToolbar({ children }: { children?: ReactNode }) {
     <div className="pointer-events-auto flex h-9 shrink-0 items-center gap-2 border-b border-border-subtle bg-surface-900 px-2">
       <ViewMenu />
       <ProfileMenu />
+      <PluginMenu />
       <div className="min-w-0 flex-1">{children}</div>
     </div>
   )

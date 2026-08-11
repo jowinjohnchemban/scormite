@@ -55,6 +55,19 @@ One Zustand store per feature — see `docs/DOMAIN_MODEL.md` for what each
 store owns. Stores update only in response to `RuntimeEventEmitter` events
 or explicit user actions; components never call the adapter directly.
 
+## Plugins
+
+`src/features/plugins/` owns the plugin host: `usePluginHost` (Zustand
+store) holds registered plugins plus their panel/command/validator
+contributions, `types.ts` defines the `ScormitePlugin` contract, and
+`builtin/samplePlugin.ts` is the reference implementation. A plugin is
+self-contained — its `activate(api)` receives a `PluginApi` that can only
+register contributions, never touch core internals. The app layer
+(`src/app/plugins/`) bridges contributions into the dock (`usePluginPanels`)
+and toolbar (`PluginMenu`), and feeds validator contributions into the
+runtime validation middleware (`pluginHostBridge`). Plugins register once,
+at app startup, before any package can load.
+
 ## Styling
 
 Tailwind v4 via `@tailwindcss/vite` (no separate `tailwind.config.*` — theme
