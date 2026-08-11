@@ -14,8 +14,8 @@ export function ResizeHandle({
   return (
     <PanelResizeHandle
       className={cn(
-        'pointer-events-auto group relative shrink-0 bg-[var(--color-border-subtle)] transition-colors',
-        'data-[state=drag]:bg-[var(--color-accent)] hover:bg-[var(--color-accent)]',
+        'pointer-events-auto group relative shrink-0 bg-border-subtle transition-colors',
+        'data-[state=drag]:bg-accent hover:bg-accent',
         // A 1px seam with a larger invisible hit area, DevTools-style.
         orientation === 'horizontal'
           ? 'w-px cursor-col-resize after:absolute after:inset-y-0 after:-left-1 after:-right-1 after:content-[""]'
@@ -38,7 +38,7 @@ export function DropIndicator({
     <div
       aria-hidden
       className={cn(
-        'shrink-0 bg-[var(--color-accent)]',
+        'shrink-0 bg-accent',
         orientation === 'horizontal' ? 'h-full w-0.5' : 'h-0.5 w-full',
       )}
     />
@@ -70,8 +70,8 @@ export function PanelChrome({ panel, region }: PanelChromeProps) {
       data-testid={`panel-header-${panel.id}`}
       className={cn(
         'flex h-7 shrink-0 cursor-grab items-center justify-between gap-2 border-b px-2 active:cursor-grabbing',
-        'border-[var(--color-border-subtle)] bg-[var(--color-surface-900)]',
-        isOver && 'border-t-2 border-t-[var(--color-accent)]',
+        'border-border-subtle bg-surface-900',
+        isOver && 'border-t-2 border-t-accent',
       )}
     >
       <div className="flex min-w-0 items-center gap-1.5">
@@ -84,7 +84,7 @@ export function PanelChrome({ panel, region }: PanelChromeProps) {
         type="button"
         aria-label={`Close ${panel.title}`}
         onClick={() => close(panel.id)}
-        className="rounded p-0.5 text-slate-500 transition-colors hover:bg-[var(--color-surface-700)] hover:text-slate-200 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--color-accent)]"
+        className="rounded p-0.5 text-slate-500 transition-colors hover:bg-surface-700 hover:text-slate-200 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
       >
         <X className="size-3" aria-hidden />
       </button>
@@ -97,7 +97,7 @@ export function PanelBody({ panel }: { panel: PanelDef }) {
   const Component = panel.component
   return (
     <div
-      className="min-h-0 flex-1 overflow-auto bg-[var(--color-surface-950)]"
+      className="min-h-0 flex-1 overflow-auto bg-surface-950"
       data-testid={`panel-body-${panel.id}`}
     >
       <Component />

@@ -53,7 +53,7 @@ export function TimelinePanel() {
           max={snapshots.length - 1}
           value={current}
           onChange={(event) => scrubTo(Number(event.target.value))}
-          className="w-full accent-[var(--color-accent)]"
+          className="w-full accent-accent"
         />
         <div className="flex justify-between font-mono text-[11px] text-slate-500">
           <span>{timestamp(snapshots[0]?.timestamp ?? 0)}</span>
@@ -75,7 +75,7 @@ export function TimelinePanel() {
                     'flex w-full items-baseline gap-2 rounded-sm px-2 py-1 text-left font-mono text-[11px] transition-colors',
                     isSelected
                       ? 'bg-amber-400/10 text-amber-200'
-                      : 'text-slate-400 hover:bg-[var(--color-surface-700)] hover:text-slate-200',
+                      : 'text-slate-400 hover:bg-surface-700 hover:text-slate-200',
                   )}
                 >
                   <span className="shrink-0 tabular-nums text-slate-500">#{index + 1}</span>

@@ -29,8 +29,8 @@ const METHODS: ScormApiMethod[] = [
 ]
 
 const inputClass =
-  'h-7 min-w-0 rounded-sm border border-border-subtle bg-[var(--color-surface-800)] px-2 text-xs ' +
-  'text-slate-200 outline-none placeholder:text-slate-600 focus-visible:ring-1 focus-visible:ring-[var(--color-accent)]'
+  'h-7 min-w-0 rounded-sm border border-border-subtle bg-surface-800 px-2 text-xs ' +
+  'text-slate-200 outline-none placeholder:text-slate-600 focus-visible:ring-1 focus-visible:ring-accent'
 
 /**
  * Breakpoint CRUD + pause control. The list shows what each breakpoint
@@ -114,7 +114,7 @@ export function BreakpointsPanel() {
                   checked={breakpoint.enabled}
                   onChange={() => BreakpointService.toggle(breakpoint.id)}
                   aria-label="Enable or disable breakpoint"
-                  className="accent-[var(--color-accent)]"
+                  className="accent-accent"
                 />
                 <span className="min-w-0 flex-1 truncate font-mono text-[11px] text-slate-300">
                   {describeBreakpoint(breakpoint)}

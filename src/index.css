@@ -23,5 +23,5 @@ body,
 }
 
 body {
-  @apply bg-[var(--color-surface-950)] text-slate-100 antialiased;
+  @apply bg-surface-950 text-slate-100 antialiased;
 }

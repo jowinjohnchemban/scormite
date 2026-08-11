@@ -28,7 +28,7 @@ function CmiSummaryPanel() {
     ['Time', cmi.totalTime || '—'],
   ]
   return (
-    <div className="border-t border-[var(--color-border-subtle)] px-3 py-2">
+    <div className="border-t border-border-subtle px-3 py-2">
       {rows.map(([label, value]) => (
         <div key={label} className="flex justify-between py-0.5 text-xs">
           <span className="text-slate-500">{label}</span>
@@ -50,14 +50,14 @@ export function BasicModeShell({ session }: { session: PackageSession }) {
     <div className="pointer-events-none absolute inset-0 flex overflow-hidden">
       {!pkg ? (
         /* Opaque backdrop so the empty-state drop zone covers the player layer. */
-        <div className="pointer-events-auto h-full w-full bg-[var(--color-surface-950)]">
+        <div className="pointer-events-auto h-full w-full bg-surface-950">
           <DropZone onFile={session.loadFile} loading={loading} error={error} />
         </div>
       ) : (
         <>
           {/* Left: package info + CMI summary + manifest tree */}
-          <aside className="pointer-events-auto flex w-64 shrink-0 flex-col overflow-hidden border-r border-[var(--color-border-subtle)] bg-[var(--color-surface-900)]">
-            <div className="shrink-0 border-b border-[var(--color-border-subtle)] px-3 py-2">
+          <aside className="pointer-events-auto flex w-64 shrink-0 flex-col overflow-hidden border-r border-border-subtle bg-surface-900">
+            <div className="shrink-0 border-b border-border-subtle px-3 py-2">
               <p className="truncate text-sm font-medium text-slate-200" title={pkg.name}>
                 {pkg.name}
               </p>

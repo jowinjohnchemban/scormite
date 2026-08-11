@@ -63,7 +63,7 @@ export function AdvancedModeShell({
     </div>
   ) : (
     /* Opaque backdrop so the empty-state drop zone covers the player layer. */
-    <div className="pointer-events-auto h-full bg-[var(--color-surface-950)]">
+    <div className="pointer-events-auto h-full bg-surface-950">
       <DropZone onFile={session.loadFile} loading={loading} error={error} />
     </div>
   )
