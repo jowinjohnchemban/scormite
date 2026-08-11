@@ -60,8 +60,8 @@ export function ActivityBar({ side }: { side: Extract<DockRegion, 'left' | 'righ
         side === 'left'
           ? 'border-r border-border-subtle'
           : 'border-l border-border-subtle',
-        isActive && 'bg-[var(--color-surface-800)]',
-        isOver && 'ring-2 ring-inset ring-[var(--color-accent)]',
+        isActive && 'bg-surface-800',
+        isOver && 'ring-2 ring-inset ring-accent',
       )}
     >
       {panelIds.map((id) => (

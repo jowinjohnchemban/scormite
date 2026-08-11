@@ -41,8 +41,8 @@ export function DockRegionStack({ region }: { region: DockRegion }) {
       data-testid={`dock-region-${region}`}
       className={cn(
         'pointer-events-auto h-full overflow-hidden',
-        isActive && 'ring-1 ring-inset ring-[var(--color-border-subtle)]',
-        isOver && 'ring-2 ring-[var(--color-accent)]',
+        isActive && 'ring-1 ring-inset ring-border-subtle',
+        isOver && 'ring-2 ring-accent',
       )}
     >
       <Group

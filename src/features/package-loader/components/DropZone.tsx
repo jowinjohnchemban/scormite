@@ -55,10 +55,10 @@ export function DropZone({ onFile, loading = false, error = null }: DropZoneProp
         tabIndex={0}
         className={cn(
           'flex w-full max-w-lg cursor-pointer flex-col items-center gap-3 rounded-lg border-2 border-dashed px-8 py-12 text-center transition-colors',
-          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2',
+          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2',
           isDragging
-            ? 'border-[var(--color-accent)] bg-[var(--color-accent)]/10'
-            : 'border-[var(--color-border-subtle)] hover:border-[var(--color-accent)]/60 hover:bg-[var(--color-surface-800)]',
+            ? 'border-accent bg-accent/10'
+            : 'border-border-subtle hover:border-accent/60 hover:bg-surface-800',
           loading && 'pointer-events-none opacity-60',
         )}
         onDragOver={onDragOver}
@@ -75,7 +75,7 @@ export function DropZone({ onFile, loading = false, error = null }: DropZoneProp
         {loading ? (
           <>
             <div
-              className="h-8 w-8 animate-spin rounded-full border-2 border-[var(--color-accent)] border-t-transparent"
+              className="h-8 w-8 animate-spin rounded-full border-2 border-accent border-t-transparent"
               aria-hidden="true"
             />
             <p className="text-sm text-slate-400">Loading package…</p>

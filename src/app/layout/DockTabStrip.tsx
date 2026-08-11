@@ -42,7 +42,7 @@ function DockTab({ panel, isActive, onSelect, onKeyDown }: DockTabProps) {
       {...dropProps}
       className={cn(
         'group flex shrink-0 cursor-grab items-center active:cursor-grabbing',
-        isOver && 'border-l-2 border-l-[var(--color-accent)]',
+        isOver && 'border-l-2 border-l-accent',
       )}
     >
       <button
@@ -56,9 +56,9 @@ function DockTab({ panel, isActive, onSelect, onKeyDown }: DockTabProps) {
         onKeyDown={onKeyDown}
         className={cn(
           'flex items-center gap-1.5 py-1.5 pl-2.5 pr-1 text-xs transition-colors',
-          'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-[var(--color-accent)]',
+          'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-accent',
           isActive
-            ? 'border-t border-t-[var(--color-accent)] bg-[var(--color-surface-950)] text-slate-100'
+            ? 'border-t border-t-accent bg-surface-950 text-slate-100'
             : 'border-t border-t-transparent text-slate-500 hover:text-slate-300',
         )}
       >
@@ -70,8 +70,8 @@ function DockTab({ panel, isActive, onSelect, onKeyDown }: DockTabProps) {
         aria-label={`Close ${panel.title}`}
         onClick={() => close(panel.id)}
         className={cn(
-          'mr-1 rounded p-0.5 text-slate-500 transition-colors hover:bg-[var(--color-surface-700)] hover:text-slate-200',
-          'focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--color-accent)]',
+          'mr-1 rounded p-0.5 text-slate-500 transition-colors hover:bg-surface-700 hover:text-slate-200',
+          'focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent',
           isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100',
         )}
       >
@@ -123,8 +123,8 @@ export function DockTabStrip() {
       data-testid={`dock-region-${REGION}`}
       className={cn(
         'pointer-events-auto flex h-full flex-col overflow-hidden',
-        isActive && 'ring-1 ring-inset ring-[var(--color-border-subtle)]',
-        isOver && 'ring-2 ring-[var(--color-accent)]',
+        isActive && 'ring-1 ring-inset ring-border-subtle',
+        isOver && 'ring-2 ring-accent',
       )}
     >
       <div
@@ -132,7 +132,7 @@ export function DockTabStrip() {
         role="tablist"
         aria-label="Bottom dock panels"
         aria-orientation="horizontal"
-        className="flex shrink-0 items-stretch overflow-x-auto border-b border-[var(--color-border-subtle)] bg-[var(--color-surface-900)]"
+        className="flex shrink-0 items-stretch overflow-x-auto border-b border-border-subtle bg-surface-900"
       >
         {panelIds.map((id) => {
           const panel = definitions[id]
@@ -154,7 +154,7 @@ export function DockTabStrip() {
         role="tabpanel"
         {...(activeId ? { 'aria-labelledby': `dock-tab-${activeId}` } : {})}
         data-testid={activePanel ? `panel-body-${activePanel.id}` : 'panel-body-empty'}
-        className="min-h-0 flex-1 overflow-auto bg-[var(--color-surface-950)]"
+        className="min-h-0 flex-1 overflow-auto bg-surface-950"
       >
         {ActiveComponent && <ActiveComponent />}
       </div>

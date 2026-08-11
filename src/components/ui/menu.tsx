@@ -73,7 +73,7 @@ export function Menu({
           role="menu"
           className={cn(
             'absolute top-full z-50 mt-1 min-w-56 rounded-md border p-1 shadow-lg',
-            'border-[var(--color-border-subtle)] bg-[var(--color-surface-800)]',
+            'border-border-subtle bg-surface-800',
             align === 'end' ? 'right-0' : 'left-0',
           )}
         >
@@ -99,7 +99,7 @@ export function MenuSeparator() {
   return (
     <div
       role="separator"
-      className="my-1 h-px bg-[var(--color-border-subtle)]"
+      className="my-1 h-px bg-border-subtle"
     />
   )
 }
@@ -118,8 +118,8 @@ export function MenuItem({ checked, className, ...props }: MenuItemProps) {
       {...(checked === undefined ? {} : { 'aria-checked': checked })}
       className={cn(
         'flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-xs text-slate-300',
-        'transition-colors hover:bg-[var(--color-surface-700)] hover:text-slate-100',
-        'focus-visible:outline-none focus-visible:bg-[var(--color-surface-700)]',
+        'transition-colors hover:bg-surface-700 hover:text-slate-100',
+        'focus-visible:outline-none focus-visible:bg-surface-700',
         '[&_svg]:size-3.5 [&_svg]:shrink-0',
         className,
       )}

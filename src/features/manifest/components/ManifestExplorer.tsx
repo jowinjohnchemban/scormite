@@ -21,7 +21,7 @@ function TreeItem({ item, depth }: TreeItemProps) {
       <button
         type="button"
         className={cn(
-          'flex w-full items-start gap-1.5 rounded px-2 py-0.5 text-left text-xs transition-colors hover:bg-[var(--color-surface-700)]',
+          'flex w-full items-start gap-1.5 rounded px-2 py-0.5 text-left text-xs transition-colors hover:bg-surface-700',
           !item.isvisible && 'opacity-50',
         )}
         style={{ paddingLeft: `${8 + depth * 14}px` }}
@@ -92,7 +92,7 @@ function OrganizationSection({ org, isDefault }: OrganizationSectionProps) {
         </svg>
         {org.title || org.identifier}
         {isDefault && (
-          <span className="ml-1 rounded bg-[var(--color-accent)]/20 px-1 py-px text-[10px] font-normal text-[var(--color-accent)]">
+          <span className="ml-1 rounded bg-accent/20 px-1 py-px text-[10px] font-normal text-accent">
             default
           </span>
         )}
@@ -184,7 +184,7 @@ export function ManifestExplorer() {
     <div className="flex h-full flex-col overflow-hidden text-xs">
       {/* Metadata strip */}
       {(manifest.metadata.schema ?? manifest.metadata.schemaVersion) && (
-        <div className="shrink-0 border-b border-[var(--color-border-subtle)] px-3 py-1.5 text-[10px] text-slate-500">
+        <div className="shrink-0 border-b border-border-subtle px-3 py-1.5 text-[10px] text-slate-500">
           {manifest.metadata.schema}
           {manifest.metadata.schemaVersion && (
             <span className="ml-1 text-slate-400">{manifest.metadata.schemaVersion}</span>
@@ -207,7 +207,7 @@ export function ManifestExplorer() {
 
         {/* Divider + Resources */}
         {manifest.resources.length > 0 && (
-          <div className="mt-1 border-t border-[var(--color-border-subtle)] px-1 pt-1">
+          <div className="mt-1 border-t border-border-subtle px-1 pt-1">
             <ResourceList resources={manifest.resources} />
           </div>
         )}
