@@ -91,15 +91,15 @@ export default tseslint.config(
             },
             {
               from: { element: { type: 'test' } },
-              allow: { to: { element: { type: 'shared' } } },
-            },
-            {
-              from: { element: { type: 'test' } },
               allow: { to: { element: { type: 'feature', captured: { featureName: 'runtime' } } } },
             },
             {
               from: { element: { type: 'test' } },
               allow: { to: { element: { type: 'feature', captured: { featureName: 'settings' } } } },
+            },
+            {
+              from: { element: { type: 'test' } },
+              allow: { to: { element: { type: 'shared' } } },
             },
             {
               from: { element: { type: 'components' } },
