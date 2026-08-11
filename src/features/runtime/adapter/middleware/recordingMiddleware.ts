@@ -12,7 +12,7 @@ import { runtimeEvents } from '../../events/RuntimeEventEmitter'
 export const recordingMiddleware: RuntimeMiddleware = {
   post(result: ApiCallResult): void {
     const record: ApiCallRecord = {
-      id: `${result.sessionId}-${result.timestamp}-${result.method}`,
+      id: crypto.randomUUID(),
       sessionId: result.sessionId,
       timestamp: result.timestamp,
       method: result.method,

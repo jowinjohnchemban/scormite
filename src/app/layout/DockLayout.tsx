@@ -12,7 +12,7 @@
  * reload, and "Reset layout" in the toolbar clears both.
  */
 
-import { useMemo, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, type ReactNode } from 'react'
 import { Group, Panel, useDefaultLayout } from 'react-resizable-panels'
 import { dockGroupId } from './dockStorage'
 import { useVisiblePanelIds } from './PanelRegistry'
@@ -24,9 +24,10 @@ import { ResizeHandle } from './DockPrimitives'
 interface DockLayoutProps {
   /** The non-dockable center region — the player. */
   center: ReactNode
+  onCenterRegionRectChange?: (rect: DOMRect | null) => void
 }
 
-export function DockLayout({ center }: DockLayoutProps) {
+export function DockLayout({ center, onCenterRegionRectChange }: DockLayoutProps) {
   const hasLeft = useVisiblePanelIds('left').length > 0
   const hasRight = useVisiblePanelIds('right').length > 0
   const hasBottom = useVisiblePanelIds('bottom').length > 0
@@ -56,6 +57,28 @@ export function DockLayout({ center }: DockLayoutProps) {
     storage: localStorage,
   })
 
+  const centerRef = useRef<HTMLDivElement | null>(null)
+  useEffect(() => {
+    if (!onCenterRegionRectChange) return
+    const node = centerRef.current
+    if (!node) {
+      onCenterRegionRectChange(null)
+      return
+    }
+
+    const update = () => onCenterRegionRectChange(node.getBoundingClientRect())
+    update()
+
+    const observer = new ResizeObserver(update)
+    observer.observe(node)
+    window.addEventListener('resize', update)
+    return () => {
+      observer.disconnect()
+      window.removeEventListener('resize', update)
+    }
+  }, [onCenterRegionRectChange, hasBottom, hasLeft, hasRight])
+
+
   return (
     <div className="flex h-full min-h-0 overflow-hidden">
       <ActivityBar side="left" />
@@ -83,7 +106,9 @@ export function DockLayout({ center }: DockLayoutProps) {
 
               <Panel id="center" minSize="25%">
                 {/* Transparent so the persistent player layer (App) shows through. */}
-                <div className="h-full overflow-hidden">{center}</div>
+                <div ref={centerRef} className="h-full overflow-hidden">
+                  {center}
+                </div>
               </Panel>
 
               {hasRight && <ResizeHandle orientation="horizontal" />}
