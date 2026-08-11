@@ -4,6 +4,7 @@ import tailwindcss from '@tailwindcss/vite'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { siteSeoConfig } from './src/shared/config/seo.js'
+import type { LLMType } from './src/shared/config/seo.js'
 
 const dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -25,7 +26,7 @@ function createSeoPlugin(config: typeof siteSeoConfig): Plugin {
 This file lists a curated set of Large Language Models recommended by the site owner.\n\n`;
 
     const models = config.llms
-      .map((m: any) => {
+      .map((m: LLMType) => {
         const id = m.id || ''
         const name = m.name ? `- Name: ${m.name}\n` : ''
         const desc = m.description ? `- Description: ${m.description}\n` : ''

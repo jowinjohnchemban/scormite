@@ -13,7 +13,7 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { Scorm12Adapter } from '@/features/runtime'
+import { Scorm12Adapter } from '@/features/runtime' // Test dependency
 import { createValidationMiddleware } from '@/features/runtime'
 import { runtimeEvents } from '@/features/runtime'
 import {
@@ -21,7 +21,7 @@ import {
   getRuntimeProfile,
   useSettingsStore,
 } from '@/features/settings'
-import { validatorsForProfile } from '@/app/profileRuntime'
+import { validatorsForProfile } from '@/app/profileRuntime' // Test: app boundary import
 import type { ValidationIssue } from '@/shared/types'
 
 function makeProfileValidated(): {

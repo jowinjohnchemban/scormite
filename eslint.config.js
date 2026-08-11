@@ -86,6 +86,22 @@ export default tseslint.config(
               allow: { to: { element: { types: { anyOf: ['app', 'feature', 'shared', 'components'] } } } },
             },
             {
+              from: { element: { type: 'test' } },
+              allow: { to: { element: { type: 'feature', captured: { featureName: '{{ featureName }}' } } } },
+            },
+            {
+              from: { element: { type: 'test' } },
+              allow: { to: { element: { type: 'shared' } } },
+            },
+            {
+              from: { element: { type: 'test' } },
+              allow: { to: { element: { type: 'feature', captured: { featureName: 'runtime' } } } },
+            },
+            {
+              from: { element: { type: 'test' } },
+              allow: { to: { element: { type: 'feature', captured: { featureName: 'settings' } } } },
+            },
+            {
               from: { element: { type: 'components' } },
               allow: { to: { element: { type: 'shared' } } },
             },

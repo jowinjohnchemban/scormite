@@ -13,7 +13,7 @@ vi.mock('@/app/modes/BasicModeShell', () => ({
   BasicModeShell: () => <div data-testid="basic-shell">Basic Mode</div>,
 }))
 vi.mock('@/app/modes/AdvancedModeShell', () => ({
-  AdvancedModeShell: (props: any) => {
+  AdvancedModeShell: (props: { onCenterRegionRectChange?: (rect: DOMRect | null) => void }) => {
     advancedShellProps = props
     return <div data-testid="advanced-shell">Advanced Mode</div>
   },
