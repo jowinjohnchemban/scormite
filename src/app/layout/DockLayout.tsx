@@ -24,7 +24,7 @@ import { ResizeHandle } from './DockPrimitives'
 interface DockLayoutProps {
   /** The non-dockable center region — the player. */
   center: ReactNode
-  onCenterRegionRectChange?: (rect: DOMRect | null) => void
+  onCenterRegionRectChange?: ((rect: DOMRect | null) => void) | undefined
 }
 
 export function DockLayout({ center, onCenterRegionRectChange }: DockLayoutProps) {

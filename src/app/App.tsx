@@ -5,7 +5,6 @@ import { AdvancedModeShell } from '@/app/modes/AdvancedModeShell'
 import { usePackageSession } from '@/app/hooks/usePackageSession'
 import { PlayerFrame } from '@/features/player'
 import { Button } from '@/components/ui/button'
-import { cn } from '@/shared/lib/utils'
 import logo from '@/assets/hero.png'
 import { logDevDiagnostic } from '@/shared/lib/devDiagnostics'
 
@@ -41,7 +40,6 @@ export function App() {
         }
 
   const handleAdvancedCenterRect = (rect: DOMRect | null) => {
-    const toolbarHeight = 36
     if (!mainRef.current || rect === null) {
       setPlayerFrameRect(null)
       return
@@ -51,7 +49,7 @@ export function App() {
       left: rect.left - mainRect.left,
       top: rect.top - mainRect.top,
       width: rect.width,
-      height: Math.max(0, rect.height - toolbarHeight),
+      height: rect.height,
     })
   }
 
