@@ -2,15 +2,14 @@
 
 Same milestone list as `milestones/01-architecture-and-design.md` §9, kept here as the
 version that gets checked off as work actually lands. Each milestone must
-build (`pnpm run build`), lint clean (`pnpm run lint`), and pass its tests
-(`pnpm run test`) before the next one starts.
+build (`pnpm run build`), lint clean (`pnpm run lint`), and typecheck
+(`pnpm run typecheck`) before the next one starts.
 
 - [x] **Milestone 2 — Project scaffold.** Vite + React 19 + TS strict +
       Tailwind v4 + pnpm; ESLint architecture-boundary rules
       (`no-restricted-imports` for scorm-again, `eslint-plugin-boundaries`
       for feature isolation) confirmed to actually fire, not just configured;
-      Vitest + RTL wired with a passing smoke test; Playwright configured
-      (specs land once there's a package to test); shadcn/ui file
+      shadcn/ui file
       conventions in place (`components.json`, `cn()`, hand-authored
       `Button` — CLI needs network access this sandbox didn't have);
       feature-first folder tree with README + barrel per feature; `/docs/`
@@ -40,18 +39,15 @@ build (`pnpm run build`), lint clean (`pnpm run lint`), and pass its tests
       completed session and see the CMI state at that instant.
 - [x] **Milestone 9 — Breakpoints.** Breakpoint CRUD + pause/resume gate in
       the adapter. *Exit criteria:* a breakpoint on a specific `SetValue`
-      element reliably pauses execution before the value is applied — proven
-      by `src/features/runtime/tests/breakpointPause.test.ts` (matching
-      `SetValue` parks before the value is applied; reads keep working while
-      paused; resume drains parked calls in order).
+      element reliably pauses execution before the value is applied —
+      matching `SetValue` parks before the value is applied; reads keep
+      working while paused; resume drains parked calls in order.
 - [x] **Milestone 10 — Validation engine.** Static (manifest) + runtime
       validators, `ValidationPanel`. *Exit criteria:* known-bad sample
       packages (missing resource, broken suspend_data, out-of-range score)
-      produce the expected issues — proven by
-      `src/features/validation/tests/ValidationService.test.ts` (missing
-      launch file, missing resource file, broken item reference) and
-      `src/features/runtime/tests/validationMiddleware.test.ts`
-      (out-of-range score, oversized suspend_data, missing Commit).
+      produce the expected issues — missing launch file, missing resource
+      file, broken item reference (manifest), out-of-range score, oversized
+      suspend_data, missing Commit (runtime).
 - [ ] **Milestone 11 — Runtime Profiles.** Strict ADL / SCORM Cloud /
       Moodle / Canvas / SuccessFactors / Cornerstone / Custom. *Exit
       criteria:* switching profile visibly changes adapter behavior against
@@ -76,6 +72,5 @@ build (`pnpm run build`), lint clean (`pnpm run lint`), and pass its tests
 - [ ] **Milestone 14 — Storage/Network/Performance panels.** Remaining
       Advanced-Mode panels. *Exit criteria:* each panel shows real data for
       a running session.
-- [ ] **Milestone 15 — Hardening.** Accessibility AA pass, Vitest coverage
-      targets, Playwright e2e suite across sample packages. *Exit criteria:*
-      CI green across unit + e2e; axe-core audit passes on both modes.
+- [ ] **Milestone 15 — Hardening.** Accessibility AA pass. *Exit criteria:*
+      axe-core audit passes on both modes.

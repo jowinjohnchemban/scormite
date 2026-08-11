@@ -7,7 +7,7 @@ import boundaries from 'eslint-plugin-boundaries'
 import prettierConfig from 'eslint-config-prettier'
 
 export default tseslint.config(
-  { ignores: ['dist', 'node_modules', 'coverage', 'playwright-report'] },
+  { ignores: ['dist', 'node_modules'] },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ['**/*.{ts,tsx}'],
@@ -27,7 +27,7 @@ export default tseslint.config(
         { type: 'shared', pattern: 'src/shared/*' },
         { type: 'components', pattern: 'src/components/*' },
       ],
-      'boundaries/files': [{ category: 'test', pattern: '**/*.{test,spec}.{ts,tsx}' }],
+      'boundaries/files': [],
       'import/resolver': {
         typescript: { project: './tsconfig.app.json' },
       },
@@ -84,22 +84,6 @@ export default tseslint.config(
             {
               from: { element: { type: 'app' } },
               allow: { to: { element: { types: { anyOf: ['app', 'feature', 'shared', 'components'] } } } },
-            },
-            {
-              from: { element: { type: 'test' } },
-              allow: { to: { element: { type: 'feature', captured: { featureName: '{{ featureName }}' } } } },
-            },
-            {
-              from: { element: { type: 'test' } },
-              allow: { to: { element: { type: 'feature', captured: { featureName: 'runtime' } } } },
-            },
-            {
-              from: { element: { type: 'test' } },
-              allow: { to: { element: { type: 'feature', captured: { featureName: 'settings' } } } },
-            },
-            {
-              from: { element: { type: 'test' } },
-              allow: { to: { element: { type: 'shared' } } },
             },
             {
               from: { element: { type: 'components' } },

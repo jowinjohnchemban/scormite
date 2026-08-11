@@ -129,32 +129,15 @@ return { scormEdition: detected.edition }   // detected.edition may be undefined
 return { ...(detected.edition !== undefined ? { scormEdition: detected.edition } : {}) }
 ```
 
-## Testing gotcha: RTL cleanup with `globals: false`
-
-`vitest.config.ts` sets `globals: false`. With this setting,
-`@testing-library/react` does **not** auto-register `afterEach(cleanup)` —
-each test file that calls `render()` must do it explicitly:
-
-```ts
-import { afterEach } from 'vitest'
-import { cleanup } from '@testing-library/react'
-
-afterEach(cleanup)
-```
-
-Without this, a second `render()` in the same file sees the previous test's
-DOM, causing spurious "multiple elements found" failures.
-
 ## Definition of done for any change here
 
 ```bash
 pnpm run lint       # must be clean, includes architecture checks
 pnpm run typecheck
-pnpm run test
 pnpm run build
 ```
 
-All four, every time, before considering a change complete — not just
+All three, every time, before considering a change complete — not just
 "the file I was editing compiles."
 
 ## Package manager

@@ -38,8 +38,6 @@ pnpm run dev        # start the dev server
 pnpm run build      # production build
 pnpm run lint       # ESLint + architecture boundary checks
 pnpm run typecheck  # tsc --noEmit
-pnpm run test       # Vitest unit/component tests
-pnpm run e2e        # Playwright e2e (needs `pnpm exec playwright install` first)
 pnpm run format     # Prettier
 ```
 
