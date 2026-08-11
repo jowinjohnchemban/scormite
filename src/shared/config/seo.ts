@@ -1,3 +1,10 @@
+export interface LLMType {
+  id: string
+  name?: string
+  description?: string
+  url?: string
+}
+
 export interface SiteSeoConfig {
   title: string
   description: string
@@ -8,12 +15,7 @@ export interface SiteSeoConfig {
   locale: string
   siteUrl: string
   routes: readonly string[]
-  llms: readonly {
-    id: string
-    name?: string
-    description?: string
-    url?: string
-  }[]
+  llms: readonly LLMType[]
 }
 
 export const siteSeoConfig: SiteSeoConfig = {
