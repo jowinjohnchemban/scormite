@@ -3,6 +3,8 @@
  */
 export { PlayerFrame } from './components/PlayerFrame'
 export { PlayerToolbar } from './components/PlayerToolbar'
+export { NetworkPanel } from './components/NetworkPanel'
+export { useNetworkStore } from './state/networkStore'
 export {
   registerServiceWorker,
   cachePackageFiles,
@@ -11,3 +13,4 @@ export {
   injectApiProxy,
   removeApiProxy,
 } from './services/PlayerBridgeService';
+export { startNetworkMonitor, clearNetworkEntries } from './services/networkMonitor';

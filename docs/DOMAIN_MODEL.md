@@ -20,6 +20,10 @@ you don't have to hunt through 12 folders to remember the shape of
 | `PluginPanelContribution` | `plugins` | A dockable panel contributed by a plugin |
 | `PluginCommandContribution` | `plugins` | A toolbar-menu command contributed by a plugin |
 | `PluginValidatorContribution` | `plugins` | A runtime validation rule contributed by a plugin |
+| `FileTreeNode` | `package-loader` | Package file-tree node (path, name, children, isLaunchFile) |
+| `NetworkEntry` | `player` | One SW `FETCH_EVENT` (path, cache hit/miss, status, duration ms) |
+| `StorageEntry` / `StorageReport` | `storage` | Cache bucket or localStorage item + full storage scan |
+| `PerformanceMetrics` | `logging` | Aggregated API-call timings (total, avg, P95, top-5, per-method) |
 
 See `milestones/01-architecture-and-design.md` §4 for the full field-level shape of each
 entity. As these get implemented in `types/` files, prefer linking to the

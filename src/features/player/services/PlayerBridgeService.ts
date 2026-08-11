@@ -5,6 +5,7 @@
  */
 
 import type { IScormAdapter, ScormVersion } from '@/shared/types'
+import { startNetworkMonitor } from './networkMonitor'
 
 // ---------------------------------------------------------------------------
 // MIME type guessing
@@ -49,6 +50,9 @@ function debug(...args: unknown[]): void {
 
 export async function registerServiceWorker(): Promise<void> {
   if (!('serviceWorker' in navigator)) return
+  // The Network panel's message listener must exist before the worker can
+  // report to it; idempotent, so safe to call every session.
+  startNetworkMonitor()
   if (!_swReady) {
     _swReady = navigator.serviceWorker
       .register('/sw.js', { scope: '/' })

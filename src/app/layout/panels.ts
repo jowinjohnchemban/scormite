@@ -11,22 +11,26 @@ import {
   Activity,
   Bug,
   Clock,
+  Database,
   FileCode,
   FileText,
   Gauge,
   ListTree,
+  Network,
   Package,
   ShieldCheck,
   Terminal,
 } from 'lucide-react'
 import { ManifestExplorer } from '@/features/manifest'
 import { CmiInspectorPanel } from '@/features/inspector'
-import { ApiMonitorPanel, ConsolePanel } from '@/features/logging'
+import { ApiMonitorPanel, ConsolePanel, PerformancePanel } from '@/features/logging'
+import { PackageExplorerPanel } from '@/features/package-loader'
+import { NetworkPanel } from '@/features/player'
+import { StoragePanel } from '@/features/storage'
 import { TimelinePanel } from '@/features/timeline'
 import { BreakpointsPanel } from '@/features/session'
 import { ValidationPanel } from '@/features/validation'
 import { ReportsPanelWrapper } from './ReportsPanelWrapper'
-import { makePlaceholderPanel } from './PlaceholderPanel'
 import type { PanelDef } from './PanelRegistry'
 
 export const ADVANCED_PANELS: readonly PanelDef[] = [
@@ -44,7 +48,23 @@ export const ADVANCED_PANELS: readonly PanelDef[] = [
     defaultRegion: 'left',
     defaultOpen: false,
     icon: Package,
-    component: makePlaceholderPanel('Package Explorer', 'Milestone 14'),
+    component: PackageExplorerPanel,
+  },
+  {
+    id: 'network',
+    title: 'Network',
+    defaultRegion: 'bottom',
+    defaultOpen: false,
+    icon: Network,
+    component: NetworkPanel,
+  },
+  {
+    id: 'storage',
+    title: 'Storage',
+    defaultRegion: 'bottom',
+    defaultOpen: false,
+    icon: Database,
+    component: StoragePanel,
   },
   {
     id: 'cmi-inspector',
@@ -100,7 +120,7 @@ export const ADVANCED_PANELS: readonly PanelDef[] = [
     defaultRegion: 'bottom',
     defaultOpen: false,
     icon: Gauge,
-    component: makePlaceholderPanel('Performance', 'Milestone 14'),
+    component: PerformancePanel,
   },
   {
     id: 'reports',

@@ -14,6 +14,7 @@ import { loadZip, PackageLoadError, usePackageStore } from '@/features/package-l
 import { ManifestParseError, parseManifest, useManifestStore } from '@/features/manifest'
 import {
   cachePackageFiles,
+  clearNetworkEntries,
   clearSessionCache,
   injectApiProxy,
   packageLaunchUrl,
@@ -193,6 +194,9 @@ export function usePackageSession(owner: 'basic' | 'advanced'): PackageSession {
 
         setManifest(manifest)
         setPackage(assembled)
+        // The archive bytes are discarded after caching, but the file list is
+        // kept so the Package Explorer panel can show the real structure.
+        usePackageStore.getState().setFilePaths(raw.filePaths)
 
         // Static validation: manifest-vs-package-file consistency. Runtime
         // issues stream in live from the validation middleware below.
@@ -292,6 +296,7 @@ export function usePackageSession(owner: 'basic' | 'advanced'): PackageSession {
     logDevDiagnostic('session.reset.requested', { owner, sessionId: runtimeSessionId })
     if (runtimeSessionId) clearSessionCache(runtimeSessionId)
     removeApiProxy()
+    clearNetworkEntries()
     resetRuntime()
     clearLogs()
     resetInspector()
