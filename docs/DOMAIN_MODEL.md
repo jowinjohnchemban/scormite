@@ -16,7 +16,10 @@ you don't have to hunt through 12 folders to remember the shape of
 | `ValidationIssue` | `validation` | Static or runtime validation finding |
 | `Breakpoint` | `session` | Pause condition (API call / CMI set / score / objective) |
 | `RuntimeProfile` | `settings` | Named scorm-again + middleware configuration preset |
-| `Plugin` | `plugins` | Registered contribution (panels, commands, validators, ...) |
+| `ScormitePlugin` | `plugins` | `{ manifest, activate(api) }` — the registration unit |
+| `PluginPanelContribution` | `plugins` | A dockable panel contributed by a plugin |
+| `PluginCommandContribution` | `plugins` | A toolbar-menu command contributed by a plugin |
+| `PluginValidatorContribution` | `plugins` | A runtime validation rule contributed by a plugin |
 
 See `milestones/01-architecture-and-design.md` §4 for the full field-level shape of each
 entity. As these get implemented in `types/` files, prefer linking to the

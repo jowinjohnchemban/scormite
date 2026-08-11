@@ -48,7 +48,7 @@ build (`pnpm run build`), lint clean (`pnpm run lint`), and typecheck
       produce the expected issues — missing launch file, missing resource
       file, broken item reference (manifest), out-of-range score, oversized
       suspend_data, missing Commit (runtime).
-- [ ] **Milestone 11 — Runtime Profiles.** Strict ADL / SCORM Cloud /
+- [x] **Milestone 11 — Runtime Profiles.** Strict ADL / SCORM Cloud /
       Moodle / Canvas / SuccessFactors / Cornerstone / Custom. *Exit
       criteria:* switching profile visibly changes adapter behavior against
       the same package.
@@ -61,11 +61,11 @@ build (`pnpm run build`), lint clean (`pnpm run lint`), and typecheck
       `vite.config.ts`. *Next:* wire `siteUrl` from environment in CI, expand
       `routes` for dynamic pages, and surface SEO metadata in any server-side
       rendering if added later.
-- [ ] **Milestone 12 — Reports.** One-click QA report
+- [x] **Milestone 12 — Reports.** One-click QA report
       (JSON/CSV/Markdown/HTML export). *Exit criteria:* generated report
       contains manifest summary, runtime summary, timeline, logs, and
       renders correctly as standalone HTML.
-- [ ] **Milestone 13 — Plugin system.** `PluginHost`, `PluginApi`,
+- [x] **Milestone 13 — Plugin system.** `PluginHost`, `PluginApi`,
       panel/command/validator registration. *Exit criteria:* a trivial
       sample plugin registers and appears in the UI without touching core
       code.
