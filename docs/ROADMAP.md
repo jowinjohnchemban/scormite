@@ -69,8 +69,14 @@ build (`pnpm run build`), lint clean (`pnpm run lint`), and typecheck
       panel/command/validator registration. *Exit criteria:* a trivial
       sample plugin registers and appears in the UI without touching core
       code.
-- [ ] **Milestone 14 — Storage/Network/Performance panels.** Remaining
+- [x] **Milestone 14 — Storage/Network/Performance panels.** Remaining
       Advanced-Mode panels. *Exit criteria:* each panel shows real data for
-      a running session.
+      a running session. Verified in the browser against a live SCORM 1.2
+      SCO: Package Explorer shows the extracted file tree with the launch
+      file marked, Network shows real SW cache hits/misses with timing
+      (3 requests, 3 hits), Storage shows Cache Storage buckets,
+      `localStorage` keys, and the browser quota estimate (12 KB of 2.1 GB
+      used), Performance shows per-call timings (18 calls, avg 0.8 ms,
+      P95 5.4 ms) with top-5 slowest and per-method breakdown.
 - [ ] **Milestone 15 — Hardening.** Accessibility AA pass. *Exit criteria:*
       axe-core audit passes on both modes.

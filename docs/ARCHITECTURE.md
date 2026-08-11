@@ -68,6 +68,32 @@ and toolbar (`PluginMenu`), and feeds validator contributions into the
 runtime validation middleware (`pluginHostBridge`). Plugins register once,
 at app startup, before any package can load.
 
+## Advanced-Mode inspection panels (M14)
+
+Four panels complete the Advanced-Mode dock, all fed by real data:
+
+- **Package Explorer** (`package-loader`): pure tree-building logic in
+  `services/fileTree.ts`; `PackageExplorerPanel` renders it with a
+  launch-file badge. The tree view is a subcomponent keyed by `pkg.id` so
+  React remounts it per package instead of setting state in an effect.
+- **Network** (`player`): the service worker (`public/sw.js`) broadcasts a
+  `FETCH_EVENT` message (path, cache hit/miss, HTTP status, duration ms)
+  for every package-file fetch to **all window clients** via
+  `self.clients.matchAll({ type: 'window' })` — the SCO lives in a
+  sandboxed iframe, so `event.clientId` alone would never reach the app
+  UI. `networkMonitor.ts` listens on the window side and records into
+  `useNetworkStore`; `NetworkPanel` renders the live log. The SW activates
+  immediately (`skipWaiting` + `clients.claim`).
+- **Storage** (`storage` feature): read-only browser-storage inspector —
+  Cache Storage buckets, `localStorage` items, and global quota estimate
+  via `StorageService` → `storageStore` → `StoragePanel`.
+- **Performance** (`logging`): `performanceMetrics.ts` aggregates
+  `ApiCallRecord`s (total, errors, avg, P95, max ms, top-5 slowest,
+  per-method breakdown); `PerformancePanel` renders the cards.
+
+All four are registered as real components in `src/app/layout/panels.ts`
+(`ADVANCED_PANELS`); no placeholder panels remain.
+
 ## Styling
 
 Tailwind v4 via `@tailwindcss/vite` (no separate `tailwind.config.*` — theme

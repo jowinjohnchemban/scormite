@@ -40,5 +40,5 @@ desktop.ini
 *.pem
 
 # Temporary files
-.tmp-scorm
+.testscorm
 

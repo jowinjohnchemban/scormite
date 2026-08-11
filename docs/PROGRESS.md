@@ -55,12 +55,46 @@ What works now
   its validator contribution flows into the runtime validation pipeline.
 - Advanced mode is console-error-free.
 
+## Milestone 14 — Storage/Network/Performance panels (2026-08-11)
+
+- Package Explorer (`src/features/package-loader/components/PackageExplorerPanel.tsx`):
+  left-dock tree of extracted package files with expand/collapse, launch-file
+  badge, and the `FileTreeView` subcomponent keyed by `pkg.id` (avoids
+  `react-hooks/set-state-in-effect` by letting React remount the tree).
+  Tree-building logic is pure and tested in
+  `src/features/package-loader/services/fileTree.ts` (`FileTreeNode[]`).
+- Network panel (`src/features/player/components/NetworkPanel.tsx`): live
+  package-file request log fed by `networkMonitor.ts`, which listens for
+  `FETCH_EVENT` postMessages from the service worker. Cache hit/miss,
+  HTTP status, duration ms; entries live in the `useNetworkStore`
+  (`NetworkEntry`). `public/sw.js` now activates immediately
+  (`skipWaiting` + `clients.claim`) and broadcasts each package-file fetch
+  to ALL window clients — crucial because the SCO runs in a sandboxed
+  iframe, so `event.clientId` alone would never reach the app UI.
+- Storage panel (`src/features/storage/`, new feature): inspects Cache
+  Storage buckets, `localStorage` items, and global quota via
+  `StorageService` (`StorageEntry`/`StorageReport`, `formatBytes`) with
+  `storageStore` + `StoragePanel`. This is a browser/devtools-style panel,
+  not an LMS data store — read-only inspection.
+- Performance panel (`src/features/logging/components/PerformancePanel.tsx`):
+  aggregates `ApiCallRecord`s via
+  `src/features/logging/services/performanceMetrics.ts` into
+  `PerformanceMetrics` — total, errors, avg, P95, max ms, top-5 slowest
+  calls, per-method breakdown.
+- `src/app/layout/panels.ts` `ADVANCED_PANELS` now registers real
+  components for Package / Network / Storage / Performance; all Milestone
+  14 placeholders are gone.
+- Verified in browser against the running `scormite-sample` SCO: file tree
+  (3 files, launch badge on `index.html`), Network (3 requests, 3 cache
+  hits), Storage (3 Cache buckets, 9 localStorage keys, quota estimate),
+  Performance (18 calls, avg 0.8 ms, P95 5.4 ms). All three quality gates
+  pass: `pnpm run lint` (0 warnings), `pnpm run typecheck`, `pnpm run build`.
+
 Next steps (later continuation)
 -------------------------------
 
-1. Milestone 14 — Storage/Network/Performance panels (replace the
-   `makePlaceholderPanel('Performance', 'Milestone 14')` placeholders in
-   `src/app/layout/panels.ts`).
+1. Milestone 15 — Hardening: accessibility AA pass (axe-core audit on both
+   modes; ARIA labels, contrast, keyboard focus, screen-reader landmarks).
 2. Wire `siteUrl` to CI/deploy environment via `VITE_SITE_URL` or `SITE_URL`.
 3. Expand `routes` to include any dynamic/public routes (e.g., per-package
    landing pages) to make a complete `sitemap.xml`.

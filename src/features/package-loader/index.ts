@@ -5,6 +5,7 @@
  * in this folder is an implementation detail.
  */
 export { DropZone } from './components/DropZone'
+export { PackageExplorerPanel } from './components/PackageExplorerPanel'
 export { usePackageStore } from './state/packageStore'
 export { loadZip, PackageLoadError } from './services/PackageLoaderService'
 export { detectScormVersion } from './services/PackageDetectionService'
