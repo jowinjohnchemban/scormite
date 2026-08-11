@@ -44,7 +44,13 @@ function PackageStatus({ pkg }: { pkg: Package | null }) {
   )
 }
 
-export function AdvancedModeShell({ session }: { session: PackageSession }) {
+export function AdvancedModeShell({
+  session,
+  onCenterRegionRectChange,
+}: {
+  session: PackageSession
+  onCenterRegionRectChange?: (rect: DOMRect | null) => void
+}) {
   useRegisterAdvancedPanels()
   useTimelineReplay()
   const { pkg, loading, error, launchUrl, reload, reset } = session
@@ -68,7 +74,7 @@ export function AdvancedModeShell({ session }: { session: PackageSession }) {
         <PackageStatus pkg={pkg} />
       </TopToolbar>
       <div className="min-h-0 flex-1">
-        <DockLayout center={center} />
+        <DockLayout center={center} onCenterRegionRectChange={onCenterRegionRectChange} />
       </div>
     </div>
   )
