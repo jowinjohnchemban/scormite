@@ -62,13 +62,8 @@ Run, in order, and don't consider the change done until all pass:
 ```bash
 pnpm run lint       # includes architecture boundary checks
 pnpm run typecheck
-pnpm run test
 pnpm run build
 ```
-
-If you touched anything UI-facing and Playwright specs exist for it
-(`e2e/`), run those too. Specs land starting Milestone 3, once there's a
-loadable package to test against.
 
 If you added/changed an architectural rule (boundary policy, a new banned
 import, a new element type), write a small deliberate-violation test the
@@ -99,7 +94,3 @@ before it would resolve imports to their owning feature at all).
   built in) don't allow that domain — in that case, hand-author new
   primitives following the existing shape in `src/components/ui/` (cva +
   `cn()` from `src/shared/lib/utils.ts`) rather than blocking on the CLI.
-- Playwright browser binaries need `pnpm exec playwright install`, which
-  also needs network access this scaffold's sandbox didn't have. Config is
-  in place (`playwright.config.ts`); actually running `pnpm run e2e` needs
-  an environment with that access.

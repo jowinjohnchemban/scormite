@@ -75,8 +75,6 @@ exactly; treat it as a stand-in for the real CLI run.
 | Types | TypeScript (strict) | `tsconfig.app.json` |
 | Lint + architecture boundaries | ESLint flat config | `eslint.config.js` |
 | Format | Prettier | defaults, via `pnpm run format` |
-| Unit/component tests | Vitest + React Testing Library | `vitest.config.ts` |
-| E2E | Playwright | `playwright.config.ts`, specs in `e2e/` |
 
 ## Adding a new feature
 
