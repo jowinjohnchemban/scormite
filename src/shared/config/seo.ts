@@ -8,7 +8,12 @@ export interface SiteSeoConfig {
   locale: string
   siteUrl: string
   routes: readonly string[]
-  llms: readonly string[]
+  llms: readonly {
+    id: string
+    name?: string
+    description?: string
+    url?: string
+  }[]
 }
 
 export const siteSeoConfig: SiteSeoConfig = {
@@ -22,5 +27,24 @@ export const siteSeoConfig: SiteSeoConfig = {
   locale: 'en_US',
   siteUrl: 'https://scormite.jowinjc.in',
   routes: ['/'],
-  llms: ['gpt-4o-mini', 'gpt-4o', 'gpt-4.1'],
+  llms: [
+    {
+      id: 'gpt-4o-mini',
+      name: 'GPT-4o Mini',
+      description: 'Cost-efficient, general-purpose large language model for shorter requests.',
+      url: 'https://platform.openai.com/models/gpt-4o-mini',
+    },
+    {
+      id: 'gpt-4o',
+      name: 'GPT-4o',
+      description: 'High-capacity conversational model suitable for general reasoning and generation.',
+      url: 'https://platform.openai.com/models/gpt-4o',
+    },
+    {
+      id: 'gpt-4.1',
+      name: 'GPT-4.1',
+      description: 'Extended reasoning and capability model for complex tasks.',
+      url: 'https://platform.openai.com/models/gpt-4.1',
+    },
+  ],
 }

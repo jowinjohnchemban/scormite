@@ -1,0 +1,30 @@
+# llms.txt
+
+SCORMite — offline-first developer toolkit for inspecting and testing
+SCORM packages. Drop a .zip and inspect runtime calls, CMI state,
+timeline replay, breakpoints, validation, and runtime profiling.
+
+## site
+
+- Home: /
+- Sitemap: /sitemap.xml
+
+## models
+
+## gpt-4o-mini
+
+- Name: GPT-4o Mini
+- Description: Cost-efficient, general-purpose large language model for shorter requests.
+- URL: https://platform.openai.com/models/gpt-4o-mini
+
+## gpt-4o
+
+- Name: GPT-4o
+- Description: High-capacity conversational model suitable for general reasoning and generation.
+- URL: https://platform.openai.com/models/gpt-4o
+
+## gpt-4.1
+
+- Name: GPT-4.1
+- Description: Extended reasoning and capability model for complex tasks.
+- URL: https://platform.openai.com/models/gpt-4.1
