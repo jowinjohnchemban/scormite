@@ -56,6 +56,15 @@ build (`pnpm run build`), lint clean (`pnpm run lint`), and pass its tests
       Moodle / Canvas / SuccessFactors / Cornerstone / Custom. *Exit
       criteria:* switching profile visibly changes adapter behavior against
       the same package.
+
+## Recent infra updates
+
+- [x] **Static SEO & build assets (dev+prod):** Added a small Vite plugin and
+      shared SEO config to generate and serve `robots.txt`, `sitemap.xml`, and
+      `llms.txt` at dev-time and build-time. See `src/shared/config/seo.ts` and
+      `vite.config.ts`. *Next:* wire `siteUrl` from environment in CI, expand
+      `routes` for dynamic pages, and surface SEO metadata in any server-side
+      rendering if added later.
 - [ ] **Milestone 12 — Reports.** One-click QA report
       (JSON/CSV/Markdown/HTML export). *Exit criteria:* generated report
       contains manifest summary, runtime summary, timeline, logs, and
