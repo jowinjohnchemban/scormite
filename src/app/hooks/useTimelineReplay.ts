@@ -15,7 +15,10 @@ import { useRuntimeStore } from '@/features/runtime'
 
 export function useTimelineReplay(): void {
   const cursor = useTimelineStore((s) => s.cursor)
-  const snapshots = useTimelineStore((s) => s.snapshots)
+  const currentSnapshot = useTimelineStore((s) => {
+    if (s.cursor === null) return null
+    return s.snapshots[s.cursor] ?? null
+  })
 
   useEffect(() => {
     const inspector = useInspectorStore.getState()
@@ -37,9 +40,8 @@ export function useTimelineReplay(): void {
       return
     }
 
-    const snapshot = snapshots[cursor]
-    if (snapshot) {
-      inspector.showSnapshot(snapshot.data, snapshot.changedPaths)
+    if (currentSnapshot) {
+      inspector.showSnapshot(currentSnapshot.data, currentSnapshot.changedPaths)
     }
-  }, [cursor, snapshots])
+  }, [cursor, currentSnapshot])
 }
