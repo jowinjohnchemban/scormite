@@ -34,7 +34,7 @@ export function ConsolePanel() {
       {records.length === 0 ? (
         <p className="p-3 text-xs text-slate-600">No runtime output yet.</p>
       ) : (
-        <ol className="min-h-0 overflow-auto p-2 font-mono text-[11px] leading-5">
+        <ol tabIndex={0} className="min-h-0 overflow-auto p-2 font-mono text-[11px] leading-5 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-accent">
           {records.map((record) => (
             <li key={record.id} className={record.errorCode ? 'text-red-400' : 'text-slate-300'}>
               <span className="mr-2 text-slate-600">{new Date(record.timestamp).toLocaleTimeString()}</span>

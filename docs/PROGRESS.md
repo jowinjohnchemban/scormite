@@ -90,11 +90,59 @@ What works now
   Performance (18 calls, avg 0.8 ms, P95 5.4 ms). All three quality gates
   pass: `pnpm run lint` (0 warnings), `pnpm run typecheck`, `pnpm run build`.
 
+## Milestone 15 — Hardening: Accessibility AA (2026-08-11)
+
+- Test infrastructure: vitest + jsdom + @testing-library/react +
+  @testing-library/jest-dom + axe-core + vitest-axe. `vitest.config.ts`,
+  `src/test/setup.ts` (jest-dom matchers, `toHaveNoViolations` matcher,
+  in-memory `localStorage` stub, ResizeObserver/matchMedia/scrollTo mocks),
+  `pnpm run test` / `pnpm run test:watch` scripts.
+- `src/app/a11y.test.tsx`: 5 tests — empty-state axe audits of Basic and
+  Advanced modes, mode-switch button names, main/header landmarks, and a
+  data-rich Advanced-mode audit (package store seeded with a real
+  Manifest/Package, Network entries, API call records, storage report).
+- jsdom limitation: axe's `color-contrast` rule cannot compute real colors
+  in jsdom, so contrast was verified with a live browser audit (dev server +
+  axe-core injected into the page, stores seeded by importing the zustand
+  modules directly via `/src/...`).
+- Violations found and fixed:
+  - `text-slate-500` (4.08:1) and `text-slate-600` (2.56:1) failed AA on
+    surface-950 → theme overrides in `src/index.css` `@theme`:
+    slate-500 `#7f93ab` (6.2:1), slate-600 `#6d829c` (4.9:1); slate-400
+    unchanged (7.6:1).
+  - `Button` default variant hovered to `bg-accent` (#4da3ff) with white
+    text = 2.5:1 → hover now inverts to dark text (7.4:1). `destructive`
+    variant was white-on-danger (3.2:1) → dark text (5.8:1); the variant
+    is currently unused but was a latent landmine.
+  - `scrollable-region-focusable`: the bottom-dock tabpanel and all 13
+    panel scroll containers got `tabIndex={0}` + a visible focus ring
+    (focus-visible ring-1 accent). Empty-state audits miss this — only a
+    populated audit fires it.
+  - ARIA tabs in `DockTabStrip`: per-tab close button moved OUT of the
+    tablist to a strip-end sibling (previously `nested-interactive`); tabs
+    use roving tabindex with Delete/Backspace close.
+  - Package Explorer tree: file rows were plain `generic` divs → all rows
+    now `role="treeitem"` with `aria-level={depth + 1}` (aria-expanded
+    stays directory-only).
+- Verification: 5/5 vitest tests pass; browser axe audits return 0
+  violations for Basic mode, Advanced empty, and Advanced data-rich (26
+  color-contrast nodes passing in the populated state). `pnpm run lint` (0
+  warnings), `pnpm run typecheck`, `pnpm run build` all pass.
+- Tooling note: vitest-axe 0.1.0 is unmaintained against modern vitest —
+  its root `matchers` entry is `export type *` (breaks
+  `verbatimModuleSyntax`), its `extend-expect` augments the removed global
+  `Vi` namespace, and `dist/extend-expect.js` is 0 bytes. The runtime
+  matcher is imported from `vitest-axe/dist/matchers`, and the
+  `expect(...).toHaveNoViolations()` typing is provided by
+  `src/test/vitest-axe.d.ts` (jest-dom-style `declare module 'vitest'`
+  augmentation). ESLint has a `**/*.d.ts` override for the
+  augmentation-required `any`/empty-interface patterns.
+
 Next steps (later continuation)
 -------------------------------
 
-1. Milestone 15 — Hardening: accessibility AA pass (axe-core audit on both
-   modes; ARIA labels, contrast, keyboard focus, screen-reader landmarks).
+1. Milestone 16 — per `docs/ROADMAP.md` (next roadmap item after the
+   hardening pass).
 2. Wire `siteUrl` to CI/deploy environment via `VITE_SITE_URL` or `SITE_URL`.
 3. Expand `routes` to include any dynamic/public routes (e.g., per-package
    landing pages) to make a complete `sitemap.xml`.
@@ -103,3 +151,6 @@ Next steps (later continuation)
 5. Add a small test that validates `dist/` contains the expected files in CI.
 6. Optionally, expose site metadata into the React app's head tags centrally
    so runtime meta changes reflect `siteSeoConfig`.
+7. Future a11y work: keep the AA baseline green by running
+   `src/app/a11y.test.tsx` in CI, and re-run the browser contrast audit
+   whenever theme tokens change (jsdom cannot catch color regressions).

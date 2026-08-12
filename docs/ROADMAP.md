@@ -78,5 +78,18 @@ build (`pnpm run build`), lint clean (`pnpm run lint`), and typecheck
       `localStorage` keys, and the browser quota estimate (12 KB of 2.1 GB
       used), Performance shows per-call timings (18 calls, avg 0.8 ms,
       P95 5.4 ms) with top-5 slowest and per-method breakdown.
-- [ ] **Milestone 15 — Hardening.** Accessibility AA pass. *Exit criteria:*
-      axe-core audit passes on both modes.
+- [x] **Milestone 15 — Hardening.** Accessibility AA pass. *Exit criteria:*
+      axe-core audit passes on both modes. Delivered: vitest + axe-core test
+      infrastructure (`vitest.config.ts`, `src/test/setup.ts`,
+      `src/app/a11y.test.tsx` — 5 tests covering empty and data-rich states
+      of both modes) plus a live-browser axe audit (jsdom cannot compute
+      real colors). Fixes: theme token contrast overrides for
+      `slate-500/600` (4.9–6.2:1 on surface-950), `Button` default-hover
+      and `destructive` text inversion, ARIA tabs pattern in
+      `DockTabStrip` (roving tabindex, close button as tablist sibling),
+      `tabIndex={0}` + focus ring on all 13 scrollable panel bodies and the
+      bottom-dock tabpanel (`scrollable-region-focusable`), and proper
+      `role="treeitem"` + `aria-level` on every Package Explorer row.
+      Verified: 5/5 vitest tests, 0 axe violations in both modes for both
+      empty and data-rich states, 26 color-contrast nodes passing in the
+      populated Advanced-mode audit. All quality gates pass.

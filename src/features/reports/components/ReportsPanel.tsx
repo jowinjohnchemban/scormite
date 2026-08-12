@@ -37,7 +37,7 @@ export function ReportsPanel({ reportData, ready, onExport }: ReportsPanelProps)
         </div>
       </header>
 
-      <div className="min-h-0 flex-1 overflow-auto p-3 space-y-4 text-sm text-slate-300">
+      <div tabIndex={0} className="min-h-0 flex-1 overflow-auto p-3 space-y-4 text-sm text-slate-300 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-accent">
         {!ready || !reportData ? (
           <div className="flex h-full flex-col items-center justify-center gap-2 rounded border border-border-subtle bg-surface-950 p-6 text-center text-xs text-slate-500">
             <p>No package is loaded yet.</p>

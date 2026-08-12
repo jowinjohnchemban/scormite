@@ -115,5 +115,30 @@ export default tseslint.config(
       'react-refresh/only-export-components': 'off',
     },
   },
+  {
+    // Declaration files conventionally use `any` — e.g. `src/test/vitest-axe.d.ts`
+    // must redeclare `Assertion<T = any>` with the exact type parameter list of
+    // the interface it merges with, or the module augmentation fails to apply.
+    files: ['**/*.d.ts'],
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
+      // Empty `interface X extends SingleType {}` is the idiomatic module
+      // augmentation shape (jest-dom uses the same); the type parameter is
+      // required to match the merged interface's parameter list even though
+      // the body is empty.
+      '@typescript-eslint/no-empty-object-type': ['error', { allowInterfaces: 'with-single-extends' }],
+      '@typescript-eslint/no-unused-vars': 'off',
+    },
+  },
+  {
+    // Vitest tests use the framework's globals (describe/it/expect/vi).
+    files: ['**/*.{test,spec}.{ts,tsx}', 'src/test/**/*.{ts,tsx}'],
+    languageOptions: {
+      globals: {
+        ...globals.browser,
+        ...globals.vitest,
+      },
+    },
+  },
   prettierConfig,
 )

@@ -94,6 +94,53 @@ Four panels complete the Advanced-Mode dock, all fed by real data:
 All four are registered as real components in `src/app/layout/panels.ts`
 (`ADVANCED_PANELS`); no placeholder panels remain.
 
+## Accessibility (M15)
+
+WCAG 2.1 AA is an enforced baseline, verified by axe-core in two layers:
+
+- **Structural audit (CI)** — `src/app/a11y.test.tsx` renders both modes
+  (empty and data-rich states) under vitest + jsdom and asserts zero axe
+  violations. Test infrastructure: `vitest.config.ts` +
+  `src/test/setup.ts` (jest-dom matchers, the `toHaveNoViolations`
+  matcher, an in-memory `localStorage` stub — Node's experimental global
+  throws without `--localstorage-file` — and ResizeObserver/matchMedia/
+  scrollTo mocks). Data-rich state is seeded by calling
+  `useXStore.setState(...)` directly with real Manifest/Package/Network/
+  log/storage shapes.
+- **Color audit (browser only)** — axe's `color-contrast` rule cannot
+  compute real colors in jsdom, so every theme-token change must be
+  re-verified against the dev server with axe-core injected into the
+  page. The populated Advanced-mode audit passes 26 contrast nodes.
+
+Conventions enforced by this milestone:
+
+- **Contrast tokens** — `src/index.css` `@theme` overrides Tailwind's
+  default slate-500 (`#7f93ab`, 6.2:1) and slate-600 (`#6d829c`, 4.9:1)
+  on surface-950; the Tailwind defaults (4.08:1 / 2.56:1) fail AA. Keep
+  the 400 > 500 > 600 luminance hierarchy. Bright accent fills
+  (`bg-accent` #4da3ff) must not carry white text — `Button`'s default
+  variant inverts to dark text on hover, and `destructive` uses dark text.
+- **Scrollable regions are focusable** — every scroll container that
+  users can tab into (all 13 panel bodies plus the bottom-dock tabpanel)
+  carries `tabIndex={0}` and a `focus-visible` ring; otherwise axe fires
+  `scrollable-region-focusable` (which only appears when the container is
+  *actually* scrollable — empty-state audits miss it).
+- **ARIA tabs** — `DockTabStrip` implements the tabs pattern: `role="tab"`
+  buttons with roving tabindex, `role="tabpanel"` + `aria-labelledby`, and
+  per-tab close controls as **siblings** of the tablist (a close button
+  nested inside the tab is `nested-interactive`).
+- **Tree semantics** — Package Explorer rows are `role="treeitem"` with
+  `aria-level={depth + 1}` on every row; `aria-expanded` only on
+  directories.
+
+Tooling caveat: vitest-axe 0.1.0 is unmaintained against modern vitest —
+import the matcher from `vitest-axe/dist/matchers` (the root entry is
+`export type *`, breaking `verbatimModuleSyntax`) and augment the
+`expect(...)` typing via `src/test/vitest-axe.d.ts` (jest-dom-style
+`declare module 'vitest'`); vitest-axe's own `extend-expect` targets the
+removed global `Vi` namespace and its runtime file is empty. ESLint allows
+the augmentation-required `any`/empty-interface patterns for `**/*.d.ts`.
+
 ## Styling
 
 Tailwind v4 via `@tailwindcss/vite` (no separate `tailwind.config.*` — theme

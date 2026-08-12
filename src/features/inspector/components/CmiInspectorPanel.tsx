@@ -31,7 +31,7 @@ export function CmiInspectorPanel() {
       {entries.length === 0 ? (
         <p className="p-3 text-xs text-slate-600">Launch a course to inspect its CMI data model.</p>
       ) : (
-        <div className="min-h-0 overflow-auto font-mono text-[11px]">
+        <div tabIndex={0} className="min-h-0 overflow-auto font-mono text-[11px] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-accent">
           {entries.map(([path, value]) => {
             const depth = path.split('.').length - 1
             const changed = changedPaths.includes(path)

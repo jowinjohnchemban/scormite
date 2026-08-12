@@ -5,6 +5,7 @@ export { PlayerFrame } from './components/PlayerFrame'
 export { PlayerToolbar } from './components/PlayerToolbar'
 export { NetworkPanel } from './components/NetworkPanel'
 export { useNetworkStore } from './state/networkStore'
+export type { NetworkEntry } from './state/networkStore'
 export {
   registerServiceWorker,
   cachePackageFiles,

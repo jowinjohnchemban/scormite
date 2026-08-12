@@ -54,7 +54,7 @@ export function ValidationPanel() {
         )}
       </header>
 
-      <div className="min-h-0 flex-1 overflow-auto p-3">
+      <div tabIndex={0} className="min-h-0 flex-1 overflow-auto p-3 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-accent">
         {issues.length === 0 ? (
           <p className="text-xs text-slate-600">
             {lastRunAt === null

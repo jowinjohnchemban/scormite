@@ -22,7 +22,8 @@ function TreeRow({ node, depth, expanded, toggle, launchPath }: TreeRowProps) {
   return (
     <>
       <div
-        role={node.isDirectory ? 'treeitem' : undefined}
+        role="treeitem"
+        aria-level={depth + 1}
         aria-expanded={node.isDirectory ? isOpen : undefined}
         className="flex items-center gap-1 pr-2 hover:bg-surface-900"
         style={{ paddingLeft: `${depth * 14 + 4}px` }}
@@ -100,7 +101,7 @@ function FileTreeView({ filePaths, launchPath }: { filePaths: string[]; launchPa
   }
 
   return (
-    <div role="tree" aria-label="Package files" className="min-h-0 overflow-auto py-1">
+    <div role="tree" aria-label="Package files" tabIndex={0} className="min-h-0 overflow-auto py-1 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-accent">
       {tree.map((node) => (
         <TreeRow
           key={node.path}
