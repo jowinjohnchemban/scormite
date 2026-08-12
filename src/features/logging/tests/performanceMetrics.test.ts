@@ -11,12 +11,12 @@ function record(partial: Partial<ApiCallRecord> & { method: ApiCallRecord['metho
     id: partial.id ?? 'id',
     sessionId: 'sess-1',
     timestamp: 0,
-    element: undefined,
-    value: undefined,
+    method: partial.method,
     returnValue: '0',
     durationMs: partial.durationMs ?? 1,
-    errorCode: partial.errorCode,
-    ...partial,
+    ...(partial.element !== undefined && { element: partial.element }),
+    ...(partial.value !== undefined && { value: partial.value }),
+    ...(partial.errorCode !== undefined && { errorCode: partial.errorCode }),
   }
 }
 

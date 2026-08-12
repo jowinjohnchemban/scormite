@@ -138,6 +138,94 @@ What works now
   augmentation). ESLint has a `**/*.d.ts` override for the
   augmentation-required `any`/empty-interface patterns.
 
+## Milestone 15 — Hardening: coverage, e2e, CI (2026-08-11, continued)
+
+Second pass of M15, completing the exit criteria row from
+`docs/ROADMAP.md`: "Vitest coverage targets, Playwright e2e suite across
+sample packages, CI green across unit + e2e".
+
+**Coverage targets**
+
+- Configured in `vitest.config.ts`: v8 provider
+  (`@vitest/coverage-v8`), `reportsDirectory './coverage'`, includes
+  `src/**/*.{ts,tsx}`, thresholds `{ statements: 35, branches: 20,
+  functions: 30, lines: 35 }`. Thresholds were chosen with deliberate
+  headroom: the measured baseline sits ~1–2 points above each floor so
+  the gate catches real regressions without flaking on noise.
+- New script `pnpm run test:coverage` (vitest run --coverage). Baseline
+  before this pass was 25.86% statements; after the test growth below it
+  sits at 36.85% stmts / 23.38% branch / 32.6% funcs / 36.99% lines.
+- The coverage run surfaces all unit tests (same files as `pnpm run
+  test`), so CI uses `test:coverage` as the single unit gate.
+
+**Unit test growth (7 new test files, 68 tests)**
+
+- `src/features/manifest/tests/fileTree.test.ts`
+- `src/features/package-loader/tests/PackageDetectionService.test.ts`
+- `src/features/logging/tests/performanceMetrics.test.ts`
+- `src/features/logging/tests/normalizeFlattenedCmi.test.ts`
+- `src/features/validation/tests/validationService.test.ts`
+- `src/features/manifest/tests/ManifestParserService.test.ts`
+- `src/features/inspector/tests/fieldConfig.test.ts`
+
+73/73 tests green (was 73/73; the new files grew the suite from 5 to
+73). The growth caught 5 real expectation bugs in existing services
+(e.g., CMI flattening edge cases, performance metric recording) before
+they could ship.
+
+**Playwright e2e suite**
+
+- Committed byte-stable fixtures: `scripts/make-fixtures.mjs` generates
+  `e2e/fixtures/scorm12-basic.zip` and
+  `e2e/fixtures/scorm2004-basic.zip` (jszip, fixed timestamps, DEFLATE,
+  platform UNKNOWN) so results are reproducible without network access.
+  Re-run `node scripts/make-fixtures.mjs` only when the fixture content
+  changes.
+- Three specs in `e2e/`:
+  - `load-package.spec.ts` — SCORM 1.2 end-to-end: load zip, sidebar
+    shows name/version, manifest org + SCO visible, player iframe
+    reaches `/scorm-files/` and the SCO's `Initialize` handshake runs,
+    Status row shows `completed`, Score row shows `100`.
+  - `scorm2004.spec.ts` — same flow for SCORM 2004 4th Edition:
+    completion_status/success_status/score.scaled surface as Status
+    `completed` and Success `passed`.
+  - `mode-switch.spec.ts` — Basic → Advanced keeps the same SCO iframe
+    (src unchanged, still `init=`), Advanced shell shows left dock
+    region + manifest explorer; switching back to Basic restores the
+    sidebar with the package still loaded.
+- 3/3 pass in ~14s. `playwright.config.ts` auto-starts the dev server
+  (webServer), CI forces `retries: 2` + 1 worker, artifacts land in
+  `test-results/` / `playwright-report/`.
+
+**CI**
+
+- `.github/workflows/ci.yml` — two jobs on push to main + PRs:
+  - `unit`: install (frozen lockfile, Node 24, pnpm 11.20.0) → lint
+    (with `--max-warnings=0`) → typecheck → `test:coverage` → build.
+  - `e2e`: same install + `playwright install --with-deps chromium` →
+    `test:e2e`, uploading `playwright-report/` + `test-results/` on
+    failure (7-day retention).
+
+**Integration details worth remembering**
+
+- `tsconfig.node.json` now includes `playwright.config.ts` and
+  `e2e/**/*.ts` (Node runtime, `module nodenext`).
+- ESLint `ignores` grew `coverage`, `test-results`, `playwright-report` —
+  generated artifacts must stay ignored or `--max-warnings=0` fails on
+  vendored files (hit this with `coverage/lcov-report/*.js`).
+- e2e specs live outside `src/`, so the boundaries plugin does not fire
+  on them; the scorm-again import ban is path-scoped, so it cannot be
+  violated from e2e either.
+- `.gitignore` grew `coverage/`, `test-results/`, `playwright-report/`,
+  `blob-report/`.
+- Fixtures assert against rendered UI and the SCO's `document.body`
+  log (the fixture SCOs write `init=`/`complete=` markers via the
+  injected API proxy), which keeps specs independent of internal DOM
+  structure.
+
+All gates green at the end of this pass: lint (0 warnings), typecheck,
+73/73 unit tests, coverage above thresholds, build, 3/3 e2e.
+
 Next steps (later continuation)
 -------------------------------
 
@@ -154,3 +242,9 @@ Next steps (later continuation)
 7. Future a11y work: keep the AA baseline green by running
    `src/app/a11y.test.tsx` in CI, and re-run the browser contrast audit
    whenever theme tokens change (jsdom cannot catch color regressions).
+8. Raise the coverage thresholds as the suite grows — they currently
+   carry headroom below the measured baseline and should be tightened
+   once the next milestone adds tests.
+9. Playwright: add a validation-panel spec and a breakpoints/timeline
+   interaction spec once those features have stable DOM hooks (the CMI
+   inspector and manifest explorer panels already do).

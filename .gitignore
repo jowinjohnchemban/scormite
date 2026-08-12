@@ -42,3 +42,9 @@ desktop.ini
 # Temporary files
 .testscorm
 
+# Test artifacts
+coverage/
+test-results/
+playwright-report/
+blob-report/
+
