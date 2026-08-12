@@ -38,6 +38,7 @@ pnpm run dev        # start the dev server
 pnpm run build      # production build
 pnpm run lint       # ESLint + architecture boundary checks
 pnpm run typecheck  # tsc --noEmit
+pnpm run test       # vitest (unit + axe-core accessibility audits)
 pnpm run format     # Prettier
 ```
 

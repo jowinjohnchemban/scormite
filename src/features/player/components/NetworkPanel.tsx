@@ -46,7 +46,7 @@ export function NetworkPanel() {
           Package file requests will appear when the course loads.
         </p>
       ) : (
-        <div className="min-h-0 overflow-auto">
+        <div tabIndex={0} className="min-h-0 overflow-auto focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-accent">
           <table className="w-full border-collapse text-left font-mono text-[11px]">
             <thead className="sticky top-0 bg-surface-900 text-slate-500">
               <tr>

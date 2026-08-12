@@ -48,7 +48,7 @@ export function PerformancePanel() {
       {metrics.total === 0 ? (
         <p className="p-3 text-xs text-slate-600">API calls will appear when the course starts.</p>
       ) : (
-        <div className="min-h-0 overflow-auto p-2">
+        <div tabIndex={0} className="min-h-0 overflow-auto p-2 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-accent">
           <div className="mb-2 flex flex-wrap gap-2">
             <StatCard label="Total" value={String(metrics.total)} />
             <StatCard label="Errors" value={String(metrics.errorCount)} />

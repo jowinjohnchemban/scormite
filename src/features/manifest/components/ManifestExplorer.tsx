@@ -193,7 +193,7 @@ export function ManifestExplorer() {
       )}
 
       {/* Tree */}
-      <div className="min-h-0 flex-1 overflow-y-auto py-1">
+      <div tabIndex={0} className="min-h-0 flex-1 overflow-y-auto py-1 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-accent">
         {/* Organizations */}
         <div className="px-1">
           {manifest.organizations.map((org) => (

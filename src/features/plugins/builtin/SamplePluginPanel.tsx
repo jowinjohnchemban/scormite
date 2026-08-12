@@ -19,7 +19,7 @@ export function SamplePluginPanel() {
   const plugins = Object.values(pluginRecord)
 
   return (
-    <section className="flex h-full min-h-0 flex-col gap-3 overflow-auto p-3 text-sm text-slate-300">
+    <section tabIndex={0} className="flex h-full min-h-0 flex-col gap-3 overflow-auto p-3 text-sm text-slate-300 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-accent">
       <div className="rounded border border-border-subtle bg-surface-950 p-3">
         <h2 className="text-xs uppercase tracking-[0.2em] text-slate-500">Sample Plugin</h2>
         <p className="mt-1 text-xs text-slate-400">
