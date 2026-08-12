@@ -161,6 +161,9 @@ exactly; treat it as a stand-in for the real CLI run.
 | Types | TypeScript (strict) | `tsconfig.app.json` |
 | Lint + architecture boundaries | ESLint flat config | `eslint.config.js` |
 | Format | Prettier | defaults, via `pnpm run format` |
+| Unit tests + coverage | Vitest + @vitest/coverage-v8 | `vitest.config.ts` (thresholds 35/20/30/35, `pnpm run test:coverage`) |
+| E2E | Playwright | `playwright.config.ts` (`e2e/`, auto-starts dev server, committed fixtures in `e2e/fixtures/`) |
+| CI | GitHub Actions | `.github/workflows/ci.yml` (unit + e2e jobs) |
 
 ## Adding a new feature
 

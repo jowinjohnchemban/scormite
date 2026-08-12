@@ -39,6 +39,8 @@ pnpm run build      # production build
 pnpm run lint       # ESLint + architecture boundary checks
 pnpm run typecheck  # tsc --noEmit
 pnpm run test       # vitest (unit + axe-core accessibility audits)
+pnpm run test:coverage  # vitest with coverage thresholds (35/20/30/35)
+pnpm run test:e2e   # Playwright e2e suite (Chromium)
 pnpm run format     # Prettier
 ```
 
