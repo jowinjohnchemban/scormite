@@ -81,14 +81,7 @@ export const ADVANCED_PANELS: readonly PanelDef[] = [
     icon: Activity,
     component: ApiMonitorPanel,
   },
-  {
-    id: 'console',
-    title: 'Console',
-    defaultRegion: 'bottom',
-    defaultOpen: true,
-    icon: Terminal,
-    component: ConsolePanel,
-  },
+
   {
     id: 'timeline',
     title: 'Timeline',
