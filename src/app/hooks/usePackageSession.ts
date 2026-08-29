@@ -250,7 +250,6 @@ export function usePackageSession(owner: 'basic' | 'advanced'): PackageSession {
               ...validatorsForProfile(
                 getRuntimeProfile(useSettingsStore.getState().activeProfileId),
               ),
-              ...pluginRuntimeValidators(),
             ],
             onIssue: (issue) => useValidationStore.getState().addIssue(issue),
           }),
