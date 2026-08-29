@@ -11,7 +11,6 @@ import {
   Activity,
   Bug,
   Clock,
-  Database,
   FileCode,
   FileText,
   Gauge,
@@ -26,7 +25,6 @@ import { CmiInspectorPanel } from '@/features/inspector'
 import { ApiMonitorPanel, ConsolePanel, PerformancePanel } from '@/features/logging'
 import { PackageExplorerPanel } from '@/features/package-loader'
 import { NetworkPanel } from '@/features/player'
-import { StoragePanel } from '@/features/storage'
 import { TimelinePanel } from '@/features/timeline'
 import { BreakpointsPanel } from '@/features/session'
 import { ValidationPanel } from '@/features/validation'
@@ -58,14 +56,7 @@ export const ADVANCED_PANELS: readonly PanelDef[] = [
     icon: Network,
     component: NetworkPanel,
   },
-  {
-    id: 'storage',
-    title: 'Storage',
-    defaultRegion: 'bottom',
-    defaultOpen: false,
-    icon: Database,
-    component: StoragePanel,
-  },
+
   {
     id: 'cmi-inspector',
     title: 'CMI Inspector',
