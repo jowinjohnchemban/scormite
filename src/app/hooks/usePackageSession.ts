@@ -32,7 +32,6 @@ import {
 } from '@/features/runtime'
 import { getRuntimeProfile, useSettingsStore } from '@/features/settings'
 import { validatorsForProfile } from '@/app/profileRuntime'
-import { pluginRuntimeValidators } from '@/app/plugins/pluginHostBridge'
 import { useLogStore } from '@/features/logging'
 import { useInspectorStore } from '@/features/inspector'
 import { useTimelineStore } from '@/features/timeline'
