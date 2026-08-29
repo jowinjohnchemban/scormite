@@ -9,7 +9,7 @@
  * survives mode switches; this shell provides the dock chrome on top.
  */
 
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { DockLayout } from '@/app/layout/DockLayout'
 import { TopToolbar } from '@/app/layout/TopToolbar'
 import { ADVANCED_PANELS } from '@/app/layout/panels'
@@ -57,10 +57,35 @@ export function AdvancedModeShell({
   useTimelineReplay()
   const { pkg, loading, error, launchUrl, reload, reset } = session
 
+  // The iframe in App is sized to the *visible player area* — the strip above
+  // the PlayerToolbar. Measuring the spacer directly keeps the two in sync
+  // without hardcoding the toolbar height: whatever the toolbar grows to, the
+  // player area shrinks by exactly that much, so the Reload/Reset ribbon never
+  // overlaps the SCO.
+  const playerAreaRef = useRef<HTMLDivElement | null>(null)
+  useEffect(() => {
+    if (!onCenterRegionRectChange) return
+    const node = playerAreaRef.current
+    if (!node) {
+      // No package yet — App falls back to its default framing.
+      onCenterRegionRectChange(null)
+      return
+    }
+    const update = () => onCenterRegionRectChange(node.getBoundingClientRect())
+    update()
+    const observer = new ResizeObserver(update)
+    observer.observe(node)
+    window.addEventListener('resize', update)
+    return () => {
+      observer.disconnect()
+      window.removeEventListener('resize', update)
+    }
+  }, [onCenterRegionRectChange, pkg])
+
   const center = pkg ? (
     /* Transparent center: the persistent player layer shows through. */
     <div className="pointer-events-none flex h-full flex-col overflow-hidden">
-      <div className="min-h-0 flex-1" />
+      <div ref={playerAreaRef} className="min-h-0 flex-1" />
       <PlayerToolbar onReload={reload} onReset={reset} disabled={!launchUrl} />
     </div>
   ) : (
@@ -76,7 +101,7 @@ export function AdvancedModeShell({
         <PackageStatus pkg={pkg} />
       </TopToolbar>
       <div className="min-h-0 flex-1">
-        <DockLayout center={center} onCenterRegionRectChange={onCenterRegionRectChange} />
+        <DockLayout center={center} />
       </div>
     </div>
   )
