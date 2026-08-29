@@ -1,9 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { useAppModeStore } from '@/app/state/appModeStore'
 import { BasicModeShell } from '@/app/modes/BasicModeShell'
 import { AdvancedModeShell } from '@/app/modes/AdvancedModeShell'
 import { usePackageSession } from '@/app/hooks/usePackageSession'
-import { registerBuiltinPlugins } from '@/app/plugins/pluginHostBridge'
 import { PlayerFrame } from '@/features/player'
 import { Button } from '@/components/ui/button'
 import logo from '@/assets/hero.png'
@@ -19,13 +18,6 @@ export function App() {
     width: number
     height: number
   } | null>(null)
-
-  // Plugins register once, before any package can be loaded, so their
-  // contributions (panels, commands, validators) are live from the start
-  // regardless of which mode is active.
-  useEffect(() => {
-    registerBuiltinPlugins()
-  }, [])
 
   // Single subscription for the whole app: the runtime session (and therefore
   // the running SCO) outlives any one mode shell.
