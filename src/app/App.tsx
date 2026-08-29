@@ -37,7 +37,7 @@ export function App() {
           top: 0,
           left: 256,
           right: 0,
-          bottom: 36,
+          bottom: 0,
         }
       : {
           position: 'absolute' as const,
@@ -98,7 +98,7 @@ export function App() {
           course. Mode shells are chrome rendered on top of this layer, so a
           Basic ↔ Advanced switch only swaps chrome — the SCO keeps running.
           `left-64` clears Basic's 256px sidebar; `left-10` clears Advanced's
-          40px activity bar; `bottom-9` clears the player toolbar.
+          40px activity bar.
         */}
         <div className="absolute inset-x-0" style={playerFrameStyle}>
           <PlayerFrame src={session.launchUrl} />

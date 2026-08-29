@@ -68,7 +68,7 @@ export async function registerServiceWorker(): Promise<void> {
       })
       .catch((error: unknown) => {
         _swReady = null
-        console.warn('[Scormite service worker] Registration failed', error)
+        if (import.meta.env.DEV) console.warn('[Scormite service worker] Registration failed', error)
         return null
       })
   }

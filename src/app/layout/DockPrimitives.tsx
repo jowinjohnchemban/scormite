@@ -25,26 +25,6 @@ export function ResizeHandle({
   )
 }
 
-/**
- * A drop line rendered between panels. Purely visual — the surrounding
- * element owns the drop handlers.
- */
-export function DropIndicator({
-  orientation,
-}: {
-  orientation: 'horizontal' | 'vertical'
-}) {
-  return (
-    <div
-      aria-hidden
-      className={cn(
-        'shrink-0 bg-accent',
-        orientation === 'horizontal' ? 'h-full w-0.5' : 'h-0.5 w-full',
-      )}
-    />
-  )
-}
-
 interface PanelChromeProps {
   panel: PanelDef
   /** Region the panel is currently docked in; a drop here inserts before it. */

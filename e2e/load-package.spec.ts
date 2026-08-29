@@ -32,10 +32,6 @@ test('loads a SCORM 1.2 package and runs the SCO end to end', async ({ page }) =
   await expect(page.getByRole('button', { name: /E2E Org 1.2/i })).toBeVisible()
   await expect(page.getByRole('button', { name: /E2E SCO 1.2/i })).toBeVisible()
 
-  // Player controls are enabled once a launch URL exists.
-  await expect(page.getByRole('button', { name: 'Reload' })).toBeEnabled()
-  await expect(page.getByRole('button', { name: 'Reset' })).toBeEnabled()
-
   // The SCO iframe is launched through the service worker (scorm-files URL).
   const player = page.frameLocator('iframe[title="SCORM Package"]')
   await expect(page.locator('iframe[title="SCORM Package"]')).toHaveAttribute(

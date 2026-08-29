@@ -1,4 +1,5 @@
 import { useInspectorStore } from '@/features/inspector/state/inspectorStore'
+import { getFieldLabel } from '@/shared/config/fieldConfig'
 
 /**
  * Defense in depth: values are normalized to strings at the adapter boundary,
@@ -35,6 +36,7 @@ export function CmiInspectorPanel() {
           {entries.map(([path, value]) => {
             const depth = path.split('.').length - 1
             const changed = changedPaths.includes(path)
+            const label = getFieldLabel(path)
             return (
               <div
                 key={path}
@@ -49,6 +51,7 @@ export function CmiInspectorPanel() {
                 <span
                   className="w-1/2 min-w-52 truncate pr-2 text-slate-400"
                   style={{ paddingLeft: `${8 + depth * 12}px` }}
+                  title={label !== path ? `${path} — ${label}` : path}
                 >
                   {path}
                 </span>

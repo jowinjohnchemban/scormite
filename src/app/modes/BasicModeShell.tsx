@@ -2,7 +2,7 @@
  * Basic Mode shell — fixed two-column layout, rendered over the persistent
  * player layer owned by `App`.
  * Left: package summary + manifest tree.  Right: transparent space over the
- * player with the player toolbar pinned to the bottom.
+ * player.
  *
  * The iframe itself lives in `App` so a running SCO survives mode switches;
  * this shell only provides chrome.
@@ -10,7 +10,6 @@
 
 import { DropZone } from '@/features/package-loader'
 import { ManifestExplorer } from '@/features/manifest'
-import { PlayerToolbar } from '@/features/player'
 import { useCmiState } from '@/app/hooks/useCmiState'
 import type { PackageSession } from '@/app/hooks/usePackageSession'
 
@@ -44,7 +43,7 @@ function CmiSummaryPanel() {
 // ---------------------------------------------------------------------------
 
 export function BasicModeShell({ session }: { session: PackageSession }) {
-  const { pkg, loading, error, launchUrl, reload, reset } = session
+  const { pkg, loading, error } = session
 
   return (
     <div className="pointer-events-none absolute inset-0 flex overflow-hidden">
@@ -72,11 +71,8 @@ export function BasicModeShell({ session }: { session: PackageSession }) {
             </div>
           </aside>
 
-          {/* Right: transparent space over the persistent player + toolbar */}
-          <main className="pointer-events-none flex min-w-0 flex-1 flex-col overflow-hidden">
-            <div className="min-h-0 flex-1" />
-            <PlayerToolbar onReload={reload} onReset={reset} disabled={!launchUrl} />
-          </main>
+          {/* Right: transparent space over the persistent player */}
+          <main className="pointer-events-none min-w-0 flex-1" />
         </>
       )}
     </div>

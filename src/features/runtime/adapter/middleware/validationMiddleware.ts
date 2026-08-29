@@ -1,5 +1,6 @@
 import type { ValidationIssue, ValidationSeverity } from '@/shared/types'
 import type { ApiCallResult, RuntimeMiddleware } from '../../types'
+import { isScorePath } from '../cmiPaths'
 
 /**
  * State the middleware tracks across calls, passed to every validator so
@@ -34,13 +35,6 @@ export interface ValidationMiddlewareOptions {
   getValidators: () => RuntimeValidator[]
   /** Fired for every call that violates a validator. */
   onIssue: (issue: ValidationIssue) => void
-}
-
-const SCORE_PATHS = ['cmi.core.score.raw', 'cmi.score.raw']
-
-/** SCORM 1.2 and 2004 both spell the score element `.score.raw`. */
-function isScorePath(element: string | undefined): boolean {
-  return element !== undefined && (SCORE_PATHS.includes(element) || element.endsWith('.score.raw'))
 }
 
 /** SCORM caps suspend_data at 4096 characters (both 1.2 and 2004). */

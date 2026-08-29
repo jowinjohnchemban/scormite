@@ -3,14 +3,7 @@ import { Trash2 } from 'lucide-react'
 import { useLogStore } from '@/features/logging/state/logStore'
 import { computePerformanceMetrics, safeMs } from '@/features/logging/services/performanceMetrics'
 import { Button } from '@/components/ui/button'
-
-function formatTime(timestamp: number): string {
-  return new Intl.DateTimeFormat(undefined, {
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-  }).format(timestamp)
-}
+import { formatTime } from '@/shared/lib/format'
 
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
@@ -76,7 +69,7 @@ export function PerformancePanel() {
                   className="border-t border-border-subtle/60 text-slate-300"
                 >
                   <td className="whitespace-nowrap px-2 py-1 text-slate-500">
-                    {formatTime(record.timestamp)}
+                    {formatTime(record.timestamp, false)}
                   </td>
                   <td className="px-2 py-1 text-accent">{record.method}</td>
                   <td className="max-w-48 truncate px-2 py-1" title={record.element}>

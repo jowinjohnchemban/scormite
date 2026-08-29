@@ -1,15 +1,7 @@
 import { Trash2 } from 'lucide-react'
 import { useLogStore } from '@/features/logging/state/logStore'
 import { Button } from '@/components/ui/button'
-
-function formatTime(timestamp: number): string {
-  return new Intl.DateTimeFormat(undefined, {
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    fractionalSecondDigits: 3,
-  }).format(timestamp)
-}
+import { formatTime } from '@/shared/lib/format'
 
 /** A live, chronological trace of every call made through the SCORM API. */
 export function ApiMonitorPanel() {

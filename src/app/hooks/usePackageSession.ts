@@ -110,36 +110,48 @@ export function usePackageSession(owner: 'basic' | 'advanced'): PackageSession {
 
   // Subscribed once for the lifetime of the App. Doing this per-load stacked
   // a fresh listener on every package, duplicating every subsequent log record.
-  useEffect(
-    () =>
-      runtimeEvents.on('api-call', (record) => {
-        addLog(record)
-        logDevelopmentApiCall(record)
-        logDevDiagnostic('runtime.api-call', {
-          owner,
-          method: record.method,
-          element: record.element ?? null,
-          returnValue: record.returnValue,
-          errorCode: record.errorCode ?? null,
-        })
-        const adapter = useRuntimeStore.getState().adapter
-        const sessionId = useRuntimeStore.getState().sessionId
-        if (!adapter || !sessionId) return
-        try {
-          const flattened = adapter.getFlattenedCmi()
-          captureSnapshot({ timestamp: record.timestamp, sessionId, data: flattened })
-          // While the timeline is scrubbing a historical snapshot the
-          // inspector keeps showing that instant; only live updates while
-          // following the running session.
-          if (useTimelineStore.getState().cursor === null) {
-            updateCmi(flattened)
-          }
-        } catch {
-          // The player may have navigated away while the event was being handled.
+  useEffect(() => {
+    const unsubApi = runtimeEvents.on('api-call', (record) => {
+      addLog(record)
+      logDevelopmentApiCall(record)
+      logDevDiagnostic('runtime.api-call', {
+        owner,
+        method: record.method,
+        element: record.element ?? null,
+        returnValue: record.returnValue,
+        errorCode: record.errorCode ?? null,
+      })
+      const adapter = useRuntimeStore.getState().adapter
+      const sessionId = useRuntimeStore.getState().sessionId
+      if (!adapter || !sessionId) return
+      try {
+        const flattened = adapter.getFlattenedCmi()
+        captureSnapshot({ timestamp: record.timestamp, sessionId, data: flattened })
+        // While the timeline is scrubbing a historical snapshot the
+        // inspector keeps showing that instant; only live updates while
+        // following the running session.
+        if (useTimelineStore.getState().cursor === null) {
+          updateCmi(flattened)
         }
-      }),
-    [addLog, updateCmi, captureSnapshot, owner],
-  )
+      } catch {
+        // The player may have navigated away while the event was being handled.
+      }
+    })
+
+    const unsubInit = runtimeEvents.on('initialized', () => {
+      useRuntimeStore.getState().setInitialized(true)
+    })
+
+    const unsubTerm = runtimeEvents.on('terminated', () => {
+      useRuntimeStore.getState().setTerminated(true)
+    })
+
+    return () => {
+      unsubApi()
+      unsubInit()
+      unsubTerm()
+    }
+  }, [addLog, updateCmi, captureSnapshot, owner])
 
   // A runtime profile switch applies its scorm-again knobs to the live
   // adapter immediately. Validators need no handling here — the validation
@@ -285,11 +297,15 @@ export function usePackageSession(owner: 'basic' | 'advanced'): PackageSession {
 
   const reload = useCallback(() => {
     if (!runtimeSessionId || !pkg) return
-    // Blanking the src first forces the iframe to remount rather than
-    // re-navigating, so the SCO starts from a clean document.
+    // Reset runtime initialization markers and blank the launchUrl briefly
+    // so the iframe remounts cleanly from a fresh document.
+    useRuntimeStore.getState().setInitialized(false)
+    useRuntimeStore.getState().setTerminated(false)
     setReloading(true)
     logDevDiagnostic('session.reload.requested', { owner, sessionId: runtimeSessionId })
-    setTimeout(() => setReloading(false), 50)
+    requestAnimationFrame(() => {
+      setReloading(false)
+    })
   }, [runtimeSessionId, pkg, owner])
 
   const reset = useCallback(() => {
