@@ -34,7 +34,7 @@ export const PROFILE_SETTING_KEYS: readonly (keyof Settings)[] = [
  * pipeline and the timing/error capture that wraps every call.
  */
 export abstract class ScormRuntimeAdapter {
-  protected readonly sessionId: string
+  readonly sessionId: string
   /** The settings the concrete adapter passed to its scorm-again API instance. */
   protected apiSettings: Partial<Settings>
   private readonly _middleware: RuntimeMiddleware[] = []

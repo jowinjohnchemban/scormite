@@ -24,7 +24,7 @@ export const useRuntimeStore = create<RuntimeState>((set) => ({
   adapter: null,
 
   setAdapter: (adapter, scormVersion) =>
-    set({ adapter, scormVersion, sessionId: adapter['sessionId'] as string }),
+    set({ adapter, scormVersion, sessionId: adapter.sessionId }),
   setInitialized: (isInitialized) => set({ isInitialized }),
   setTerminated: (isTerminated) => set({ isTerminated }),
   reset: () =>

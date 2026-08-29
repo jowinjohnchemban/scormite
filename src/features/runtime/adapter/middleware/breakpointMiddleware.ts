@@ -1,5 +1,6 @@
 import type { Breakpoint, BreakpointHit } from '@/shared/types'
 import type { ApiCallContext, MiddlewareDecision, RuntimeMiddleware } from '../../types'
+import { isScorePath } from '../cmiPaths'
 
 /**
  * Dependencies the middleware needs, injected at creation time so it never
@@ -11,15 +12,6 @@ export interface BreakpointMiddlewareOptions {
   getBreakpoints: () => Breakpoint[]
   /** Fired when an enabled breakpoint pauses a call. */
   onHit: (hit: BreakpointHit) => void
-}
-
-function isScorePath(element: string | undefined): boolean {
-  return (
-    element !== undefined &&
-    (element === 'cmi.core.score.raw' ||
-      element === 'cmi.score.raw' ||
-      element.endsWith('.score.raw'))
-  )
 }
 
 /**

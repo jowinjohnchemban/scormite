@@ -24,9 +24,6 @@ test('loads a SCORM 2004 4th Edition package and runs the SCO end to end', async
   await expect(page.getByRole('button', { name: /E2E Org 2004/i })).toBeVisible()
   await expect(page.getByRole('button', { name: /E2E SCO 2004/i })).toBeVisible()
 
-  await expect(page.getByRole('button', { name: 'Reload' })).toBeEnabled()
-  await expect(page.getByRole('button', { name: 'Reset' })).toBeEnabled()
-
   const player = page.frameLocator('iframe[title="SCORM Package"]')
   await expect(page.locator('iframe[title="SCORM Package"]')).toHaveAttribute(
     'src',

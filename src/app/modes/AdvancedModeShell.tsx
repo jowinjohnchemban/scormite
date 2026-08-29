@@ -18,7 +18,6 @@ import { useTimelineReplay } from '@/app/hooks/useTimelineReplay'
 import { useRegisterPluginPanels } from '@/app/plugins/usePluginPanels'
 import type { PackageSession } from '@/app/hooks/usePackageSession'
 import { DropZone } from '@/features/package-loader'
-import { PlayerToolbar } from '@/features/player'
 import type { Package } from '@/shared/types'
 
 function useRegisterAdvancedPanels(): void {
@@ -55,17 +54,13 @@ export function AdvancedModeShell({
   useRegisterAdvancedPanels()
   useRegisterPluginPanels()
   useTimelineReplay()
-  const { pkg, loading, error, launchUrl, reload, reset } = session
+  const { pkg, loading, error } = session
 
-  // The iframe in App is sized to the *visible player area* — the strip above
-  // the PlayerToolbar. Measuring the spacer directly keeps the two in sync
-  // without hardcoding the toolbar height: whatever the toolbar grows to, the
-  // player area shrinks by exactly that much, so the Reload/Reset ribbon never
-  // overlaps the SCO.
-  const playerAreaRef = useRef<HTMLDivElement | null>(null)
+  // The iframe in App is sized to the center dock region.
+  const centerRef = useRef<HTMLDivElement | null>(null)
   useEffect(() => {
     if (!onCenterRegionRectChange) return
-    const node = playerAreaRef.current
+    const node = centerRef.current
     if (!node) {
       // No package yet — App falls back to its default framing.
       onCenterRegionRectChange(null)
@@ -84,10 +79,7 @@ export function AdvancedModeShell({
 
   const center = pkg ? (
     /* Transparent center: the persistent player layer shows through. */
-    <div className="pointer-events-none flex h-full flex-col overflow-hidden">
-      <div ref={playerAreaRef} className="min-h-0 flex-1" />
-      <PlayerToolbar onReload={reload} onReset={reset} disabled={!launchUrl} />
-    </div>
+    <div ref={centerRef} className="pointer-events-none h-full" />
   ) : (
     /* Opaque backdrop so the empty-state drop zone covers the player layer. */
     <div className="pointer-events-auto h-full bg-surface-950">
