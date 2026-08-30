@@ -43,6 +43,7 @@ function DockTab({ panel, isActive, onSelect, onClose, onKeyDown }: DockTabProps
       aria-selected={isActive}
       aria-controls="dock-bottom-tabpanel"
       tabIndex={isActive ? 0 : -1}
+      title={isActive ? `${panel.title} (active)` : `${panel.title}`}
       onClick={onSelect}
       onDoubleClick={onClose}
       onKeyDown={onKeyDown}
@@ -125,6 +126,7 @@ export function DockTabStrip() {
           role="tablist"
           aria-label="Bottom dock panels"
           aria-orientation="horizontal"
+          title="Click a tab to show its panel. Double-click the close icon to remove a panel."
           className="flex min-w-0 flex-1 items-stretch overflow-x-auto"
         >
           {panelIds.map((id) => {
