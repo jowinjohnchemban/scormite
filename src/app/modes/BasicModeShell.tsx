@@ -44,11 +44,12 @@ function CmiSummaryPanel() {
 
 export function BasicModeShell({ session }: { session: PackageSession }) {
   const { pkg, loading, error } = session
+  const showDropZone = pkg === null || loading || error !== null
 
   return (
     <div className="pointer-events-none absolute inset-0 flex overflow-hidden">
-      {!pkg ? (
-        /* Opaque backdrop so the empty-state drop zone covers the player layer. */
+      {showDropZone ? (
+        /* Opaque backdrop so the upload state covers the player layer. */
         <div className="pointer-events-auto h-full w-full bg-surface-950">
           <DropZone onFile={session.loadFile} loading={loading} error={error} />
         </div>
