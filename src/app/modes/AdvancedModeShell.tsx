@@ -53,6 +53,7 @@ export function AdvancedModeShell({
   useRegisterAdvancedPanels()
   useTimelineReplay()
   const { pkg, loading, error } = session
+  const showDropZone = pkg === null || loading || error !== null
 
   // The iframe in App is sized to the center dock region.
   const centerRef = useRef<HTMLDivElement | null>(null)
@@ -75,14 +76,14 @@ export function AdvancedModeShell({
     }
   }, [onCenterRegionRectChange, pkg])
 
-  const center = pkg ? (
-    /* Transparent center: the persistent player layer shows through. */
-    <div ref={centerRef} className="pointer-events-none h-full" />
-  ) : (
+  const center = showDropZone ? (
     /* Opaque backdrop so the empty-state drop zone covers the player layer. */
     <div className="pointer-events-auto h-full bg-surface-950">
       <DropZone onFile={session.loadFile} loading={loading} error={error} />
     </div>
+  ) : (
+    /* Transparent center: the persistent player layer shows through. */
+    <div ref={centerRef} className="pointer-events-none h-full" />
   )
 
   return (
