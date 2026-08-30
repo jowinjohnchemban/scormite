@@ -1,7 +1,8 @@
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useAppModeStore } from '@/app/state/appModeStore'
 import { BasicModeShell } from '@/app/modes/BasicModeShell'
 import { AdvancedModeShell } from '@/app/modes/AdvancedModeShell'
+import { useMediaQuery } from '@/app/hooks/useMediaQuery'
 import { usePackageSession } from '@/app/hooks/usePackageSession'
 import { PlayerFrame } from '@/features/player'
 import { Button } from '@/components/ui/button'
@@ -11,6 +12,11 @@ import { logDevDiagnostic } from '@/shared/lib/devDiagnostics'
 export function App() {
   const mode = useAppModeStore((s) => s.mode)
   const setMode = useAppModeStore((s) => s.setMode)
+  const isDesktop = useMediaQuery('(min-width: 1024px)')
+
+  useEffect(() => {
+    if (!isDesktop && mode === 'advanced') setMode('basic')
+  }, [isDesktop, mode, setMode])
   const mainRef = useRef<HTMLDivElement | null>(null)
   const [playerFrameRect, setPlayerFrameRect] = useState<{
     left: number
@@ -24,13 +30,20 @@ export function App() {
   const session = usePackageSession(mode)
 
   const playerFrameStyle =
-    mode === 'basic' || playerFrameRect === null
-      ? {
-          top: 0,
-          left: 256,
-          right: 0,
-          bottom: 0,
-        }
+    mode === 'basic' || !isDesktop || playerFrameRect === null
+      ? isDesktop
+        ? {
+            top: 0,
+            left: 256,
+            right: 0,
+            bottom: 0,
+          }
+        : {
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+          }
       : {
           position: 'absolute' as const,
           left: playerFrameRect.left,
@@ -74,7 +87,10 @@ export function App() {
           <Button
             size="sm"
             variant={mode === 'advanced' ? 'default' : 'ghost'}
+            disabled={!isDesktop}
+            title={isDesktop ? 'Advanced mode (desktop only)' : 'Advanced mode is only available on wide/desktop screens'}
             onClick={() => {
+              if (!isDesktop) return
               logDevDiagnostic('mode.change.requested', { from: mode, to: 'advanced' })
               setMode('advanced')
             }}
@@ -95,7 +111,9 @@ export function App() {
         <div className="absolute inset-x-0" style={playerFrameStyle}>
           <PlayerFrame src={session.launchUrl} />
         </div>
-        {mode === 'basic' ? (
+        {!isDesktop ? (
+          <BasicModeShell session={session} />
+        ) : mode === 'basic' ? (
           <BasicModeShell session={session} />
         ) : (
           <AdvancedModeShell

@@ -178,7 +178,7 @@ export function BasicModeShell({ session }: { session: PackageSession }) {
   const showDropZone = pkg === null || loading || error !== null
 
   return (
-    <div className="pointer-events-none absolute inset-0 flex overflow-hidden">
+    <div className="pointer-events-none absolute inset-0 flex flex-col overflow-hidden lg:flex-row">
       {showDropZone ? (
         /* Opaque backdrop so the upload state covers the player layer. */
         <div className="pointer-events-auto h-full w-full bg-surface-950">
@@ -186,15 +186,15 @@ export function BasicModeShell({ session }: { session: PackageSession }) {
         </div>
       ) : (
         <>
-          {/* Left: richer package header + CMI summary + API log */}
-          <aside className="pointer-events-auto flex w-64 shrink-0 flex-col overflow-hidden border-r border-border-subtle bg-surface-900">
+          {/* Left: richer package header + CMI summary + API log — full-width on mobile, 256px sidebar on desktop */}
+          <aside className="pointer-events-auto flex max-h-[48vh] w-full flex-col overflow-hidden border-b border-border-subtle bg-surface-900 lg:max-h-none lg:h-full lg:w-64 lg:shrink-0 lg:border-b-0 lg:border-r">
             <PackageHeader />
             <CmiSummaryPanel />
             <BasicApiLog />
           </aside>
 
           {/* Right: transparent space over the persistent player */}
-          <main className="pointer-events-none min-w-0 flex-1" />
+          <main className="pointer-events-none min-h-0 min-w-0 flex-1" />
         </>
       )}
     </div>
