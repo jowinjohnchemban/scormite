@@ -18,11 +18,10 @@ import {
   Network,
   Package,
   ShieldCheck,
-  Terminal,
 } from 'lucide-react'
 import { ManifestExplorer } from '@/features/manifest'
 import { CmiInspectorPanel } from '@/features/inspector'
-import { ApiMonitorPanel, ConsolePanel, PerformancePanel } from '@/features/logging'
+import { ApiMonitorPanel, PerformancePanel } from '@/features/logging'
 import { PackageExplorerPanel } from '@/features/package-loader'
 import { NetworkPanel } from '@/features/player'
 import { TimelinePanel } from '@/features/timeline'
