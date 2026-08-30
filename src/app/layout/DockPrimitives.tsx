@@ -63,6 +63,7 @@ export function PanelChrome({ panel, region }: PanelChromeProps) {
       <button
         type="button"
         aria-label={`Close ${panel.title}`}
+        title={`Close ${panel.title}`}
         onClick={() => close(panel.id)}
         className="rounded p-0.5 text-slate-500 transition-colors hover:bg-surface-700 hover:text-slate-200 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
       >

@@ -72,7 +72,10 @@ export function PerformancePanel() {
                     {formatTime(record.timestamp, false)}
                   </td>
                   <td className="px-2 py-1 text-accent">{record.method}</td>
-                  <td className="max-w-48 truncate px-2 py-1" title={record.element}>
+                  <td
+                    className="max-w-48 truncate px-2 py-1"
+                    title={`Element: ${record.element ?? '—'}`}
+                  >
                     {record.element ?? '—'}
                   </td>
                   <td className="px-2 py-1 text-right text-slate-400">

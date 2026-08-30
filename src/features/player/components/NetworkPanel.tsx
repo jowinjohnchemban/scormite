@@ -57,7 +57,10 @@ export function NetworkPanel() {
                   <td className="whitespace-nowrap px-2 py-1 text-slate-500">
                     {formatTime(entry.timestamp)}
                   </td>
-                  <td className="max-w-72 truncate px-2 py-1" title={entry.path}>
+                  <td
+                    className="max-w-72 truncate px-2 py-1"
+                    title={`Fetch path: ${entry.path}`}
+                  >
                     {entry.path}
                   </td>
                   <td className="px-2 py-1">

@@ -51,7 +51,10 @@ export function ApiMonitorPanel() {
                   <td className="whitespace-nowrap px-2 py-1 text-slate-500">{formatTime(record.timestamp)}</td>
                   <td className="px-2 py-1 text-accent">{record.method}</td>
                   <td className="px-2 py-1">{record.element ?? '—'}</td>
-                  <td className="max-w-48 truncate px-2 py-1" title={record.value}>
+                  <td
+                    className="max-w-48 truncate px-2 py-1"
+                    title={`Value: ${record.value ?? '—'}`}
+                  >
                     {record.value ?? '—'}
                   </td>
                   <td className={record.errorCode ? 'px-2 py-1 text-red-400' : 'px-2 py-1 text-emerald-400'}>
