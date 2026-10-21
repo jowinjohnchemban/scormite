@@ -6,6 +6,11 @@ export interface ManifestValidationContext {
   manifest: Manifest
   /** All file paths found in the package ZIP, forward-slash normalized. */
   filePaths: string[]
+  /**
+   * Set when imsmanifest.xml was found inside a single top-level folder of
+   * the archive rather than at its root (see the package loader).
+   */
+  rootFolder?: string
 }
 
 /** One finding from a static validator — a location plus an explanation. */
@@ -34,6 +39,19 @@ export function normalizePackagePath(path: string): string {
     .replace(/^\/+/, '')
 }
 
+/**
+ * The package file a launch href points at: no query string or fragment,
+ * and percent-escapes decoded (`My%20Course.html` is `My Course.html` in the zip).
+ */
+function launchFilePath(href: string): string {
+  const path = normalizePackagePath(href.split(/[?#]/, 1)[0] ?? '')
+  try {
+    return decodeURI(path)
+  } catch {
+    return path
+  }
+}
+
 function* walkItems(items: ManifestItem[]): Generator<ManifestItem> {
   for (const item of items) {
     yield item
@@ -49,8 +67,9 @@ export const missingLaunchFileValidator: StaticValidator = {
     const present = new Set(filePaths)
     const findings: StaticFinding[] = []
     for (const resource of manifest.resources) {
-      if (resource.href === undefined) continue
-      const href = normalizePackagePath(resource.href)
+      // External launch URLs are not package files.
+      if (resource.href === undefined || /^[a-z][a-z0-9+.-]*:/i.test(resource.href)) continue
+      const href = launchFilePath(resource.href)
       if (!present.has(href)) {
         findings.push({
           location: `resource ${resource.identifier}`,
@@ -147,8 +166,27 @@ export const noScoResourceValidator: StaticValidator = {
   },
 }
 
+/**
+ * imsmanifest.xml must sit at the root of the zip. Scormite re-roots a
+ * folder-wrapped archive so the course still runs, but LMSs reject it.
+ */
+export const packageRootValidator: StaticValidator = {
+  ruleId: 'package.manifest-not-at-root',
+  severity: 'error',
+  check({ rootFolder }) {
+    if (rootFolder === undefined) return []
+    return [
+      {
+        location: `${rootFolder}/imsmanifest.xml`,
+        message: `imsmanifest.xml is inside the "${rootFolder}" folder instead of at the zip root. Scormite opened it anyway, but an LMS will reject this package — zip the folder's contents, not the folder.`,
+      },
+    ]
+  },
+}
+
 /** The full static rule set, run in this order by `validateManifest`. */
 export const STATIC_VALIDATORS: readonly StaticValidator[] = [
+  packageRootValidator,
   missingLaunchFileValidator,
   missingResourceFileValidator,
   brokenItemReferenceValidator,
@@ -160,8 +198,13 @@ export const STATIC_VALIDATORS: readonly StaticValidator[] = [
 export function validateManifest(
   manifest: Manifest,
   filePaths: string[],
+  rootFolder?: string,
 ): ValidationIssue[] {
-  const ctx: ManifestValidationContext = { manifest, filePaths }
+  const ctx: ManifestValidationContext = {
+    manifest,
+    filePaths,
+    ...(rootFolder !== undefined ? { rootFolder } : {}),
+  }
   const issues: ValidationIssue[] = []
   for (const validator of STATIC_VALIDATORS) {
     for (const finding of validator.check(ctx)) {
@@ -203,8 +246,8 @@ export const ValidationService = {
    * Replaces any previous issues (a fresh package starts a fresh report);
    * `addIssues([])` still stamps `lastRunAt` so the panel can show "clean".
    */
-  validateManifest(manifest: Manifest, filePaths: string[]): ValidationIssue[] {
-    const issues = validateManifest(manifest, filePaths)
+  validateManifest(manifest: Manifest, filePaths: string[], rootFolder?: string): ValidationIssue[] {
+    const issues = validateManifest(manifest, filePaths, rootFolder)
     const store = useValidationStore.getState()
     store.clearIssues()
     store.addIssues(issues)

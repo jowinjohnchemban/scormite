@@ -191,6 +191,32 @@ describe('noScoResourceValidator', () => {
   })
 })
 
+describe('missingLaunchFileValidator — launch URL forms', () => {
+  it('ignores query strings, fragments, percent-escapes, and external URLs', () => {
+    const manifest = makeManifest()
+    const withHref = (href: string) => ({
+      ...manifest,
+      resources: manifest.resources.map((r, i) => (i === 0 ? { ...r, href } : r)),
+    })
+    const files = ['My Course.html', 'index.html', 'course/main.js']
+    expect(missingLaunchFileValidator.check({ manifest: withHref('index.html?lang=en#p2'), filePaths: files })).toEqual([])
+    expect(missingLaunchFileValidator.check({ manifest: withHref('My%20Course.html'), filePaths: files })).toEqual([])
+    expect(missingLaunchFileValidator.check({ manifest: withHref('https://cdn.example.com/x.html'), filePaths: files })).toEqual([])
+  })
+})
+
+describe('packageRootValidator', () => {
+  it('flags a manifest found inside a wrapping folder as an error', () => {
+    const issues = validateManifest(makeManifest(), ['index.html', 'course/main.js'], 'My Course')
+    expect(issues).toHaveLength(1)
+    expect(issues[0]).toMatchObject({
+      ruleId: 'package.manifest-not-at-root',
+      severity: 'error',
+      location: 'My Course/imsmanifest.xml',
+    })
+  })
+})
+
 describe('validateManifest', () => {
   it('collects issues across all validators with stable metadata', () => {
     const issues = validateManifest(makeManifest(), [])
