@@ -1,79 +1,57 @@
-# **SCORMITE** <br> SCORM Interactive Testing Environment
+# SCORMite
 
-**DevTools for your SCORM package.** Drop a `.zip` and Scormite runs it locally — playing every SCO, surfacing a live API transcript, the full CMI data model, validation findings, and session replay. No LMS. No upload. No black box.
+**Test, debug and validate SCORM packages in your browser.**
 
-Compatibility benchmark: **SCORM Cloud.**  UX benchmark: **VS Code + Chrome DevTools.**  
-Runtime: [scorm-again](https://github.com/jcputney/scorm-again) — wrapped, never modified.
+[![CI](https://github.com/jowinjohnchemban/scormite/actions/workflows/ci.yml/badge.svg)](https://github.com/jowinjohnchemban/scormite/actions/workflows/ci.yml)
+![SCORM 1.2](https://img.shields.io/badge/SCORM-1.2-2f6fb0)
+![SCORM 2004](https://img.shields.io/badge/SCORM%202004-2nd%20%7C%203rd%20%7C%204th%20Edition-2f6fb0)
+[![Runtime: scorm-again 3.2](https://img.shields.io/badge/runtime-scorm--again%203.2-3fb950)](https://github.com/jcputney/scorm-again)
+![Sequencing](https://img.shields.io/badge/SCORM%202004-sequencing-3fb950)
+![Accessibility: WCAG 2.1 AA](https://img.shields.io/badge/a11y-WCAG%202.1%20AA%20(axe--core)-3fb950)
+![Privacy: runs locally](https://img.shields.io/badge/privacy-runs%20locally%2C%20no%20upload-7f93ab)
 
----
+![React 19](https://img.shields.io/badge/React-19-20232a?logo=react)
+![TypeScript 6](https://img.shields.io/badge/TypeScript-6-3178c6?logo=typescript&logoColor=white)
+![Vite 8](https://img.shields.io/badge/Vite-8-646cff?logo=vite&logoColor=white)
+![Tailwind CSS 4](https://img.shields.io/badge/Tailwind%20CSS-4-06b6d4?logo=tailwindcss&logoColor=white)
+![pnpm 11](https://img.shields.io/badge/pnpm-11-f69220?logo=pnpm&logoColor=white)
+![Tested with Vitest and Playwright](https://img.shields.io/badge/tests-Vitest%20%2B%20Playwright-6e9f18)
 
-## Privacy
-
-Your packages never leave your machine. ZIP parsing, manifest analysis, and package execution all run entirely in the browser. No server round-trip. No account. No telemetry.
-
----
+Drop a SCORM `.zip` and SCORMite plays it the way an LMS does — on the
+open-source [scorm-again](https://github.com/jcputney/scorm-again) runtime —
+showing every API call, the live CMI data, validation issues and a
+replayable timeline, so you catch tracking problems before uploading to
+Moodle, Canvas, SuccessFactors, Cornerstone or any other LMS. Your package
+never leaves your browser: no upload, no account, no telemetry.
 
 ## Features
 
-| | Feature |
-|---|---|
-| 01 | **SCORM 1.2 and SCORM 2004** (2nd / 3rd / 4th Edition) runtimes via scorm-again; SCORM 1.1 packages run on the 1.2 API |
-| 02 | **Course player** — sandboxed iframe, course outline for multi-SCO packages, previous / next, SCORM 2004 navigation requests (`continue`, `previous`, `choice`, `jump`) followed |
-| 03 | **Resume testing** — relaunch a SCO from its stored attempt (`entry=resume`, suspend_data, location, score), start a new attempt, or restart the whole course |
-| 04 | **LMS launch data** — mastery score, launch data, time limits, completion threshold and passing score from the manifest are seeded like an LMS would |
-| 05 | **API transcript** — every `Initialize`, `GetValue`, `SetValue`, `Commit`, `Terminate` with arguments, return value, timing, and scorm-again's error explanation |
-| 06 | **CMI inspector** — live CMI data model with change highlighting |
-| 07 | **Timeline replay** — scrub to any point of a session and see the CMI state at that instant |
-| 08 | **Breakpoints** — pause *before* a specific `SetValue` is applied, inspect, resume |
-| 09 | **Validation** — manifest checks (missing files, broken refs, duplicate ids, manifest not at the zip root) and runtime checks (out-of-range score, oversized suspend_data, missing commit) |
-| 10 | **QA report** — HTML / Markdown / JSON / CSV export of the session |
-| 11 | **Package / Network / Performance panels** — file tree, service-worker fetches, API call timings |
+- **SCORM 1.2 and SCORM 2004** (2nd, 3rd, 4th Edition); SCORM 1.1 packages run on the 1.2 API
+- **Course player** — sandboxed player, course outline for multi-SCO packages, Previous / Next
+- **SCORM 2004 sequencing** — the manifest's `imsss` rules run on scorm-again's sequencing engine: disabled items, flow and choice controls, SCO navigation requests, rollup
+- **Resume testing** — relaunch a SCO from its saved attempt (`entry=resume`, suspend data, location, score), start a new attempt, or restart the course
+- **LMS launch data** — mastery score, launch data, time limits, completion threshold and passing score from the manifest
+- **API log** — every call with arguments, result, timing and the runtime's own error explanation
+- **CMI inspector, timeline replay and breakpoints** (Advanced mode)
+- **Validation** — packaging problems (missing files, broken references, manifest not at the zip root, …) and runtime problems (out-of-range scores, oversized suspend data, missing commits, refused navigation)
+- **QA reports** — HTML, Markdown, JSON or CSV
 
----
-
-## Getting started
+## Quick start
 
 ```bash
 pnpm install
-pnpm run dev        # start the dev server
-pnpm run build      # production build
-pnpm run lint       # ESLint + architecture boundary checks
-pnpm run typecheck  # tsc --noEmit
-pnpm run test       # vitest (unit + axe-core accessibility audits)
-pnpm run test:coverage  # vitest with coverage thresholds (35/20/30/35)
-pnpm run test:e2e   # Playwright e2e suite (Chromium)
-pnpm run format     # Prettier
+pnpm run dev        # http://localhost:5173
 ```
 
-Requires pnpm (see `packageManager` in `package.json`).
-
-## Deployment
-
-Deploy to Vercel, Cloudflare, or any Docker-compatible host using the checked-in
-configuration files. See [deployment instructions](docs/DEPLOYMENT.md).
-
----
+Requires Node.js 24 (the CI version) and pnpm (pinned in `package.json`). See
+[Development](docs/DEVELOPMENT.md) for every command and the definition of
+done, and [Deployment](docs/DEPLOYMENT.md) for hosting the static build.
 
 ## Documentation
 
-- `CLAUDE.md` — rules and workflow for any AI or human picking up development
-- `docs/ARCHITECTURE.md` — layering, folder structure, tooling decisions
-- `docs/DOMAIN_MODEL.md` — canonical entity list and feature ownership
-- `docs/ROADMAP.md` — milestone-by-milestone plan with exit criteria
-- `docs/adr/` — architecture decision records
-- `src/features/<name>/README.md` — what each feature owns
+All documentation lives in [`docs/`](docs/README.md) — the knowledge hub for
+people and agents:
 
----
-
-## Architecture
-
-```
-UI (React)  →  Studio Services  →  Runtime Adapter  →  scorm-again  →  SCORM Package
-```
-
-Two rules enforced by ESLint (not just convention):
-
-1. Only `src/features/runtime` may import `scorm-again`.
-2. Features cannot reach into another feature's internals — only `app`, `shared`, `components`, and same-feature imports are allowed across feature boundaries.
-
-See `docs/adr/0001-eslint-architecture-boundaries.md` for how these work and one gotcha worth knowing if you touch that config.
+- [User guide](docs/USER_GUIDE.md) · [SCORM support](docs/SCORM_SUPPORT.md)
+- [Architecture](docs/ARCHITECTURE.md) · [Development](docs/DEVELOPMENT.md) · [Domain model](docs/DOMAIN_MODEL.md)
+- [Deployment](docs/DEPLOYMENT.md) · [Roadmap](docs/ROADMAP.md) · [Decision records](docs/adr/)

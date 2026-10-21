@@ -48,3 +48,7 @@ test-results/
 playwright-report/
 blob-report/
 
+
+# Agent-only working notes (progress logs, research scratch). Formal,
+# shared documentation lives in docs/.
+.agent-docs/
