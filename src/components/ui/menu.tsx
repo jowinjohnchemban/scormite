@@ -21,6 +21,15 @@ interface MenuProps {
   variant?: ButtonProps['variant']
   size?: ButtonProps['size']
   className?: string
+  /**
+   * Close the menu after any item is chosen (action menus). Leave off for
+   * menus whose items toggle state and are often used several at a time.
+   */
+  closeOnSelect?: boolean
+  /** Disables the trigger. */
+  disabled?: boolean
+  /** Tooltip for the trigger. */
+  title?: string
   children: React.ReactNode
 }
 
@@ -31,6 +40,9 @@ export function Menu({
   variant = 'ghost',
   size = 'sm',
   className,
+  closeOnSelect = false,
+  disabled = false,
+  title,
   children,
 }: MenuProps) {
   const [open, setOpen] = React.useState(false)
@@ -63,7 +75,9 @@ export function Menu({
         size={size}
         aria-haspopup="menu"
         aria-expanded={open}
+        disabled={disabled}
         {...(ariaLabel ? { 'aria-label': ariaLabel } : {})}
+        {...(title ? { title } : {})}
         onClick={() => setOpen((v) => !v)}
       >
         {label}
@@ -71,6 +85,12 @@ export function Menu({
       {open && (
         <div
           role="menu"
+          onClick={(event) => {
+            if (!closeOnSelect) return
+            if (!(event.target as HTMLElement).closest('[role^="menuitem"]')) return
+            setOpen(false)
+            triggerRef.current?.focus()
+          }}
           className={cn(
             'absolute top-full z-50 mt-1 min-w-56 rounded-md border p-1 shadow-lg',
             'border-border-subtle bg-surface-800',
