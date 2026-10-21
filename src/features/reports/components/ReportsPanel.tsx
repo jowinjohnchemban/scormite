@@ -59,7 +59,6 @@ export function ReportsPanel({ reportData, ready, onExport }: ReportsPanelProps)
               </div>
               <div className="rounded border border-border-subtle bg-surface-950 p-3">
                 <h2 className="text-xs uppercase tracking-[0.2em] text-slate-500">Runtime</h2>
-                <p className="text-sm text-slate-200">Profile: {reportData.runtime.activeProfileId}</p>
                 <p className="text-xs text-slate-500">Session ID: {reportData.runtime.sessionId ?? 'N/A'}</p>
                 <p className="text-xs text-slate-500">Initialized: {String(reportData.runtime.isInitialized)}</p>
                 <p className="text-xs text-slate-500">Terminated: {String(reportData.runtime.isTerminated)}</p>

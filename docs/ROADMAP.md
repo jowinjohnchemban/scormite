@@ -52,6 +52,10 @@ build (`pnpm run build`), lint clean (`pnpm run lint`), and typecheck
       Moodle / Canvas / SuccessFactors / Cornerstone / Custom. *Exit
       criteria:* switching profile visibly changes adapter behavior against
       the same package.
+      *Removed in Milestone 17:* the LMS-named profiles only toggled three
+      SCORM 1.2 status switches and were never verified against the real
+      LMSs, so they implied an emulation that did not exist. The runtime now
+      uses one fixed rule set modelled on SCORM Cloud.
 
 ## Recent infra updates
 

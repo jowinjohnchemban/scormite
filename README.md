@@ -26,9 +26,8 @@ Your packages never leave your machine. ZIP parsing, manifest analysis, and pack
 | 07 | **Timeline replay** — scrub to any point of a session and see the CMI state at that instant |
 | 08 | **Breakpoints** — pause *before* a specific `SetValue` is applied, inspect, resume |
 | 09 | **Validation** — manifest checks (missing files, broken refs, duplicate ids, manifest not at the zip root) and runtime checks (out-of-range score, oversized suspend_data, missing commit) |
-| 10 | **Runtime profiles** — Strict ADL, SCORM Cloud, Moodle, Canvas, SuccessFactors, Cornerstone, Custom |
-| 11 | **QA report** — HTML / Markdown / JSON / CSV export of the session |
-| 12 | **Package / Network / Performance panels** — file tree, service-worker fetches, API call timings |
+| 10 | **QA report** — HTML / Markdown / JSON / CSV export of the session |
+| 11 | **Package / Network / Performance panels** — file tree, service-worker fetches, API call timings |
 
 ---
 

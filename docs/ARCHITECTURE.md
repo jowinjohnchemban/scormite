@@ -66,7 +66,7 @@ manifest, runtime, player, session, settings, and validation):
 | `getLaunchableItems` (`features/manifest`) | pure function | Default-organization items that reference a resource with an href, in flow order, with launch paths built per the CAM `parameters` rules and `xml:base` applied |
 | `CourseNavigator` | class | Previous / next in flow order; resolves SCORM 2004 navigation requests (`continue`, `previous`, `choice`, `jump`, `exitAll`, …) to the item to deliver |
 | `AttemptStore` | class | The LMS's persistence for the session: last stored attempt per item |
-| `ScoLauncher` | class | Builds one SCO's runtime: adapter + active profile + middleware (recording, breakpoints, validation) + manifest launch data + stored attempt + `window.API` proxy |
+| `ScoLauncher` | class | Builds one SCO's runtime: adapter + middleware (recording, breakpoints, validation) + manifest launch data + stored attempt + `window.API` proxy |
 | `useCourseStore` (`app/state`) | Zustand | Items, current item, per-item progress, pending launch request |
 | `usePackageSession` (`app/hooks`) | hook | Load / close packages, perform launches, follow navigation events, relaunch / new attempt / restart course |
 
@@ -108,6 +108,13 @@ dismissible strip; the open session keeps running.
 (`features/storage`), and `ConsolePanel` (`features/logging`) are still in
 the tree but no longer wired into the app: no plugin registration, plugin
 menu, or plugin validators run, and neither panel is in `ADVANCED_PANELS`.
+
+Runtime profiles (Strict ADL / SCORM Cloud / Moodle / Canvas /
+SuccessFactors / Cornerstone) were removed entirely: they only toggled three
+SCORM 1.2 status switches and were never verified against those LMSs. The
+runtime uses one fixed rule set modelled on SCORM Cloud
+(`LMS_BASE_SETTINGS` in `ScormRuntimeAdapter.ts`), and every runtime
+validation rule always runs.
 
 ## Advanced-Mode inspection panels (M14)
 

@@ -47,8 +47,6 @@ export interface Session {
   packageId?: string
   startedAt: Date
   endedAt?: Date
-  /** RuntimeProfile id in use for this session. */
-  profile: string
   apiCalls: ApiCallRecord[]
   snapshots: CmiSnapshot[]
 }

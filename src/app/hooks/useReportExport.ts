@@ -4,7 +4,7 @@
  * Report menu (both modes).
  *
  * Lives in `app/` because the report joins package, manifest, logging,
- * timeline, validation, runtime, and settings state.
+ * timeline, validation, and runtime state.
  */
 
 import { useCallback, useMemo } from 'react'
@@ -15,7 +15,6 @@ import { useLogStore } from '@/features/logging'
 import { useTimelineStore } from '@/features/timeline'
 import { useValidationStore } from '@/features/validation'
 import { useRuntimeStore } from '@/features/runtime'
-import { useActiveProfile } from '@/features/settings'
 
 export const REPORT_FORMATS: readonly { format: ReportFormat; label: string }[] = [
   { format: 'html', label: 'HTML report' },
@@ -78,7 +77,6 @@ export function useReportExport(): ReportExport {
   const scormVersion = useRuntimeStore((s) => s.scormVersion)
   const isInitialized = useRuntimeStore((s) => s.isInitialized)
   const isTerminated = useRuntimeStore((s) => s.isTerminated)
-  const activeProfile = useActiveProfile()
 
   const reportData = useMemo<ReportData | null>(() => {
     if (!pkg || !manifest) return null
@@ -86,7 +84,6 @@ export function useReportExport(): ReportExport {
       pkg,
       manifest,
       sessionId,
-      activeProfileId: activeProfile.id,
       scormVersion,
       isInitialized,
       isTerminated,
@@ -98,7 +95,6 @@ export function useReportExport(): ReportExport {
     pkg,
     manifest,
     sessionId,
-    activeProfile.id,
     scormVersion,
     isInitialized,
     isTerminated,
