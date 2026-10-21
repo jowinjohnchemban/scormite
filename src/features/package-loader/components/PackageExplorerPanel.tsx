@@ -3,8 +3,22 @@ import { ChevronRight, File, Folder, FolderOpen } from 'lucide-react'
 import { usePackageStore } from '@/features/package-loader/state/packageStore'
 import { buildFileTree, type FileTreeNode } from '@/features/package-loader/services/fileTree'
 
-function normalizePath(path: string): string {
-  return path.replace(/^\.\//, '').replace(/\\/g, '/')
+/**
+ * The package files resources launch: hrefs without query string or
+ * fragment, percent-escapes decoded, external URLs left out.
+ */
+function launchFiles(hrefs: (string | undefined)[]): ReadonlySet<string> {
+  const files = new Set<string>()
+  for (const href of hrefs) {
+    if (!href || /^[a-z][a-z0-9+.-]*:/i.test(href)) continue
+    const path = (href.split(/[?#]/, 1)[0] ?? '').replace(/^\.\//, '').replace(/\\/g, '/')
+    try {
+      files.add(decodeURI(path))
+    } catch {
+      files.add(path)
+    }
+  }
+  return files
 }
 
 interface TreeRowProps {
@@ -12,12 +26,12 @@ interface TreeRowProps {
   depth: number
   expanded: ReadonlySet<string>
   toggle: (path: string) => void
-  launchPath: string | null
+  launchPaths: ReadonlySet<string>
 }
 
-function TreeRow({ node, depth, expanded, toggle, launchPath }: TreeRowProps) {
+function TreeRow({ node, depth, expanded, toggle, launchPaths }: TreeRowProps) {
   const isOpen = expanded.has(node.path)
-  const isLaunch = launchPath === node.path
+  const isLaunch = !node.isDirectory && launchPaths.has(node.path)
 
   return (
     <>
@@ -73,7 +87,7 @@ function TreeRow({ node, depth, expanded, toggle, launchPath }: TreeRowProps) {
             depth={depth + 1}
             expanded={expanded}
             toggle={toggle}
-            launchPath={launchPath}
+            launchPaths={launchPaths}
           />
         ))}
     </>
@@ -85,7 +99,7 @@ function TreeRow({ node, depth, expanded, toggle, launchPath }: TreeRowProps) {
  * expansion — no effect needed, and stale paths from the previous package
  * can never linger in the expansion state.
  */
-function FileTreeView({ filePaths, launchPath }: { filePaths: string[]; launchPath: string }) {
+function FileTreeView({ filePaths, launchPaths }: { filePaths: string[]; launchPaths: ReadonlySet<string> }) {
   const tree = useMemo(() => buildFileTree(filePaths), [filePaths])
   const [expanded, setExpanded] = useState<ReadonlySet<string>>(
     () => new Set(tree.filter((node) => node.isDirectory).map((node) => node.path)),
@@ -109,7 +123,7 @@ function FileTreeView({ filePaths, launchPath }: { filePaths: string[]; launchPa
           depth={0}
           expanded={expanded}
           toggle={toggle}
-          launchPath={launchPath}
+          launchPaths={launchPaths}
         />
       ))}
     </div>
@@ -142,7 +156,7 @@ export function PackageExplorerPanel() {
         <FileTreeView
           key={pkg.id}
           filePaths={filePaths}
-          launchPath={normalizePath(pkg.launchUrl)}
+          launchPaths={launchFiles(pkg.manifest.resources.map((resource) => resource.href))}
         />
       )}
     </section>
