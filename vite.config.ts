@@ -17,6 +17,24 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react(), tailwindcss(), createSeoPlugin({ ...siteSeoConfig, siteUrl })],
+    build: {
+      rolldownOptions: {
+        output: {
+          codeSplitting: {
+            groups: [
+              {
+                // The SCORM runtime, unzip, and XML parser are only needed once a
+                // package is opened. Their own chunk keeps them out of the start
+                // page; without it the bundler merges them into a chunk the start
+                // page imports.
+                name: 'package-runtime',
+                test: /node_modules[/\\](scorm-again|jszip|fast-xml-parser|pako|lie|immediate|setimmediate|readable-stream)[/\\]/,
+              },
+            ],
+          },
+        },
+      },
+    },
     resolve: {
       alias: {
         '@': path.resolve(dirname, './src'),
