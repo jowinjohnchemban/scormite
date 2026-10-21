@@ -1,9 +1,15 @@
 # Deployment
 
 Scormite is a static, browser-only application. It has no server API, database,
-accounts, telemetry, or environment variables. Deploy the generated `dist/`
-directory at the root of an HTTPS origin: the service worker requires a secure
-context (localhost is also accepted by browsers).
+accounts, or telemetry. Deploy the generated `dist/` directory at the root of an
+HTTPS origin: the service worker requires a secure context (localhost is also
+accepted by browsers).
+
+The one build-time setting is optional: `VITE_SITE_URL` (or `SITE_URL`) is the
+public origin used for the canonical link, Open Graph / Twitter image URLs,
+JSON-LD, `sitemap.xml`, `robots.txt`, and `llms.txt`. It defaults to the
+production origin in `src/shared/config/seo.ts`; set it for preview or staging
+deployments so their metadata does not point at production.
 
 ## Vercel
 

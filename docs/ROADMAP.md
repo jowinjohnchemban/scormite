@@ -110,3 +110,29 @@ build (`pnpm run build`), lint clean (`pnpm run lint`), and typecheck
       running SCO; CI workflow (`.github/workflows/ci.yml`) with separate
       unit and e2e jobs (pnpm 11.20.0, Node 24, `--frozen-lockfile`,
       Playwright report uploaded on failure). All quality gates pass.
+- [x] **Milestone 16 — Course player, session controls, SEO.** *Exit
+      criteria:* a multi-SCO package can be navigated SCO by SCO; each SCO
+      resumes from its stored attempt (`entry=resume`, suspend_data,
+      location) or restarts clean; SCORM 2004 `adl.nav.request` continue /
+      previous / choice / jump deliver the right SCO; manifest launch data
+      (mastery score, launch data, time limits, completion threshold,
+      passing score) reaches the runtime; packages can be opened, relaunched,
+      reported on, and closed without a page reload. Verified by unit tests
+      against real scorm-again (attempt export/restore, seeding, navigation
+      events, error descriptions) and Playwright e2e on three new fixtures
+      (multi-SCO 1.2, 2004 continue flow, folder-wrapped zip): 145 unit +
+      7 e2e tests green, lint/typecheck/build clean.
+      Also: xml:base and item `parameters` resolved; namespace-agnostic
+      manifest parsing; SCORM 2004 2nd Edition (`CAM 1.3`) and SCORM 1.1
+      detection; folder-wrapped zips re-rooted and reported as a package
+      error; service worker ignores launch query strings; SEO metadata,
+      JSON-LD, llms.txt, sitemap, and a landing screen from one config.
+
+## Next candidates
+
+- **SCORM 2004 sequencing engine.** Build scorm-again's `sequencing`
+  activity tree from the manifest's `imsss:*` rules so pre/post-condition
+  rules, rollup, and `adl.nav.request_valid` come from scorm-again instead
+  of flow order.
+- **Remove dead modules.** `features/plugins`, `StoragePanel`, and
+  `ConsolePanel` are no longer wired into the app (see ARCHITECTURE.md).

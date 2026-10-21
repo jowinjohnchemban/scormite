@@ -55,18 +55,59 @@ One Zustand store per feature — see `docs/DOMAIN_MODEL.md` for what each
 store owns. Stores update only in response to `RuntimeEventEmitter` events
 or explicit user actions; components never call the adapter directly.
 
-## Plugins
+## Course player (M16)
 
-`src/features/plugins/` owns the plugin host: `usePluginHost` (Zustand
-store) holds registered plugins plus their panel/command/validator
-contributions, `types.ts` defines the `ScormitePlugin` contract, and
-`builtin/samplePlugin.ts` is the reference implementation. A plugin is
-self-contained — its `activate(api)` receives a `PluginApi` that can only
-register contributions, never touch core internals. The app layer
-(`src/app/plugins/`) bridges contributions into the dock (`usePluginPanels`)
-and toolbar (`PluginMenu`), and feeds validator contributions into the
-runtime validation middleware (`pluginHostBridge`). Plugins register once,
-at app startup, before any package can load.
+SCORMite plays the LMS for one course session. The course-session logic
+lives in `src/app/course/` (the app layer, because it joins package-loader,
+manifest, runtime, player, session, settings, and validation):
+
+| Piece | Kind | Responsibility |
+|---|---|---|
+| `getLaunchableItems` (`features/manifest`) | pure function | Default-organization items that reference a resource with an href, in flow order, with launch paths built per the CAM `parameters` rules and `xml:base` applied |
+| `CourseNavigator` | class | Previous / next in flow order; resolves SCORM 2004 navigation requests (`continue`, `previous`, `choice`, `jump`, `exitAll`, …) to the item to deliver |
+| `AttemptStore` | class | The LMS's persistence for the session: last stored attempt per item |
+| `ScoLauncher` | class | Builds one SCO's runtime: adapter + active profile + middleware (recording, breakpoints, validation) + manifest launch data + stored attempt + `window.API` proxy |
+| `useCourseStore` (`app/state`) | Zustand | Items, current item, per-item progress, pending launch request |
+| `usePackageSession` (`app/hooks`) | hook | Load / close packages, perform launches, follow navigation events, relaunch / new attempt / restart course |
+
+**One runtime per launch.** Every SCO launch gets a fresh scorm-again
+adapter, as scorm-again's own multi-SCO guidance prescribes. The LMS-side
+data flow uses scorm-again end to end:
+
+- *Before Initialize* — `seedLaunchData()` loads the item's manifest data
+  (`datafromlms`, `masteryscore`, `maxtimeallowed`, `timelimitaction`,
+  `completionThreshold`, primary-objective `minNormalizedMeasure`) plus
+  `cmi.core.credit` through `loadFromFlattenedJSON`.
+- *Leaving a SCO* — `exportAttempt()` stores scorm-again's terminate-commit
+  payload (`renderCommitCMI(true)`, which accumulates `total_time`).
+- *Resuming* — `restoreAttempt()` feeds that record to `loadFromJSON` with
+  `entry` set to `resume` after a `suspend` exit (blank otherwise).
+- *Navigation* — scorm-again parses `adl.nav.request` at Terminate and
+  raises `SequenceNext` / `SequencePrevious` / `SequenceChoice` / …; the
+  adapter forwards them as `navigation-request` runtime events and
+  `CourseNavigator` picks the next item. Full IMS Simple Sequencing (an
+  activity tree with rules, rollup, and `adl.nav.request_valid`) is not
+  configured yet.
+- *Errors* — every failed call records scorm-again's `GetErrorString` and
+  `GetDiagnostic` on its `ApiCallRecord`.
+
+**Launch ordering.** A launch is a two-step request: `requestLaunch` blanks
+the player (unmounting the old iframe, whose unload handlers then call
+`LMSFinish` / `Terminate` on the *old* runtime), and an effect performs the
+launch after that commit. Injecting the new `window.API` first would route
+the old SCO's unload-time calls into the new runtime.
+
+**Session controls** (header, both modes): Open another package (or drop a
+zip anywhere), Restart › Relaunch (resume) / New attempt / Restart whole
+course, Report export, Close. A load error while a package is open is a
+dismissible strip; the open session keeps running.
+
+## Removed from the UI
+
+`src/features/plugins/` (M13 plugin host), `StoragePanel`
+(`features/storage`), and `ConsolePanel` (`features/logging`) are still in
+the tree but no longer wired into the app: no plugin registration, plugin
+menu, or plugin validators run, and neither panel is in `ADVANCED_PANELS`.
 
 ## Advanced-Mode inspection panels (M14)
 
@@ -91,8 +132,10 @@ Four panels complete the Advanced-Mode dock, all fed by real data:
   `ApiCallRecord`s (total, errors, avg, P95, max ms, top-5 slowest,
   per-method breakdown); `PerformancePanel` renders the cards.
 
-All four are registered as real components in `src/app/layout/panels.ts`
-(`ADVANCED_PANELS`); no placeholder panels remain.
+Package Explorer, Network, and Performance are registered in
+`src/app/layout/panels.ts` (`ADVANCED_PANELS`), alongside the Outline
+panel added in M16; the Storage panel has since been removed from the dock
+(see "Removed from the UI").
 
 ## Accessibility (M15)
 
@@ -121,7 +164,7 @@ Conventions enforced by this milestone:
   (`bg-accent` #4da3ff) must not carry white text — `Button`'s default
   variant inverts to dark text on hover, and `destructive` uses dark text.
 - **Scrollable regions are focusable** — every scroll container that
-  users can tab into (all 13 panel bodies plus the bottom-dock tabpanel)
+  users can tab into (every panel body plus the bottom-dock tabpanel)
   carries `tabIndex={0}` and a `focus-visible` ring; otherwise axe fires
   `scrollable-region-focusable` (which only appears when the container is
   *actually* scrollable — empty-state audits miss it).
@@ -161,7 +204,9 @@ exactly; treat it as a stand-in for the real CLI run.
 | Types | TypeScript (strict) | `tsconfig.app.json` |
 | Lint + architecture boundaries | ESLint flat config | `eslint.config.js` |
 | Format | Prettier | defaults, via `pnpm run format` |
-| Unit tests + coverage | Vitest + @vitest/coverage-v8 | `vitest.config.ts` (thresholds 35/20/30/35, `pnpm run test:coverage`) |
+| Unit tests + coverage | Vitest + @vitest/coverage-v8 | `vitest.config.ts` (`src/**` and `build/**` tests; thresholds 35/20/30/35, `pnpm run test:coverage`) |
+| SEO / metadata | Vite plugin `build/seoPlugin.ts` | Renders head tags, JSON-LD, no-JS fallback, robots.txt, sitemap.xml, llms.txt, manifest.webmanifest from `src/shared/config/seo.ts`; set `VITE_SITE_URL` per deployment |
+| Brand images | `scripts/make-brand-assets.mjs` | Renders `public/og-image.png` and app icons with Playwright Chromium (outputs committed) |
 | E2E | Playwright | `playwright.config.ts` (`e2e/`, auto-starts dev server, committed fixtures in `e2e/fixtures/`) |
 | CI | GitHub Actions | `.github/workflows/ci.yml` (unit + e2e jobs) |
 
