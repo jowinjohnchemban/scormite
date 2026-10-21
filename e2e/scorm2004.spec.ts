@@ -20,8 +20,8 @@ test('loads a SCORM 2004 4th Edition package and runs the SCO end to end', async
   await expect(page.getByText('scorm2004-basic', { exact: true })).toBeVisible()
   await expect(page.getByText('SCORM 2004 4th Edition', { exact: true })).toBeVisible()
 
-  // Manifest tree renders the 2004 org + item.
-  await expect(page.getByRole('button', { name: /E2E Org 2004/i })).toBeVisible()
+  // Course title and the outline's launchable item.
+  await expect(page.getByText('E2E Org 2004', { exact: true })).toBeVisible()
   await expect(page.getByRole('button', { name: /E2E SCO 2004/i })).toBeVisible()
 
   const player = page.frameLocator('iframe[title="SCORM Package"]')

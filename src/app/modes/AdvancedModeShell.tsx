@@ -17,7 +17,7 @@ import { usePanelRegistry } from '@/app/layout/PanelRegistry'
 import { useTimelineReplay } from '@/app/hooks/useTimelineReplay'
 import type { PackageSession } from '@/app/hooks/usePackageSession'
 import { DropZone } from '@/features/package-loader'
-import type { Package } from '@/shared/types'
+import type { LaunchableItem, Package } from '@/shared/types'
 
 function useRegisterAdvancedPanels(): void {
   const register = usePanelRegistry((s) => s.register)
@@ -26,7 +26,7 @@ function useRegisterAdvancedPanels(): void {
   }, [register])
 }
 
-function PackageStatus({ pkg }: { pkg: Package | null }) {
+function PackageStatus({ pkg, currentItem }: { pkg: Package | null; currentItem: LaunchableItem | null }) {
   if (!pkg) {
     return <span className="text-xs text-slate-600">No package loaded</span>
   }
@@ -39,6 +39,11 @@ function PackageStatus({ pkg }: { pkg: Package | null }) {
         SCORM {pkg.scormVersion}
         {pkg.scormEdition ? ` ${pkg.scormEdition}` : ''}
       </span>
+      {currentItem && (
+        <span className="min-w-0 truncate text-[11px] text-slate-500" title={currentItem.launchPath}>
+          › {currentItem.title}
+        </span>
+      )}
     </div>
   )
 }
@@ -53,7 +58,7 @@ export function AdvancedModeShell({
   useRegisterAdvancedPanels()
   useTimelineReplay()
   const { pkg, loading, error } = session
-  const showDropZone = pkg === null || loading || error !== null
+  const showDropZone = pkg === null
 
   // The iframe in App is sized to the center dock region.
   const centerRef = useRef<HTMLDivElement | null>(null)
@@ -89,7 +94,7 @@ export function AdvancedModeShell({
   return (
     <div className="pointer-events-none absolute inset-0 flex min-h-0 flex-col overflow-hidden">
       <TopToolbar>
-        <PackageStatus pkg={pkg} />
+        <PackageStatus pkg={pkg} currentItem={session.currentItem} />
       </TopToolbar>
       <div className="min-h-0 flex-1">
         <DockLayout center={center} />
