@@ -22,7 +22,6 @@ import { useAppModeStore } from '@/app/state/appModeStore'
 import { usePackageStore } from '@/features/package-loader'
 import { useNetworkStore, type NetworkEntry } from '@/features/player'
 import { useLogStore } from '@/features/logging'
-import { useStorageStore } from '@/features/storage'
 import type { ApiCallRecord, Package } from '@/shared/types'
 
 // Stores are module-level singletons; a previous test switching to Advanced
@@ -64,7 +63,7 @@ describe('accessibility (axe-core, AA)', () => {
 
 /**
  * Data-rich audit: the panels in Advanced mode (Package Explorer tree,
- * Network table, API monitor, Storage table) only render their interactive
+ * Network table, API monitor) only render their interactive
  * content when their stores hold data. Seeding the stores directly is safe —
  * the package load flow only runs through `loadFile`, and `launchUrl` is
  * derived from a runtime session, which stays null here.
@@ -174,32 +173,6 @@ describe('accessibility with live data (axe-core, AA)', () => {
     })
     useNetworkStore.setState({ entries: networkEntries })
     useLogStore.setState({ records: logRecords })
-    useStorageStore.setState({
-      refreshing: false,
-      report: {
-        entries: [
-          {
-            id: 'st-1',
-            origin: 'cache',
-            key: 'scormite-pkg-pkg-sample-1',
-            kind: 'Cache Storage',
-            itemCount: 4,
-            sizeBytes: 18_432,
-          },
-          {
-            id: 'st-2',
-            origin: 'local',
-            key: 'scormite-dock-layout',
-            kind: 'localStorage',
-            itemCount: null,
-            sizeBytes: 842,
-          },
-        ],
-        usageBytes: 19_274,
-        quotaBytes: 2_147_483_648,
-        generatedAt: new Date('2026-08-11T10:00:00Z'),
-      },
-    })
   })
 
   it('has no axe violations in Advanced mode with populated panels', async () => {

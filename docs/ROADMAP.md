@@ -34,6 +34,8 @@ build (`pnpm run build`), lint clean (`pnpm run lint`), and typecheck
       panels wired to `logStore`/`runtimeStore`. *Exit criteria:* every
       SCORM API call appears in the monitor within one frame; CMI tree
       reflects live state with diff highlighting.
+      *The Console panel was removed in Milestone 17* (not reachable from
+      the UI).
 - [x] **Milestone 8 — Timeline + Session Replay.** `TimelinePanel`,
       scrubbing, snapshot restore. *Exit criteria:* scrub to any point in a
       completed session and see the CMI state at that instant.
@@ -72,7 +74,7 @@ build (`pnpm run build`), lint clean (`pnpm run lint`), and typecheck
 - [x] **Milestone 13 — Plugin system.** `PluginHost`, `PluginApi`,
       panel/command/validator registration. *Exit criteria:* a trivial
       sample plugin registers and appears in the UI without touching core
-      code.
+      code. *Removed in Milestone 17* — no longer reachable from the UI.
 - [x] **Milestone 14 — Storage/Network/Performance panels.** Remaining
       Advanced-Mode panels. *Exit criteria:* each panel shows real data for
       a running session. Verified in the browser against a live SCORM 1.2
@@ -82,6 +84,8 @@ build (`pnpm run build`), lint clean (`pnpm run lint`), and typecheck
       `localStorage` keys, and the browser quota estimate (12 KB of 2.1 GB
       used), Performance shows per-call timings (18 calls, avg 0.8 ms,
       P95 5.4 ms) with top-5 slowest and per-method breakdown.
+      *The Storage panel was removed in Milestone 17* (not reachable from
+      the UI).
 - [x] **Milestone 15 — Hardening.** *Exit criteria:* axe-core audit passes
       on both modes; Vitest coverage targets enforced; Playwright e2e suite
       runs against sample packages; CI is green across unit + e2e.
@@ -134,9 +138,7 @@ build (`pnpm run build`), lint clean (`pnpm run lint`), and typecheck
 
 ## Next candidates
 
-- **SCORM 2004 sequencing engine.** Build scorm-again's `sequencing`
-  activity tree from the manifest's `imsss:*` rules so pre/post-condition
-  rules, rollup, and `adl.nav.request_valid` come from scorm-again instead
-  of flow order.
-- **Remove dead modules.** `features/plugins`, `StoragePanel`, and
-  `ConsolePanel` are no longer wired into the app (see ARCHITECTURE.md).
+- **Persistent learner records.** Keep attempts across page reloads
+  (IndexedDB) so long courses can be resumed in a later session.
+- **Learner identity.** Let testers set `learner_id` / `learner_name` for
+  courses that display or branch on them.

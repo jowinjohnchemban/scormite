@@ -124,23 +124,23 @@ zip anywhere), Restart › Relaunch (resume) / New attempt / Restart whole
 course, Report export, Close. A load error while a package is open is a
 dismissible strip; the open session keeps running.
 
-## Removed from the UI
+## Removed features
 
-`src/features/plugins/` (M13 plugin host), `StoragePanel`
-(`features/storage`), and `ConsolePanel` (`features/logging`) are still in
-the tree but no longer wired into the app: no plugin registration, plugin
-menu, or plugin validators run, and neither panel is in `ADVANCED_PANELS`.
+Features that did not earn their place were removed from the product and
+the code, not just hidden:
 
-Runtime profiles (Strict ADL / SCORM Cloud / Moodle / Canvas /
-SuccessFactors / Cornerstone) were removed entirely: they only toggled three
-SCORM 1.2 status switches and were never verified against those LMSs. The
-runtime uses one fixed rule set modelled on SCORM Cloud
-(`LMS_BASE_SETTINGS` in `ScormRuntimeAdapter.ts`), and every runtime
-validation rule always runs.
+- The **plugin system** (M13), the **Storage** panel (M14), and the
+  **Console** panel (M7) — none was reachable from the UI any more.
+
+- **Runtime profiles** (Strict ADL / SCORM Cloud / Moodle / Canvas /
+  SuccessFactors / Cornerstone) only toggled three SCORM 1.2 status
+  switches and were never verified against those LMSs. The runtime uses one
+  fixed rule set modelled on SCORM Cloud (`LMS_BASE_SETTINGS` in
+  `ScormRuntimeAdapter.ts`), and every runtime validation rule always runs.
 
 ## Advanced-Mode inspection panels (M14)
 
-Four panels complete the Advanced-Mode dock, all fed by real data:
+Three panels complete the Advanced-Mode dock, all fed by real data:
 
 - **Package Explorer** (`package-loader`): pure tree-building logic in
   `services/fileTree.ts`; `PackageExplorerPanel` renders it with a
@@ -154,17 +154,12 @@ Four panels complete the Advanced-Mode dock, all fed by real data:
   UI. `networkMonitor.ts` listens on the window side and records into
   `useNetworkStore`; `NetworkPanel` renders the live log. The SW activates
   immediately (`skipWaiting` + `clients.claim`).
-- **Storage** (`storage` feature): read-only browser-storage inspector —
-  Cache Storage buckets, `localStorage` items, and global quota estimate
-  via `StorageService` → `storageStore` → `StoragePanel`.
 - **Performance** (`logging`): `performanceMetrics.ts` aggregates
   `ApiCallRecord`s (total, errors, avg, P95, max ms, top-5 slowest,
   per-method breakdown); `PerformancePanel` renders the cards.
 
-Package Explorer, Network, and Performance are registered in
-`src/app/layout/panels.ts` (`ADVANCED_PANELS`), alongside the Outline
-panel added in M16; the Storage panel has since been removed from the dock
-(see "Removed from the UI").
+They are registered in `src/app/layout/panels.ts` (`ADVANCED_PANELS`)
+alongside the Outline panel added in M16.
 
 ## Accessibility (M15)
 
