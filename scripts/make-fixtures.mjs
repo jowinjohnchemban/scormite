@@ -281,6 +281,114 @@ const MANIFEST_2004_SEQUENCED = `<?xml version="1.0" encoding="utf-8"?>
 </manifest>
 `
 
+// ---------------------------------------------------------------------------
+// SCORM 2004 with real sequencing rules: the quiz is disabled until the
+// intro's primary objective (shared through a global objective) is passed.
+// The intro waits for a click so the gated state can be asserted first.
+// ---------------------------------------------------------------------------
+
+const SCO_2004_GATED_INTRO = `<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"/><title>Gated intro</title></head>
+<body>
+<button id="pass" type="button">Pass and continue</button>
+<script>
+  (function () {
+    var api = window.parent.API_1484_11
+    api.Initialize('')
+    document.getElementById('pass').addEventListener('click', function () {
+      api.SetValue('cmi.success_status', 'passed')
+      api.SetValue('cmi.completion_status', 'completed')
+      // Report the primary objective too, as objective-tracking SCOs do.
+      if (Number(api.GetValue('cmi.objectives._count')) > 0) {
+        api.SetValue('cmi.objectives.0.success_status', 'passed')
+      }
+      api.Commit('')
+      api.SetValue('adl.nav.request', 'continue')
+      api.Terminate('')
+    })
+  })()
+</script>
+</body>
+</html>
+`
+
+const SCO_2004_GATED_QUIZ = `<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"/><title>Gated quiz</title></head>
+<body>
+<script>
+  (function () {
+    var api = window.parent.API_1484_11
+    api.Initialize('')
+    document.body.textContent = 'gated quiz delivered'
+  })()
+</script>
+</body>
+</html>
+`
+
+const MANIFEST_2004_GATED = `<?xml version="1.0" encoding="utf-8"?>
+<manifest identifier="e2e-scorm2004-gated"
+  xmlns="http://www.imsglobal.org/xsd/imscp_v1p1"
+  xmlns:adlcp="http://www.adlnet.org/xsd/adlcp_v1p3"
+  xmlns:imsss="http://www.imsglobal.org/xsd/imsss"
+  version="1.0">
+  <metadata>
+    <schema>ADL SCORM</schema>
+    <schemaversion>2004 4th Edition</schemaversion>
+  </metadata>
+  <organizations default="org-gated">
+    <organization identifier="org-gated">
+      <title>Gated Course</title>
+      <item identifier="gated-intro" identifierref="res-gated-intro">
+        <title>Gated Intro</title>
+        <imsss:sequencing>
+          <imsss:objectives>
+            <imsss:primaryObjective objectiveID="intro-passed">
+              <imsss:mapInfo targetObjectiveID="g-intro-passed" writeSatisfiedStatus="true"/>
+            </imsss:primaryObjective>
+          </imsss:objectives>
+        </imsss:sequencing>
+      </item>
+      <item identifier="gated-quiz" identifierref="res-gated-quiz">
+        <title>Gated Quiz</title>
+        <imsss:sequencing>
+          <imsss:sequencingRules>
+            <imsss:preConditionRule>
+              <!-- "Not satisfied" alone is unknown (not true) while the intro has
+                   no status yet, so the usual gate also checks the status is known. -->
+              <imsss:ruleConditions conditionCombination="any">
+                <imsss:ruleCondition referencedObjective="intro-gate" operator="not" condition="objectiveStatusKnown"/>
+                <imsss:ruleCondition referencedObjective="intro-gate" operator="not" condition="satisfied"/>
+              </imsss:ruleConditions>
+              <imsss:ruleAction action="disabled"/>
+            </imsss:preConditionRule>
+          </imsss:sequencingRules>
+          <imsss:objectives>
+            <imsss:primaryObjective objectiveID="quiz-passed"/>
+            <imsss:objective objectiveID="intro-gate">
+              <imsss:mapInfo targetObjectiveID="g-intro-passed" readSatisfiedStatus="true"/>
+            </imsss:objective>
+          </imsss:objectives>
+        </imsss:sequencing>
+      </item>
+      <imsss:sequencing>
+        <imsss:controlMode choice="true" flow="true"/>
+      </imsss:sequencing>
+    </organization>
+  </organizations>
+  <resources>
+    <resource identifier="res-gated-intro" type="webcontent" adlcp:scormType="sco" href="intro.html">
+      <file href="intro.html"/>
+    </resource>
+    <resource identifier="res-gated-quiz" type="webcontent" adlcp:scormType="sco" href="quiz.html">
+      <file href="quiz.html"/>
+    </resource>
+  </resources>
+</manifest>
+`
+
 /** Pin file metadata so regenerated zips are byte-identical. */
 function pinned(name, content) {
   return { name, content, date: FIXED_DATE }
@@ -315,6 +423,14 @@ const packages = [
       pinned('imsmanifest.xml', MANIFEST_2004_SEQUENCED),
       pinned('intro.html', SCO_2004_FIRST),
       pinned('quiz.html', SCO_2004_SECOND),
+    ],
+  },
+  {
+    file: 'scorm2004-sequenced.zip',
+    entries: [
+      pinned('imsmanifest.xml', MANIFEST_2004_GATED),
+      pinned('intro.html', SCO_2004_GATED_INTRO),
+      pinned('quiz.html', SCO_2004_GATED_QUIZ),
     ],
   },
   {

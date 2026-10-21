@@ -9,6 +9,7 @@ import type { LaunchableItem } from '@/shared/types'
 import { AttemptStore } from './AttemptStore'
 import { CourseNavigator } from './CourseNavigator'
 import { progressTone, summarizeCmi } from './summarizeCmi'
+import { useCourseStore } from '@/app/state/courseStore'
 
 function item(identifier: string): LaunchableItem {
   return {
@@ -106,5 +107,41 @@ describe('progressTone', () => {
     expect(progressTone({ ...base, completionStatus: 'completed' })).toBe('completed')
     expect(progressTone({ ...base, completionStatus: 'incomplete' })).toBe('in-progress')
     expect(progressTone(base)).toBe('not-started')
+  })
+})
+
+describe('useCourseStore.go', () => {
+  const items = [item('a'), item('b'), item('c')]
+
+  it('resolves flow navigation to a launch request', () => {
+    useCourseStore.getState().setCourse(items, false)
+    useCourseStore.setState({ currentItemId: 'a' })
+    useCourseStore.getState().go({ request: 'continue', mode: 'resume' })
+    expect(useCourseStore.getState().pendingLaunch).toEqual({ itemId: 'b', mode: 'resume' })
+  })
+
+  it('hands sequenced navigation to the engine only when its look-ahead allows it', () => {
+    const store = useCourseStore.getState()
+    store.setCourse(items, true)
+    useCourseStore.setState({ currentItemId: 'a' })
+    store.setNavigation({ canContinue: false, canPrevious: false, choices: ['a', 'b'], hiddenControls: [] })
+
+    useCourseStore.getState().go({ request: 'continue', mode: 'resume' })
+    expect(useCourseStore.getState().pendingNavigation).toBeNull()
+    expect(useCourseStore.getState().notice).toMatch(/sequencing rules/)
+
+    useCourseStore.getState().go({ request: 'choice', targetId: 'c', mode: 'resume' })
+    expect(useCourseStore.getState().pendingNavigation).toBeNull()
+
+    useCourseStore.getState().go({ request: 'choice', targetId: 'b', mode: 'resume' })
+    expect(useCourseStore.getState().pendingNavigation).toEqual({ request: 'choice', targetId: 'b', mode: 'resume' })
+    expect(useCourseStore.getState().notice).toBeNull()
+  })
+
+  it('ignores navigation while a launch is in flight', () => {
+    useCourseStore.getState().setCourse(items, false)
+    useCourseStore.setState({ currentItemId: 'a', pendingLaunch: { itemId: 'c', mode: 'new' } })
+    useCourseStore.getState().go({ request: 'continue', mode: 'resume' })
+    expect(useCourseStore.getState().pendingLaunch).toEqual({ itemId: 'c', mode: 'new' })
   })
 })
