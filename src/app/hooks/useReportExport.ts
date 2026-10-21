@@ -15,12 +15,13 @@ import { useLogStore } from '@/features/logging'
 import { useTimelineStore } from '@/features/timeline'
 import { useValidationStore } from '@/features/validation'
 import { useRuntimeStore } from '@/features/runtime'
+import { useCourseStore } from '@/app/state/courseStore'
 
 export const REPORT_FORMATS: readonly { format: ReportFormat; label: string }[] = [
   { format: 'html', label: 'HTML report' },
   { format: 'markdown', label: 'Markdown' },
   { format: 'json', label: 'JSON' },
-  { format: 'csv', label: 'CSV (API calls)' },
+  { format: 'csv', label: 'CSV (API log)' },
 ]
 
 const MIME_TYPES: Record<ReportFormat, string> = {
@@ -77,12 +78,31 @@ export function useReportExport(): ReportExport {
   const scormVersion = useRuntimeStore((s) => s.scormVersion)
   const isInitialized = useRuntimeStore((s) => s.isInitialized)
   const isTerminated = useRuntimeStore((s) => s.isTerminated)
+  const items = useCourseStore((s) => s.items)
+  const progress = useCourseStore((s) => s.progress)
+  const sequenced = useCourseStore((s) => s.sequenced)
+  const currentItemId = useCourseStore((s) => s.currentItemId)
 
   const reportData = useMemo<ReportData | null>(() => {
     if (!pkg || !manifest) return null
     return ReportBuilderService.buildReportData({
       pkg,
       manifest,
+      course: {
+        sequenced,
+        currentItemTitle: items.find((item) => item.identifier === currentItemId)?.title ?? null,
+        items: items.map((item) => {
+          const summary = progress[item.identifier]
+          return {
+            identifier: item.identifier,
+            title: item.title,
+            scormType: item.scormType,
+            completionStatus: summary?.completionStatus ?? 'not attempted',
+            successStatus: summary?.successStatus ?? 'unknown',
+            score: summary?.score ?? '',
+          }
+        }),
+      },
       sessionId,
       scormVersion,
       isInitialized,
@@ -94,6 +114,10 @@ export function useReportExport(): ReportExport {
   }, [
     pkg,
     manifest,
+    items,
+    progress,
+    sequenced,
+    currentItemId,
     sessionId,
     scormVersion,
     isInitialized,
