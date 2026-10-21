@@ -83,3 +83,23 @@ test('opens another package from the header without a page reload', async ({ pag
   await expect(page.getByText('scorm12-basic', { exact: true })).toHaveCount(0)
   await expect(playerBody(page)).toContainText('setStatus=true', { timeout: 15_000 })
 })
+
+test('enforces SCORM 2004 sequencing rules from the manifest', async ({ page }) => {
+  await page.goto('/')
+  await page.setInputFiles('input[type="file"]', fixture('scorm2004-sequenced.zip'))
+
+  const outline = page.getByRole('region', { name: 'Course outline' })
+  await expect(outline.getByText('sequenced')).toBeVisible({ timeout: 15_000 })
+
+  // The quiz's precondition rule disables it until the intro is passed.
+  const quiz = outline.getByRole('button', { name: /Gated Quiz/ })
+  await expect(quiz).toBeDisabled()
+  await expect(outline.getByRole('button', { name: /Gated Intro/ })).toHaveAttribute('aria-current', 'step')
+
+  // Passing the intro writes the shared objective; its continue request is
+  // then allowed and the engine delivers the quiz.
+  await page.frameLocator(PLAYER).getByRole('button', { name: 'Pass and continue' }).click()
+  await expect(playerBody(page)).toContainText('gated quiz delivered', { timeout: 15_000 })
+  await expect(quiz).toHaveAttribute('aria-current', 'step')
+  await expect(outline.getByRole('button', { name: /Gated Intro/ })).toBeEnabled()
+})

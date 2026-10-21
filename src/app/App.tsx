@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useAppModeStore } from '@/app/state/appModeStore'
+import { useCourseStore } from '@/app/state/courseStore'
 import { BasicModeShell } from '@/app/modes/BasicModeShell'
 import { AdvancedModeShell } from '@/app/modes/AdvancedModeShell'
 import { useMediaQuery } from '@/app/hooks/useMediaQuery'
@@ -35,6 +36,9 @@ export function App() {
   // Single subscription for the whole app: the runtime session (and therefore
   // the running SCO) outlives any one mode shell.
   const session = usePackageSession(mode)
+  const notice = useCourseStore((s) => s.notice)
+  const setNotice = useCourseStore((s) => s.setNotice)
+  const dismissNotice = useCallback(() => setNotice(null), [setNotice])
   const draggingFile = useWindowFileDrop(true, (file) => void session.loadFile(file))
 
   const playerFrameStyle =
@@ -108,6 +112,7 @@ export function App() {
         </div>
       </header>
       <SessionAlert message={session.pkg ? session.error : null} onDismiss={session.dismissError} />
+      <SessionAlert message={notice} onDismiss={dismissNotice} tone="warning" />
       <main ref={mainRef} className="relative min-h-0 flex-1 overflow-hidden">
         {/*
           Persistent player layer. The SCO iframe must never leave the DOM on

@@ -1,8 +1,9 @@
 /**
- * Builds the runtime for one SCO launch: a scorm-again adapter with the
- * middleware pipeline (recording, breakpoints, validation), the manifest's
- * launch data, any stored attempt to resume, and the `window.API` /
- * `window.API_1484_11` proxy the SCO finds.
+ * Builds SCO runtimes: a scorm-again adapter with the middleware pipeline
+ * (recording, breakpoints, validation) — optionally driven by the SCORM 2004
+ * sequencing engine — and, per delivered SCO, the manifest's launch data,
+ * any stored attempt to resume, and the `window.API` / `window.API_1484_11`
+ * proxy the SCO finds.
  *
  * Lives in `app/` because it joins runtime, session, validation, and
  * player — no single feature may import the others.
@@ -17,6 +18,7 @@ import {
   Scorm2004Adapter,
   type AttemptRecord,
   type ScormRuntimeAdapter,
+  type SequencingOptions,
 } from '@/features/runtime'
 import { useBreakpointStore } from '@/features/session'
 import { useValidationStore } from '@/features/validation'
@@ -24,33 +26,42 @@ import type { LaunchableItem, Package } from '@/shared/types'
 
 export class ScoLauncher {
   private readonly pkg: Package
+  private engines = 0
 
   constructor(pkg: Package) {
     this.pkg = pkg
   }
 
-  /**
-   * Create and wire the adapter for `item`, resuming from `attempt` when
-   * given. The returned adapter is already reachable by the SCO; the caller
-   * publishes it to the runtime store and points the player at the item.
-   */
-  launch(item: LaunchableItem, attempt: AttemptRecord | undefined): ScormRuntimeAdapter {
-    const adapter = this.createAdapter()
+  /** A fresh runtime for one SCO launch, in manifest-order (flow) mode. */
+  createRuntime(): ScormRuntimeAdapter {
+    const adapter =
+      this.pkg.scormVersion === '1.2' ? new Scorm12Adapter(this.pkg.id) : new Scorm2004Adapter(this.pkg.id)
     this.installMiddleware(adapter)
-
-    // What an LMS supplies before launch: the manifest's data for this
-    // item, then the stored attempt (which wins where both set a value).
-    adapter.seedLaunchData(item.launchData)
-    if (attempt) adapter.restoreAttempt(attempt)
-
-    injectApiProxy(adapter, this.pkg.scormVersion)
     return adapter
   }
 
-  private createAdapter(): ScormRuntimeAdapter {
-    return this.pkg.scormVersion === '1.2'
-      ? new Scorm12Adapter(this.pkg.id)
-      : new Scorm2004Adapter(this.pkg.id)
+  /**
+   * One SCORM 2004 runtime for the whole course, driven by scorm-again's
+   * sequencing engine; reused for every SCO it delivers.
+   */
+  createSequencedRuntime(sequencing: SequencingOptions): Scorm2004Adapter {
+    // A distinct session id per engine, so events from a replaced engine (a
+    // course restart) can be told apart from the current one's.
+    this.engines += 1
+    const adapter = new Scorm2004Adapter(`${this.pkg.id}#${this.engines}`, undefined, sequencing)
+    this.installMiddleware(adapter)
+    return adapter
+  }
+
+  /**
+   * Prepare `adapter` for `item`: what an LMS supplies before launch — the
+   * manifest's data for the item, then the stored attempt (which wins where
+   * both set a value) — and expose it to the SCO.
+   */
+  deliver(adapter: ScormRuntimeAdapter, item: LaunchableItem, attempt: AttemptRecord | undefined): void {
+    adapter.seedLaunchData(item.launchData)
+    if (attempt) adapter.restoreAttempt(attempt)
+    injectApiProxy(adapter, this.pkg.scormVersion)
   }
 
   private installMiddleware(adapter: ScormRuntimeAdapter): void {

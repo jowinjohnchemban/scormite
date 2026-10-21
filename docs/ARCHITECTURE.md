@@ -55,24 +55,42 @@ One Zustand store per feature — see `docs/DOMAIN_MODEL.md` for what each
 store owns. Stores update only in response to `RuntimeEventEmitter` events
 or explicit user actions; components never call the adapter directly.
 
-## Course player (M16)
+## Course player (M16–M17)
 
 SCORMite plays the LMS for one course session. The course-session logic
 lives in `src/app/course/` (the app layer, because it joins package-loader,
-manifest, runtime, player, session, settings, and validation):
+manifest, runtime, player, session, and validation):
 
 | Piece | Kind | Responsibility |
 |---|---|---|
-| `getLaunchableItems` (`features/manifest`) | pure function | Default-organization items that reference a resource with an href, in flow order, with launch paths built per the CAM `parameters` rules and `xml:base` applied |
-| `CourseNavigator` | class | Previous / next in flow order; resolves SCORM 2004 navigation requests (`continue`, `previous`, `choice`, `jump`, `exitAll`, …) to the item to deliver |
+| `getLaunchableItems` / `getActivityTree` (`features/manifest`) | pure functions | Launchable items in flow order (launch paths per the CAM `parameters` rules, `xml:base` applied); the SCORM 2004 activity tree with each activity's parsed `imsss` sequencing (`SequencingParser`) |
+| `CourseSession` | class | One open package: starts the course, delivers SCOs, hands learner navigation to the engine, stores / restores attempts, publishes progress and navigation availability |
+| `ScoLauncher` | class | Builds runtimes (a fresh one per SCO, or one sequenced runtime per course) with the middleware pipeline, and delivers an item into a runtime: manifest launch data + stored attempt + `window.API` proxy |
+| `CourseNavigator` | class | Flow-mode previous / next and resolution of SCO navigation requests |
 | `AttemptStore` | class | The LMS's persistence for the session: last stored attempt per item |
-| `ScoLauncher` | class | Builds one SCO's runtime: adapter + middleware (recording, breakpoints, validation) + manifest launch data + stored attempt + `window.API` proxy |
-| `useCourseStore` (`app/state`) | Zustand | Items, current item, per-item progress, pending launch request |
-| `usePackageSession` (`app/hooks`) | hook | Load / close packages, perform launches, follow navigation events, relaunch / new attempt / restart course |
+| `useCourseStore` (`app/state`) | Zustand | Items, current item, progress, navigation availability, pending launch / navigation; `go()` is the one entry point for navigation |
+| `usePackageSession` (`app/hooks`) | hook | React glue: load / close packages, run pending launches and navigation through the `CourseSession` |
 
-**One runtime per launch.** Every SCO launch gets a fresh scorm-again
-adapter, as scorm-again's own multi-SCO guidance prescribes. The LMS-side
-data flow uses scorm-again end to end:
+**Two ways to play a course.**
+
+- *SCORM 2004 — sequenced.* The activity tree goes to scorm-again's SCORM
+  2004 sequencing engine (`SequencingConfigBuilder` maps it; anything the
+  engine cannot evaluate faithfully is reported as a `sequencing.unsupported`
+  warning instead of approximated). One runtime serves the whole course:
+  the engine's `start`, SCO-initiated `adl.nav.request`s, and the learner's
+  outline / Previous / Next requests all go through it, and it announces
+  each SCO to deliver; between SCOs the runtime is `reset()` (sequencing
+  state survives). Outline items the rules do not allow are disabled using
+  the engine's look-ahead (`predictChoiceEnabled` / continue / previous),
+  Previous / Next honour `hideLMSUI`, and statuses come from the engine's
+  rollup. If the engine cannot start the course it falls back to flow mode
+  with a `sequencing.start-failed` warning.
+- *SCORM 1.2 (and the fallback) — flow.* A fresh runtime per SCO, as
+  scorm-again's multi-SCO guidance prescribes; navigation in manifest
+  order, and a 2004 SCO's `adl.nav.request` is resolved by
+  `CourseNavigator`.
+
+**LMS-side data flow** — scorm-again end to end:
 
 - *Before Initialize* — `seedLaunchData()` loads the item's manifest data
   (`datafromlms`, `masteryscore`, `maxtimeallowed`, `timelimitaction`,
@@ -82,20 +100,24 @@ data flow uses scorm-again end to end:
   payload (`renderCommitCMI(true)`, which accumulates `total_time`).
 - *Resuming* — `restoreAttempt()` feeds that record to `loadFromJSON` with
   `entry` set to `resume` after a `suspend` exit (blank otherwise).
-- *Navigation* — scorm-again parses `adl.nav.request` at Terminate and
-  raises `SequenceNext` / `SequencePrevious` / `SequenceChoice` / …; the
-  adapter forwards them as `navigation-request` runtime events and
-  `CourseNavigator` picks the next item. Full IMS Simple Sequencing (an
-  activity tree with rules, rollup, and `adl.nav.request_valid`) is not
-  configured yet.
 - *Errors* — every failed call records scorm-again's `GetErrorString` and
-  `GetDiagnostic` on its `ApiCallRecord`.
+  `GetDiagnostic` on its `ApiCallRecord`; refused navigation requests
+  become `sequencing.request-refused` warnings.
 
-**Launch ordering.** A launch is a two-step request: `requestLaunch` blanks
-the player (unmounting the old iframe, whose unload handlers then call
-`LMSFinish` / `Terminate` on the *old* runtime), and an effect performs the
-launch after that commit. Injecting the new `window.API` first would route
-the old SCO's unload-time calls into the new runtime.
+**Known runtime limitation (scorm-again 3.2.0).** When a sequenced activity
+is retried, scorm-again seeds `cmi.objectives` with the primary objective's
+status from the previous attempt, and that entry wins at Terminate. A SCO
+that only sets `cmi.success_status` on the retry therefore keeps the old
+satisfaction status; SCOs that also report their primary objective in
+`cmi.objectives` behave correctly. Scormite does not patch scorm-again, so
+the behaviour is shown as the runtime produces it.
+
+**Launch ordering.** Launches and engine navigation are two-step
+requests: the request blanks the player (unmounting the old iframe, whose
+unload handlers then call `LMSFinish` / `Terminate` on the *old* runtime
+state), and an effect performs the launch or navigation after that commit.
+Injecting the next SCO's state first would route the old SCO's unload-time
+calls into it.
 
 **Session controls** (header, both modes): Open another package (or drop a
 zip anywhere), Restart › Relaunch (resume) / New attempt / Restart whole
