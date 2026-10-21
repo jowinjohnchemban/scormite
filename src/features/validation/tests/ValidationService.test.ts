@@ -251,3 +251,23 @@ describe('countBySeverity', () => {
     expect(countBySeverity([])).toEqual({ error: 0, warning: 0, suggestion: 0 })
   })
 })
+
+describe('missingResourceFileValidator — file href forms', () => {
+  it('decodes percent-escapes and skips external files', () => {
+    const manifest = makeManifest()
+    const withFiles = (files: string[]) => ({
+      ...manifest,
+      resources: manifest.resources.map((r, i) => (i === 0 ? { ...r, files } : r)),
+    })
+    const present = ['index.html', 'course/main.js', 'docs/My Notes.pdf']
+    expect(
+      missingResourceFileValidator.check({
+        manifest: withFiles(['docs/My%20Notes.pdf', 'https://cdn.example.com/lib.js']),
+        filePaths: present,
+      }),
+    ).toEqual([])
+    expect(
+      missingResourceFileValidator.check({ manifest: withFiles(['docs/missing.pdf']), filePaths: present }),
+    ).toHaveLength(1)
+  })
+})

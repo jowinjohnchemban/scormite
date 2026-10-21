@@ -39,11 +39,13 @@ export function normalizePackagePath(path: string): string {
     .replace(/^\/+/, '')
 }
 
+const EXTERNAL_URL = /^[a-z][a-z0-9+.-]*:/i
+
 /**
- * The package file a launch href points at: no query string or fragment,
- * and percent-escapes decoded (`My%20Course.html` is `My Course.html` in the zip).
+ * The package file an href points at: no query string or fragment, and
+ * percent-escapes decoded (`My%20Course.html` is `My Course.html` in the zip).
  */
-function launchFilePath(href: string): string {
+function packageFilePath(href: string): string {
   const path = normalizePackagePath(href.split(/[?#]/, 1)[0] ?? '')
   try {
     return decodeURI(path)
@@ -68,8 +70,8 @@ export const missingLaunchFileValidator: StaticValidator = {
     const findings: StaticFinding[] = []
     for (const resource of manifest.resources) {
       // External launch URLs are not package files.
-      if (resource.href === undefined || /^[a-z][a-z0-9+.-]*:/i.test(resource.href)) continue
-      const href = launchFilePath(resource.href)
+      if (resource.href === undefined || EXTERNAL_URL.test(resource.href)) continue
+      const href = packageFilePath(resource.href)
       if (!present.has(href)) {
         findings.push({
           location: `resource ${resource.identifier}`,
@@ -90,8 +92,9 @@ export const missingResourceFileValidator: StaticValidator = {
     const findings: StaticFinding[] = []
     for (const resource of manifest.resources) {
       for (const file of resource.files) {
-        const normalized = normalizePackagePath(file)
-        if (!present.has(normalized)) {
+        // External files are not part of the package.
+        if (EXTERNAL_URL.test(file)) continue
+        if (!present.has(packageFilePath(file))) {
           findings.push({
             location: `resource ${resource.identifier}`,
             message: `Declared file "${file}" is missing from the package.`,

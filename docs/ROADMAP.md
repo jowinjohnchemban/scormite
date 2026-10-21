@@ -13,7 +13,7 @@ build (`pnpm run build`), lint clean (`pnpm run lint`), and typecheck
       conventions in place (`components.json`, `cn()`, hand-authored
       `Button` — CLI needs network access this sandbox didn't have);
       feature-first folder tree with README + barrel per feature; `/docs/`
-      folder; `CLAUDE.md` + project skill for future Claude sessions.
+      folder; agent instructions for future sessions.
 - [x] **Milestone 3 — Package loader + Manifest parser.** ZIP/folder/drag-drop
       ingestion, SCORM version detection, manifest tree parse
       (fast-xml-parser). *Exit criteria:* load a real SCORM 1.2 and a real
