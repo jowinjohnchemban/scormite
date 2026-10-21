@@ -3,16 +3,11 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/png" href="/logo.png" />
-    <link rel="apple-touch-icon" href="/logo.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="DevTools for your SCORM package. Drop a .zip and Scormite runs it locally — live API transcript, CMI inspector, timeline replay, breakpoints, validation, and runtime profiles. No upload. No account." />
-    <title>Scormite</title>
-
-    <!-- Preload critical resources for faster initial paint -->
-    <link rel="modulepreload" href="/src/main.tsx" />
-    <link rel="preload" as="style" href="/src/index.css" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
+    <meta name="description" content="" />
+    <title>SCORMite</title>
+    <!-- Vite injects modulepreload / stylesheet links for the built chunks. -->
 
     <!-- Preloader styles (inline to avoid FOUC) -->
     <style>
@@ -50,7 +45,23 @@
         font-size: 13px;
         font-family: system-ui, -apple-system, sans-serif;
       }
+      /* Crawlable fallback inside #root (rendered by build/seoPlugin.ts);
+         React replaces it on mount. Readable on its own without JS. */
+      .seo-fallback {
+        max-width: 48rem;
+        margin: 0 auto;
+        padding: 2rem 1rem;
+        color: #c9d1d9;
+        background: #0b0d10;
+        font: 14px/1.6 system-ui, -apple-system, sans-serif;
+      }
+      .seo-fallback h1 { font-size: 1.5rem; color: #f0f6fc; }
+      .seo-fallback h2 { font-size: 1.125rem; margin-top: 2rem; color: #f0f6fc; }
+      .seo-fallback h3 { font-size: 1rem; margin: 0; color: #f0f6fc; }
+      .seo-fallback dt { font-weight: 600; margin-top: 1rem; color: #f0f6fc; }
+      .seo-fallback dd { margin: 0.25rem 0 0; }
     </style>
+    <noscript><style>#preloader { display: none; }</style></noscript>
   </head>
   <body>
     <!-- Preloader shown until React hydrates -->

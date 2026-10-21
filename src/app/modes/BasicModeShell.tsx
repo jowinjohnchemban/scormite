@@ -13,6 +13,7 @@ import { DropZone } from '@/features/package-loader'
 import { useCmiState } from '@/app/hooks/useCmiState'
 import type { PackageSession } from '@/app/hooks/usePackageSession'
 import { CourseOutline } from '@/app/course/CourseOutline'
+import { LandingContent } from '@/app/landing/LandingContent'
 import { useCourseStore } from '@/app/state/courseStore'
 import { useLogStore } from '@/features/logging'
 import { useManifestStore } from '@/features/manifest'
@@ -198,7 +199,9 @@ export function BasicModeShell({ session }: { session: PackageSession }) {
       {pkg === null ? (
         /* Opaque backdrop so the upload state covers the player layer. */
         <div className="pointer-events-auto h-full w-full bg-surface-950">
-          <DropZone onFile={session.loadFile} loading={loading} error={error} />
+          <LandingContent
+            dropZone={<DropZone onFile={session.loadFile} loading={loading} error={error} />}
+          />
         </div>
       ) : (
         <>
