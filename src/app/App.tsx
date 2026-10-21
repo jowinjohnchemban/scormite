@@ -71,7 +71,9 @@ export function App() {
       <header className="flex h-10 shrink-0 items-center justify-between gap-2 border-b border-border-subtle bg-surface-900 px-3 text-sm">
         <div className="flex shrink-0 items-center gap-2">
           <img src={logo} alt="" className="h-6 w-6 object-contain" />
-          <h1 className="font-medium tracking-tight">SCORMite</h1>
+          <span className="font-medium tracking-tight">SCORMite</span>
+          {/* The landing screen carries the visible h1; in a session the page is about the package. */}
+          {session.pkg && <h1 className="sr-only">{session.pkg.name} — SCORMite</h1>}
         </div>
         <div className="flex min-w-0 items-center gap-1">
           <SessionControls session={session} />
