@@ -1,11 +1,11 @@
 /**
- * Builds the runtime for one SCO launch: a scorm-again adapter configured
- * with the active runtime profile, the middleware pipeline (recording,
- * breakpoints, validation), the manifest's launch data, any stored attempt
- * to resume, and the `window.API` / `window.API_1484_11` proxy the SCO finds.
+ * Builds the runtime for one SCO launch: a scorm-again adapter with the
+ * middleware pipeline (recording, breakpoints, validation), the manifest's
+ * launch data, any stored attempt to resume, and the `window.API` /
+ * `window.API_1484_11` proxy the SCO finds.
  *
- * Lives in `app/` because it joins runtime, session, settings, validation,
- * and player — no single feature may import the others.
+ * Lives in `app/` because it joins runtime, session, validation, and
+ * player — no single feature may import the others.
  */
 
 import { injectApiProxy } from '@/features/player'
@@ -19,9 +19,7 @@ import {
   type ScormRuntimeAdapter,
 } from '@/features/runtime'
 import { useBreakpointStore } from '@/features/session'
-import { getRuntimeProfile, useSettingsStore } from '@/features/settings'
 import { useValidationStore } from '@/features/validation'
-import { validatorsForProfile } from '@/app/profileRuntime'
 import type { LaunchableItem, Package } from '@/shared/types'
 
 export class ScoLauncher {
@@ -38,10 +36,6 @@ export class ScoLauncher {
    */
   launch(item: LaunchableItem, attempt: AttemptRecord | undefined): ScormRuntimeAdapter {
     const adapter = this.createAdapter()
-
-    // The active runtime profile's scorm-again knobs apply before the very
-    // first Initialize.
-    adapter.configure(this.activeProfile().scormAgainOverrides)
     this.installMiddleware(adapter)
 
     // What an LMS supplies before launch: the manifest's data for this
@@ -57,10 +51,6 @@ export class ScoLauncher {
     return this.pkg.scormVersion === '1.2'
       ? new Scorm12Adapter(this.pkg.id)
       : new Scorm2004Adapter(this.pkg.id)
-  }
-
-  private activeProfile() {
-    return getRuntimeProfile(useSettingsStore.getState().activeProfileId)
   }
 
   private installMiddleware(adapter: ScormRuntimeAdapter): void {
@@ -80,12 +70,11 @@ export class ScoLauncher {
     adapter.onPauseChange((paused) => useBreakpointStore.getState().setPausedFlag(paused))
     breakpoints.setResumeHandler(() => adapter.resume())
 
-    // Runtime validation runs on every completed call. The rule list is
-    // re-read from the active profile per call, so a profile switch changes
-    // which issues appear without rebuilding the pipeline.
+    // Runtime validation runs on every completed call.
     adapter.addMiddleware(
       createValidationMiddleware({
-        getValidators: () => validatorsForProfile(this.activeProfile()),
+        scormVersion: this.pkg.scormVersion,
+        ...(this.pkg.scormEdition !== undefined ? { scormEdition: this.pkg.scormEdition } : {}),
         onIssue: (issue) => useValidationStore.getState().addIssue(issue),
       }),
     )

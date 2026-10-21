@@ -18,7 +18,6 @@ export interface ReportData {
   }
   runtime: {
     sessionId: string | null
-    activeProfileId: string
     scormVersion: string | null
     isInitialized: boolean
     isTerminated: boolean
@@ -36,7 +35,6 @@ export interface BuildReportOptions {
   pkg: Package
   manifest: Manifest
   sessionId: string | null
-  activeProfileId: string
   scormVersion: string | null
   isInitialized: boolean
   isTerminated: boolean
@@ -71,7 +69,6 @@ export const ReportBuilderService = {
     pkg,
     manifest,
     sessionId,
-    activeProfileId,
     scormVersion,
     isInitialized,
     isTerminated,
@@ -94,7 +91,6 @@ export const ReportBuilderService = {
       },
       runtime: {
         sessionId,
-        activeProfileId,
         scormVersion,
         isInitialized,
         isTerminated,
@@ -136,7 +132,6 @@ export const ReportBuilderService = {
 
     addSummary('Runtime', [
       ['Session ID', report.runtime.sessionId ?? 'None'],
-      ['Profile', report.runtime.activeProfileId],
       ['SCORM Version', report.runtime.scormVersion ?? 'Unknown'],
       ['Initialized', String(report.runtime.isInitialized)],
       ['Terminated', String(report.runtime.isTerminated)],
@@ -214,7 +209,6 @@ export const ReportBuilderService = {
       `## Runtime Summary`,
       summaryRows('Runtime', [
         ['Session ID', report.runtime.sessionId ?? 'None'],
-        ['Profile', report.runtime.activeProfileId],
         ['SCORM Version', report.runtime.scormVersion ?? 'Unknown'],
         ['Initialized', String(report.runtime.isInitialized)],
         ['Terminated', String(report.runtime.isTerminated)],
@@ -313,7 +307,6 @@ export const ReportBuilderService = {
     ${sectionTable([
       '<tr><th>Field</th><th>Value</th></tr>',
       rows(['Session ID', escapeHtml(report.runtime.sessionId ?? 'None')]),
-      rows(['Profile', escapeHtml(report.runtime.activeProfileId)]),
       rows(['SCORM Version', escapeHtml(report.runtime.scormVersion ?? 'Unknown')]),
       rows(['Initialized', String(report.runtime.isInitialized)]),
       rows(['Terminated', String(report.runtime.isTerminated)]),

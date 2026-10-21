@@ -66,15 +66,6 @@ export class Scorm2004Adapter extends ScormRuntimeAdapter {
     return next
   }
 
-  /**
-   * scorm-again's `settings` setter merges into the live instance, so a
-   * profile switch mid-session reaches every setting that is read at call
-   * time.
-   */
-  protected applyApiSettings(settings: Partial<Settings>): void {
-    this.api.settings = { ...this.api.settings, ...settings }
-  }
-
   initialize(): string {
     const result = this.runCall(
       'Initialize',

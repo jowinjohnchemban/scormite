@@ -1,6 +1,6 @@
 ---
 name: scormite-conventions
-description: Architecture, folder, and workflow conventions for the Scormite codebase. Use this whenever adding a feature, touching src/features/runtime or anything that talks to scorm-again, adding a new UI primitive, writing a new ESLint/architecture rule, or picking up the next roadmap milestone. Also use when the user mentions Scormite, scorm-again, CMI inspector, API monitor, breakpoints, runtime profiles, or asks "what's next" / "which milestone" for this project.
+description: Architecture, folder, and workflow conventions for the Scormite codebase. Use this whenever adding a feature, touching src/features/runtime or anything that talks to scorm-again, adding a new UI primitive, writing a new ESLint/architecture rule, or picking up the next roadmap milestone. Also use when the user mentions Scormite, scorm-again, CMI inspector, API monitor, breakpoints, course player, or asks "what's next" / "which milestone" for this project.
 ---
 
 # Scormite Conventions
@@ -31,7 +31,6 @@ implementation.
 | A shared, dumb UI primitive (button, dialog, etc.) | `src/components/ui/`, following the shadcn/ui file shape (cva variants + `cn()`) |
 | A cross-feature utility with no UI | `src/shared/lib/` |
 | **A shared entity type** (`Package`, `Manifest`, `Session`, …) | **`src/shared/types/`** — see the type-sharing pattern below |
-| A new SCORM runtime profile (Moodle, Canvas, etc.) | `src/features/settings/profiles/` |
 | Cross-feature orchestration (calling two feature services together) | The `app/` layer — it is the only layer allowed to import from multiple features simultaneously |
 
 ## The type-sharing pattern (established in Milestone 3)

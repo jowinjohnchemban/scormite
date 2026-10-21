@@ -15,7 +15,6 @@ you don't have to hunt through 12 folders to remember the shape of
 | `TimelineEvent` | `timeline` | Lifecycle/CMI-change/navigation/sequencing/error event |
 | `ValidationIssue` | `validation` | Static or runtime validation finding |
 | `Breakpoint` | `session` | Pause condition (API call / CMI set / score / objective) |
-| `RuntimeProfile` | `settings` | Named scorm-again + middleware configuration preset |
 | `ScormitePlugin` | `plugins` | `{ manifest, activate(api) }` — the registration unit (module not wired into the app) |
 | `PluginPanelContribution` | `plugins` | A dockable panel contributed by a plugin |
 | `PluginCommandContribution` | `plugins` | A toolbar-menu command contributed by a plugin |

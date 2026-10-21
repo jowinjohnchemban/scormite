@@ -25,7 +25,6 @@ import {
   removeApiProxy,
 } from '@/features/player'
 import { runtimeEvents, useRuntimeStore } from '@/features/runtime'
-import { getRuntimeProfile, useSettingsStore } from '@/features/settings'
 import { useLogStore } from '@/features/logging'
 import { useInspectorStore } from '@/features/inspector'
 import { useTimelineStore } from '@/features/timeline'
@@ -165,19 +164,6 @@ export function usePackageSession(owner: 'basic' | 'advanced'): PackageSession {
       unsubNav()
     }
   }, [owner])
-
-  // A runtime profile switch applies its scorm-again knobs to the live
-  // adapter immediately; later launches pick the profile up on creation.
-  useEffect(
-    () =>
-      useSettingsStore.subscribe((state, previous) => {
-        if (state.activeProfileId === previous.activeProfileId) return
-        const adapter = useRuntimeStore.getState().adapter
-        if (!adapter) return
-        adapter.configure(getRuntimeProfile(state.activeProfileId).scormAgainOverrides)
-      }),
-    [],
-  )
 
   // ---------------------------------------------------------------------------
   // Launching. Runs after React has committed the launch request, i.e. after

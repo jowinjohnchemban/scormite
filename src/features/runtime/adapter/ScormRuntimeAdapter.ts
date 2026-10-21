@@ -23,6 +23,13 @@ export const LMS_BASE_SETTINGS: Partial<Settings> = {
   lmsCommitUrl: false,
   autocommit: false,
   dataCommitFormat: 'json',
+  // Status rules follow SCORM Cloud, the compatibility benchmark: at Finish
+  // a mastery score decides passed / failed when the SCO reported a score,
+  // a status the SCO set itself is respected, and an unset status stays
+  // incomplete instead of being auto-completed.
+  mastery_override: true,
+  score_overrides_status: false,
+  autoCompleteLessonStatus: false,
 }
 
 /** A call parked while a breakpoint holds execution. */
@@ -32,24 +39,6 @@ interface PendingCall {
   /** Runs with the result once the call actually executes (immediately or on resume). */
   settle?: (result: string) => void
 }
-
-/**
- * scorm-again `Settings` keys that runtime profiles are allowed to tune.
- *
- * Verified against scorm-again 3.2.0's compiled output: `mastery_override`,
- * `score_overrides_status`, and `autoCompleteLessonStatus` are all read at
- * terminate time in scorm12.js (lesson_status derivation, stages 1–2) and
- * `mastery_override` is read by both constructors.
- *
- * `strict_errors` is deliberately absent — it appears only in DefaultSettings
- * in 3.2.0 and is never read by the API, so configuring it would silently do
- * nothing. Profiles must not be built on knobs that don't exist.
- */
-export const PROFILE_SETTING_KEYS: readonly (keyof Settings)[] = [
-  'mastery_override',
-  'score_overrides_status',
-  'autoCompleteLessonStatus',
-]
 
 /**
  * Abstract base class for SCORM runtime adapters.
@@ -74,30 +63,6 @@ export abstract class ScormRuntimeAdapter {
   addMiddleware(mw: RuntimeMiddleware): void {
     this._middleware.push(mw)
   }
-
-  /**
-   * Apply a runtime profile's scorm-again overrides.
-   *
-   * Only `PROFILE_SETTING_KEYS` are applied — unknown keys are ignored, so a
-   * profile cannot corrupt the API with a typo or an unsupported knob. The
-   * overrides go to the live scorm-again instance (which reads them at call
-   * time, e.g. status derivation at Terminate) and into `apiSettings` so a
-   * later `resetApiIfNeeded` keeps the profile across SCO restarts.
-   */
-  configure(overrides: Record<string, unknown>): void {
-    const next: Partial<Settings> = {}
-    for (const key of PROFILE_SETTING_KEYS) {
-      const value = overrides[key]
-      if (value !== undefined) {
-        ;(next as Record<string, unknown>)[key] = value
-      }
-    }
-    this.apiSettings = { ...this.apiSettings, ...next }
-    this.applyApiSettings(next)
-  }
-
-  /** Push settings onto the concrete scorm-again API instance. */
-  protected abstract applyApiSettings(settings: Partial<Settings>): void
 
   /** True while a breakpoint is holding execution. */
   get isPaused(): boolean {

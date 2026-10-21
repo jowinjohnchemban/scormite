@@ -48,7 +48,6 @@ const baseOptions: BuildReportOptions = {
   pkg: mockPackage,
   manifest: mockManifest,
   sessionId: 'session-456',
-  activeProfileId: 'strict-adl',
   scormVersion: '1.2',
   isInitialized: true,
   isTerminated: false,
