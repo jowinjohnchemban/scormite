@@ -11,22 +11,19 @@ import { cn } from '@/shared/lib/utils'
 import type { BreakpointKind, ScormApiMethod } from '@/shared/types'
 
 const KINDS: Array<{ value: BreakpointKind; label: string }> = [
-  { value: 'cmi-set', label: 'SetValue (element)' },
-  { value: 'api-call', label: 'API call (method)' },
-  { value: 'score-threshold', label: 'Score threshold' },
-  { value: 'objective-update', label: 'Objective update' },
+  { value: 'cmi-set', label: 'SetValue on an element' },
+  { value: 'score-threshold', label: 'Score at or above' },
+  { value: 'objective-update', label: 'Objective change' },
+  { value: 'api-call', label: 'Every SetValue or Commit' },
 ]
 
-const METHODS: ScormApiMethod[] = [
-  'Initialize',
-  'Terminate',
-  'GetValue',
-  'SetValue',
-  'Commit',
-  'GetLastError',
-  'GetErrorString',
-  'GetDiagnostic',
-]
+/**
+ * Only calls whose effect can be deferred can be held: the SCORM API is
+ * synchronous, so the SCO gets its answer immediately and the held call is
+ * applied on Resume. Initialize, Terminate, and reads cannot be held without
+ * lying to the course.
+ */
+const METHODS: ScormApiMethod[] = ['SetValue', 'Commit']
 
 const inputClass =
   'h-7 min-w-0 rounded-sm border border-border-subtle bg-surface-800 px-2 text-xs ' +
@@ -85,8 +82,9 @@ export function BreakpointsPanel() {
       {paused && currentHit && (
         <div className="flex shrink-0 items-center justify-between gap-2 border-b border-amber-400/30 bg-amber-400/10 px-2 py-1.5">
           <span className="truncate font-mono text-[11px] text-amber-200">
-            Paused at {currentHit.method}
+            Holding {currentHit.method}
             {currentHit.element ? ` ${currentHit.element}` : ''}
+            {currentHit.value !== undefined ? ` = ${currentHit.value}` : ''}
           </span>
           <Button size="sm" onClick={() => BreakpointService.resume()}>
             Resume
@@ -97,7 +95,9 @@ export function BreakpointsPanel() {
       <div tabIndex={0} className="min-h-0 flex-1 overflow-auto p-3 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-accent">
         {breakpoints.length === 0 ? (
           <p className="text-xs text-slate-600">
-            Breakpoints pause the course before a matching call is applied. Add one below.
+            A breakpoint holds a matching SetValue or Commit before it reaches the
+            runtime, so you can inspect the data first. The course keeps running and
+            receives "true"; held calls are applied in order when you resume.
           </p>
         ) : (
           <ul className="space-y-1" aria-label="Breakpoint list">

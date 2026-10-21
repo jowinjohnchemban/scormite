@@ -15,6 +15,7 @@ export { recordingMiddleware } from './adapter/middleware/recordingMiddleware'
 export {
   createBreakpointMiddleware,
   matchesBreakpoint,
+  BREAKABLE_METHODS,
   type BreakpointMiddlewareOptions,
 } from './adapter/middleware/breakpointMiddleware'
 export {
