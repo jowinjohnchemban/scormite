@@ -2,14 +2,18 @@
  * Parses a raw imsmanifest.xml string into the Manifest entity.
  *
  * Supports both SCORM 1.2 and SCORM 2004 manifests. Uses fast-xml-parser
- * for XML parsing — it handles namespaced attributes and arrays correctly
- * when configured with `isArray`.
+ * for XML parsing. Element and attribute lookups are namespace-prefix
+ * agnostic and case-insensitive on the local name: real-world manifests bind
+ * `adlcp` / `imsss` to whatever prefix their authoring tool likes and are
+ * inconsistent about `scormtype` vs `scormType`, so matching on the exact
+ * qualified name silently drops data.
  */
 
 import { XMLParser } from 'fast-xml-parser'
 import type {
   Manifest,
   ManifestItem,
+  ManifestItemLaunchData,
   ManifestMetadata,
   ManifestOrganization,
   ManifestResource,
@@ -23,59 +27,6 @@ export class ManifestParseError extends Error {
 }
 
 // ---------------------------------------------------------------------------
-// Internal raw XML shapes (what fast-xml-parser returns)
-// ---------------------------------------------------------------------------
-
-interface RawFile {
-  '@_href': string
-}
-
-interface RawResource {
-  '@_identifier': string
-  '@_type': string
-  '@_href'?: string
-  '@_adlcp:scormtype'?: string
-  '@_adlcp:scormType'?: string
-  'file'?: RawFile | RawFile[]
-}
-
-interface RawItem {
-  '@_identifier': string
-  '@_identifierref'?: string
-  '@_isvisible'?: string
-  'title'?: string
-  'item'?: RawItem | RawItem[]
-}
-
-interface RawOrganization {
-  '@_identifier': string
-  'title'?: string
-  'item'?: RawItem | RawItem[]
-}
-
-interface RawMetadata {
-  'schema'?: string
-  'schemaversion'?: string
-  'adlcp:location'?: string
-  'imsmd:lom'?: { 'imsmd:general'?: { 'imsmd:title'?: { 'imsmd:langstring'?: string } } }
-}
-
-interface RawManifest {
-  'manifest': {
-    '@_identifier'?: string
-    '@_default'?: string // default organization identifier on <organizations>
-    'metadata'?: RawMetadata
-    'organizations': {
-      '@_default'?: string
-      'organization'?: RawOrganization | RawOrganization[]
-    }
-    'resources': {
-      'resource'?: RawResource | RawResource[]
-    }
-  }
-}
-
-// ---------------------------------------------------------------------------
 // Parser configuration
 // ---------------------------------------------------------------------------
 
@@ -85,7 +36,7 @@ const PARSER = new XMLParser({
   // Always produce arrays for these elements so we never have to
   // branch on "is this an object or array?" downstream.
   isArray: (tagName) =>
-    ['organization', 'item', 'resource', 'file', 'dependency'].includes(tagName),
+    ['organization', 'item', 'resource', 'file', 'dependency'].includes(localName(tagName)),
   // Treat all text content as strings — prevents '1.2' being coerced to number.
   parseTagValue: false,
   // Trim whitespace from text values.
@@ -95,98 +46,235 @@ const PARSER = new XMLParser({
 })
 
 // ---------------------------------------------------------------------------
+// Namespace-agnostic node access
+// ---------------------------------------------------------------------------
+
+type RawNode = Record<string, unknown>
+
+function isNode(value: unknown): value is RawNode {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
+/** `adlcp:scormType` → `scormtype`. */
+function localName(qualified: string): string {
+  const colon = qualified.indexOf(':')
+  return (colon >= 0 ? qualified.slice(colon + 1) : qualified).toLowerCase()
+}
+
+/** First child element whose local name matches `name`. */
+function child(node: unknown, name: string): unknown {
+  if (!isNode(node)) return undefined
+  const target = name.toLowerCase()
+  for (const [key, value] of Object.entries(node)) {
+    if (key.startsWith('@_') || key === '#text') continue
+    if (localName(key) === target) return value
+  }
+  return undefined
+}
+
+/**
+ * Attribute value by local name. An exact unprefixed match wins so that,
+ * e.g., `type` never resolves to a stray `xsi:type`.
+ */
+function attr(node: unknown, name: string): string | undefined {
+  if (!isNode(node)) return undefined
+  const exact = node[`@_${name}`]
+  if (typeof exact === 'string') return exact
+  const target = name.toLowerCase()
+  for (const [key, value] of Object.entries(node)) {
+    if (!key.startsWith('@_') || typeof value !== 'string') continue
+    if (localName(key.slice(2)) === target) return value
+  }
+  return undefined
+}
+
+/** Text content of a simple element (plain string, or `#text` beside attributes). */
+function text(value: unknown): string | undefined {
+  if (typeof value === 'string') return value
+  if (isNode(value) && typeof value['#text'] === 'string') return value['#text']
+  return undefined
+}
+
+function toArray(value: unknown): unknown[] {
+  if (value === undefined || value === null) return []
+  return Array.isArray(value) ? value : [value]
+}
+
+// ---------------------------------------------------------------------------
+// xml:base resolution
+// ---------------------------------------------------------------------------
+
+const ABSOLUTE_URL = /^[a-z][a-z0-9+.-]*:/i
+
+/**
+ * Resolves `href` against a chain of `xml:base` values (outermost first).
+ * Bases are treated as directories even without a trailing slash — authoring
+ * tools omit it often enough that strict URL resolution would break real
+ * packages.
+ */
+export function resolveXmlBase(bases: (string | undefined)[], href: string): string {
+  if (ABSOLUTE_URL.test(href)) return href
+  let path = ''
+  for (const base of bases) {
+    if (!base) continue
+    if (ABSOLUTE_URL.test(base)) {
+      path = base
+      continue
+    }
+    path += base.endsWith('/') ? base : `${base}/`
+  }
+  return normalizeRelativePath(path + href)
+}
+
+/** Collapses `./` and `seg/../` segments; keeps any query string or fragment intact. */
+function normalizeRelativePath(path: string): string {
+  if (ABSOLUTE_URL.test(path)) return path
+  const suffixIndex = path.search(/[?#]/)
+  const pathname = suffixIndex >= 0 ? path.slice(0, suffixIndex) : path
+  const suffix = suffixIndex >= 0 ? path.slice(suffixIndex) : ''
+  const out: string[] = []
+  for (const segment of pathname.replace(/\\/g, '/').split('/')) {
+    if (segment === '.' || segment === '') continue
+    if (segment === '..') out.pop()
+    else out.push(segment)
+  }
+  return out.join('/') + suffix
+}
+
+// ---------------------------------------------------------------------------
 // Public parse function
 // ---------------------------------------------------------------------------
 
 export function parseManifest(xml: string): Manifest {
-  let raw: RawManifest
+  let raw: unknown
   try {
-    raw = PARSER.parse(xml) as RawManifest
+    raw = PARSER.parse(xml)
   } catch (e) {
     throw new ManifestParseError(
       `Failed to parse imsmanifest.xml: ${e instanceof Error ? e.message : String(e)}`,
     )
   }
 
-  const manifest = raw?.manifest
-  if (!manifest) {
+  const manifest = child(raw, 'manifest')
+  if (!isNode(manifest)) {
     throw new ManifestParseError('imsmanifest.xml does not contain a <manifest> root element.')
   }
 
-  const metadata = parseMetadata(manifest.metadata)
-
-  const defaultOrgId: string | undefined =
-    manifest.organizations?.['@_default'] ?? undefined
-
-  const organizations: ManifestOrganization[] = toArray(
-    manifest.organizations?.organization,
-  ).map(parseOrganization)
-
-  const resources: ManifestResource[] = toArray(
-    manifest.resources?.resource,
-  ).map(parseResource)
+  const organizationsNode = child(manifest, 'organizations')
+  const resourcesNode = child(manifest, 'resources')
+  const defaultOrgId = attr(organizationsNode, 'default')
+  const resourceBases = [attr(manifest, 'base'), attr(resourcesNode, 'base')]
 
   return {
     ...(defaultOrgId !== undefined ? { defaultOrganizationIdentifier: defaultOrgId } : {}),
-    organizations,
-    resources,
-    metadata,
+    organizations: toArray(child(organizationsNode, 'organization')).map(parseOrganization),
+    resources: toArray(child(resourcesNode, 'resource')).map((r) =>
+      parseResource(r, resourceBases),
+    ),
+    metadata: parseMetadata(child(manifest, 'metadata')),
   }
 }
 
 // ---------------------------------------------------------------------------
-// Helpers
+// Element parsers
 // ---------------------------------------------------------------------------
 
-function toArray<T>(value: T | T[] | undefined): T[] {
-  if (value === undefined || value === null) return []
-  return Array.isArray(value) ? value : [value]
-}
-
-function parseMetadata(raw: RawMetadata | undefined): ManifestMetadata {
-  if (!raw) return {}
-  const title = raw['imsmd:lom']?.['imsmd:general']?.['imsmd:title']?.['imsmd:langstring']
+function parseMetadata(raw: unknown): ManifestMetadata {
+  if (!isNode(raw)) return {}
+  const schema = text(child(raw, 'schema'))
+  const schemaVersion = text(child(raw, 'schemaversion'))
+  const titleNode = child(child(child(raw, 'lom'), 'general'), 'title')
+  const title = text(child(titleNode, 'langstring')) ?? text(child(titleNode, 'string'))
   return {
-    ...(raw.schema !== undefined ? { schema: raw.schema } : {}),
-    ...(raw.schemaversion !== undefined ? { schemaVersion: raw.schemaversion } : {}),
+    ...(schema !== undefined ? { schema } : {}),
+    ...(schemaVersion !== undefined ? { schemaVersion } : {}),
     ...(title !== undefined ? { title } : {}),
   }
 }
 
-function parseOrganization(raw: RawOrganization): ManifestOrganization {
+function parseOrganization(raw: unknown): ManifestOrganization {
   return {
-    identifier: raw['@_identifier'] ?? '',
-    title: raw.title ?? '',
-    items: toArray(raw.item).map(parseItem),
+    identifier: attr(raw, 'identifier') ?? '',
+    title: text(child(raw, 'title')) ?? '',
+    items: toArray(child(raw, 'item')).map(parseItem),
   }
 }
 
-function parseItem(raw: RawItem): ManifestItem {
-  const isvisible = raw['@_isvisible']?.toLowerCase() !== 'false'
-  const identifierref = raw['@_identifierref']
+function parseItem(raw: unknown): ManifestItem {
+  const isvisible = attr(raw, 'isvisible')?.toLowerCase() !== 'false'
+  const identifierref = attr(raw, 'identifierref')
+  const parameters = attr(raw, 'parameters')
+  const launchData = parseLaunchData(raw)
   return {
-    identifier: raw['@_identifier'] ?? '',
-    title: typeof raw.title === 'string' ? raw.title : '',
+    identifier: attr(raw, 'identifier') ?? '',
+    title: text(child(raw, 'title')) ?? '',
     ...(identifierref !== undefined ? { identifierref } : {}),
     isvisible,
-    children: toArray(raw.item).map(parseItem),
+    ...(parameters ? { parameters } : {}),
+    ...(Object.keys(launchData).length > 0 ? { launchData } : {}),
+    children: toArray(child(raw, 'item')).map(parseItem),
   }
 }
 
-function parseResource(raw: RawResource): ManifestResource {
-  const scormType =
-    raw['@_adlcp:scormtype'] ?? raw['@_adlcp:scormType']
+function parseLaunchData(raw: unknown): ManifestItemLaunchData {
+  const dataFromLms = text(child(raw, 'datafromlms'))
+  const masteryScore = text(child(raw, 'masteryscore'))
+  const maxTimeAllowed = text(child(raw, 'maxtimeallowed'))
+  const timeLimitAction = text(child(raw, 'timelimitaction'))
+  const completionThreshold = parseCompletionThreshold(child(raw, 'completionthreshold'))
+  const scaledPassingScore = parseScaledPassingScore(child(raw, 'sequencing'))
+  const entries: [keyof ManifestItemLaunchData, string | undefined][] = [
+    ['dataFromLms', dataFromLms],
+    ['masteryScore', masteryScore],
+    ['maxTimeAllowed', maxTimeAllowed],
+    ['timeLimitAction', timeLimitAction],
+    ['completionThreshold', completionThreshold],
+    ['scaledPassingScore', scaledPassingScore],
+  ]
+  const data: ManifestItemLaunchData = {}
+  for (const [key, value] of entries) {
+    if (value !== undefined && value !== '') data[key] = value
+  }
+  return data
+}
+
+/**
+ * 2004 3rd Edition writes the threshold as element text; 4th Edition uses
+ * `completedByMeasure` + `minProgressMeasure` attributes, and only defines a
+ * threshold when `completedByMeasure="true"`.
+ */
+function parseCompletionThreshold(raw: unknown): string | undefined {
+  if (raw === undefined) return undefined
+  const minProgress = attr(raw, 'minProgressMeasure')
+  if (minProgress !== undefined || attr(raw, 'completedByMeasure') !== undefined) {
+    if (attr(raw, 'completedByMeasure')?.toLowerCase() !== 'true') return undefined
+    return minProgress ?? '1.0'
+  }
+  return text(raw)
+}
+
+function parseScaledPassingScore(sequencing: unknown): string | undefined {
+  const primary = child(child(sequencing, 'objectives'), 'primaryObjective')
+  if (attr(primary, 'satisfiedByMeasure')?.toLowerCase() !== 'true') return undefined
+  return text(child(primary, 'minNormalizedMeasure')) ?? '1.0'
+}
+
+function parseResource(raw: unknown, inheritedBases: (string | undefined)[]): ManifestResource {
+  const scormType = attr(raw, 'scormtype')?.toLowerCase()
   const normalised: 'sco' | 'asset' | undefined =
     scormType === 'sco' || scormType === 'asset' ? scormType : undefined
-  const href = raw['@_href']
+  const bases = [...inheritedBases, attr(raw, 'base')]
+  const rawHref = attr(raw, 'href')
+  const href = rawHref !== undefined ? resolveXmlBase(bases, rawHref) : undefined
 
-  const files: string[] = toArray(raw.file)
-    .map((f) => f['@_href'])
-    .filter(Boolean)
+  const files = toArray(child(raw, 'file'))
+    .map((f) => attr(f, 'href'))
+    .filter((h): h is string => Boolean(h))
+    .map((h) => resolveXmlBase(bases, h))
 
   return {
-    identifier: raw['@_identifier'] ?? '',
-    type: raw['@_type'] ?? '',
+    identifier: attr(raw, 'identifier') ?? '',
+    type: attr(raw, 'type') ?? '',
     ...(href !== undefined ? { href } : {}),
     ...(normalised !== undefined ? { scormType: normalised } : {}),
     files,
