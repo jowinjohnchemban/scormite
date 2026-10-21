@@ -1,6 +1,6 @@
 # **SCORMITE** <br> SCORM Interactive Testing Environment
 
-**DevTools for your SCORM package.** Drop a `.zip` and Scormite runs it locally — surfacing a live API transcript, the full CMI data model, sequencing logic, validation findings, and session replay. No LMS. No upload. No black box.
+**DevTools for your SCORM package.** Drop a `.zip` and Scormite runs it locally — playing every SCO, surfacing a live API transcript, the full CMI data model, validation findings, and session replay. No LMS. No upload. No black box.
 
 Compatibility benchmark: **SCORM Cloud.**  UX benchmark: **VS Code + Chrome DevTools.**  
 Runtime: [scorm-again](https://github.com/jcputney/scorm-again) — wrapped, never modified.
@@ -15,18 +15,20 @@ Your packages never leave your machine. ZIP parsing, manifest analysis, and pack
 
 ## Features
 
-| | Feature | Status |
-|---|---|---|
-| 01 | **Manifest explorer** — parse `imsmanifest.xml`, inspect the organization tree and resource list, detect SCORM version | ✅ Milestone 3 |
-| 02 | **Sandboxed iframe player** — launch SCOs in a sandboxed iframe, reload, reset, fullscreen | 🔜 Milestone 5 |
-| 03 | **API transcript** — every `Initialize`, `GetValue`, `SetValue`, `Commit`, `Terminate` in order, with arguments, return codes, and timing | 🔜 Milestone 7 |
-| 04 | **CMI inspector** — live CMI data model tree with diff highlighting on every `SetValue` | 🔜 Milestone 7 |
-| 05 | **Timeline + session replay** — scrub to any point in a completed session and see the CMI state at that instant | 🔜 Milestone 8 |
-| 06 | **Breakpoints** — pause execution *before* a specific `SetValue` fires, inspect state, then resume | 🔜 Milestone 9 |
-| 07 | **Validation** — static manifest lint + runtime rule violations, each with a severity and rule ID | 🔜 Milestone 10 |
-| 08 | **Runtime profiles** — switch between SCORM Cloud, Moodle, Canvas, SuccessFactors, Cornerstone, or a custom config to reproduce LMS-specific behaviour | 🔜 Milestone 11 |
-| 09 | **QA report** — one-click export of manifest summary, runtime log, timeline, and validation findings as JSON / CSV / Markdown / standalone HTML | 🔜 Milestone 12 |
-| 10 | **Plugin system** — register custom panels, validators, and commands without touching core code | 🔜 Milestone 13 |
+| | Feature |
+|---|---|
+| 01 | **SCORM 1.2 and SCORM 2004** (2nd / 3rd / 4th Edition) runtimes via scorm-again; SCORM 1.1 packages run on the 1.2 API |
+| 02 | **Course player** — sandboxed iframe, course outline for multi-SCO packages, previous / next, SCORM 2004 navigation requests (`continue`, `previous`, `choice`, `jump`) followed |
+| 03 | **Resume testing** — relaunch a SCO from its stored attempt (`entry=resume`, suspend_data, location, score), start a new attempt, or restart the whole course |
+| 04 | **LMS launch data** — mastery score, launch data, time limits, completion threshold and passing score from the manifest are seeded like an LMS would |
+| 05 | **API transcript** — every `Initialize`, `GetValue`, `SetValue`, `Commit`, `Terminate` with arguments, return value, timing, and scorm-again's error explanation |
+| 06 | **CMI inspector** — live CMI data model with change highlighting |
+| 07 | **Timeline replay** — scrub to any point of a session and see the CMI state at that instant |
+| 08 | **Breakpoints** — pause *before* a specific `SetValue` is applied, inspect, resume |
+| 09 | **Validation** — manifest checks (missing files, broken refs, duplicate ids, manifest not at the zip root) and runtime checks (out-of-range score, oversized suspend_data, missing commit) |
+| 10 | **Runtime profiles** — Strict ADL, SCORM Cloud, Moodle, Canvas, SuccessFactors, Cornerstone, Custom |
+| 11 | **QA report** — HTML / Markdown / JSON / CSV export of the session |
+| 12 | **Package / Network / Performance panels** — file tree, service-worker fetches, API call timings |
 
 ---
 
