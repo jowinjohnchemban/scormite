@@ -47,6 +47,13 @@ const mockPackage: Package = {
 const baseOptions: BuildReportOptions = {
   pkg: mockPackage,
   manifest: mockManifest,
+  course: {
+    sequenced: false,
+    currentItemTitle: 'Module 1',
+    items: [
+      { identifier: 'item-1', title: 'Module 1', scormType: 'sco', completionStatus: 'passed', successStatus: 'passed', score: '90' },
+    ],
+  },
   sessionId: 'session-456',
   scormVersion: '1.2',
   isInitialized: true,
@@ -81,48 +88,57 @@ const baseOptions: BuildReportOptions = {
 }
 
 describe('ReportBuilderService', () => {
-  it('builds structured report data', () => {
-    const data = ReportBuilderService.buildReportData(baseOptions)
+  const failed = {
+    id: 'call-2',
+    sessionId: 'session-456',
+    method: 'SetValue' as const,
+    element: 'cmi.core.score.raw',
+    value: 'a|b',
+    returnValue: 'false',
+    errorCode: '405',
+    errorString: 'Incorrect Data Type',
+    durationMs: 0,
+    timestamp: 1704067201000,
+  }
+  const options = { ...baseOptions, apiCalls: [...baseOptions.apiCalls, failed] }
+
+  it('builds structured report data with course results and failure counts', () => {
+    const data = ReportBuilderService.buildReportData(options)
     expect(data.package.name).toBe('Test Package')
-    expect(data.package.scormVersion).toBe('1.2')
-    expect(data.runtime.isInitialized).toBe(true)
-    expect(data.runtime.isTerminated).toBe(false)
-    expect(data.apiCalls).toHaveLength(1)
-    expect(data.snapshots).toHaveLength(1)
-    expect(data.validationIssues).toHaveLength(1)
+    expect(data.course.items[0]).toMatchObject({ title: 'Module 1', successStatus: 'passed', score: '90' })
+    expect(data.runtime).toMatchObject({ apiCallCount: 2, failedCallCount: 1, isInitialized: true })
   })
 
-  it('serializes report as valid JSON', () => {
-    const data = ReportBuilderService.buildReportData(baseOptions)
-    const json = ReportBuilderService.serializeJson(data)
-    const parsed = JSON.parse(json)
+  it('serializes the whole report as JSON', () => {
+    const parsed = JSON.parse(ReportBuilderService.serializeJson(ReportBuilderService.buildReportData(options)))
     expect(parsed.package.id).toBe('pkg-123')
-    expect(parsed.runtime.sessionId).toBe('session-456')
+    expect(parsed.course.items).toHaveLength(1)
   })
 
-  it('serializes report as CSV with summary and tables', () => {
-    const data = ReportBuilderService.buildReportData(baseOptions)
-    const csv = ReportBuilderService.serializeCsv(data)
-    expect(csv).toContain('Section,Field,Value')
-    expect(csv).toContain('Package,Name,Test Package')
-    expect(csv).toContain('Runtime,Initialized,true')
-    expect(csv).toContain('Initialize')
+  it('serializes the API log as one flat CSV table with error explanations', () => {
+    const csv = ReportBuilderService.serializeCsv(ReportBuilderService.buildReportData(options))
+    const lines = csv.trim().split('\n')
+    expect(lines[0]).toBe('Time,Method,Element,Value,Result,Error')
+    expect(lines).toHaveLength(3)
+    expect(lines[2]).toContain('405 — Incorrect Data Type')
   })
 
-  it('serializes report as Markdown with tables and manifest JSON', () => {
-    const data = ReportBuilderService.buildReportData(baseOptions)
-    const md = ReportBuilderService.serializeMarkdown(data)
-    expect(md).toContain('# SCORMite QA Report')
-    expect(md).toContain('## Package Summary')
-    expect(md).toContain('Test Package')
-    expect(md).toContain('Initialize')
+  it('serializes Markdown with course results and escaped table cells', () => {
+    const md = ReportBuilderService.serializeMarkdown(ReportBuilderService.buildReportData(options))
+    expect(md).toContain('# SCORMite QA report')
+    expect(md).toContain('## Course results')
+    expect(md).toContain('| Module 1 | sco | passed | passed | 90 |')
+    expect(md).toContain('a\\|b')
   })
 
-  it('serializes report as standalone HTML', () => {
-    const data = ReportBuilderService.buildReportData(baseOptions)
-    const html = ReportBuilderService.serializeHtml(data)
+  it('serializes standalone, escaped, print-friendly HTML', () => {
+    const html = ReportBuilderService.serializeHtml(
+      ReportBuilderService.buildReportData({ ...options, pkg: { ...mockPackage, name: '<Quiz>' } }),
+    )
     expect(html).toContain('<!DOCTYPE html>')
-    expect(html).toContain('<h1>SCORMite QA Report</h1>')
-    expect(html).toContain('Test Package')
+    expect(html).toContain('&lt;Quiz&gt;')
+    expect(html).not.toContain('<Quiz>')
+    expect(html).toContain('@media print')
+    expect(html).toContain('class="failed"')
   })
 })
