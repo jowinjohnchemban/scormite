@@ -4,7 +4,13 @@
  */
 export { ScormRuntimeAdapter } from './adapter/ScormRuntimeAdapter'
 export { Scorm12Adapter } from './adapter/Scorm12Adapter'
-export { Scorm2004Adapter } from './adapter/Scorm2004Adapter'
+export {
+  Scorm2004Adapter,
+  type ActivityStatus,
+  type NavigationState,
+  type SequencingOptions,
+  type SequencingRequest,
+} from './adapter/Scorm2004Adapter'
 export { recordingMiddleware } from './adapter/middleware/recordingMiddleware'
 export {
   createBreakpointMiddleware,

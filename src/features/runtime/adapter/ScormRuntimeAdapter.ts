@@ -117,8 +117,15 @@ export abstract class ScormRuntimeAdapter {
   }): void {
     if (!api.isNotInitialized()) {
       api.reset(this.apiSettings)
+      this.afterApiReset()
     }
   }
+
+  /**
+   * scorm-again's reset() also clears every listener registered with
+   * `api.on()`; subclasses re-register theirs here.
+   */
+  protected afterApiReset(): void {}
 
   // ---------------------------------------------------------------------------
   // Template: wrap any API call through the middleware pipeline

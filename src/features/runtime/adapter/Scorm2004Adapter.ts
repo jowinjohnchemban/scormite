@@ -1,16 +1,20 @@
 import { Scorm2004API } from 'scorm-again'
 import type { Settings } from 'scorm-again'
-import type { ManifestItemLaunchData } from '@/shared/types'
+import type {
+  ActivityDefinition,
+  HideLmsUiToken,
+  ManifestItemLaunchData,
+  SequencingDefinition,
+} from '@/shared/types'
 import { LMS_BASE_SETTINGS, ScormRuntimeAdapter } from './ScormRuntimeAdapter'
 import { normalizeFlattenedCmi } from './normalizeFlattenedCmi'
+import { SequencingConfigBuilder } from './sequencing/SequencingConfigBuilder'
 import { runtimeEvents } from '../events/RuntimeEventEmitter'
 import type { NavigationRequest } from '../types'
 
 /**
  * scorm-again raises one listener event per navigation request it parses out
- * of `adl.nav.request` at Terminate. The adapter forwards each as a typed
- * `navigation-request` runtime event; acting on it is the LMS's (the app's)
- * job.
+ * of `adl.nav.request` at Terminate — when no sequencing engine handled it.
  */
 const NAVIGATION_EVENTS: readonly (readonly [string, NavigationRequest])[] = [
   ['SequenceNext', 'continue'],
@@ -23,27 +27,194 @@ const NAVIGATION_EVENTS: readonly (readonly [string, NavigationRequest])[] = [
   ['SequenceAbandonAll', 'abandonAll'],
 ]
 
+/** Navigation requests the LMS itself may issue to the sequencing engine. */
+export type SequencingRequest =
+  | 'start'
+  | 'resumeAll'
+  | 'continue'
+  | 'previous'
+  | 'choice'
+  | 'jump'
+  | 'exit'
+  | 'exitAll'
+  | 'suspendAll'
+  | 'abandon'
+  | 'abandonAll'
+  | 'retry'
+  | 'retryAll'
+
+/** What the engine allows right now — drives the player's navigation UI. */
+export interface NavigationState {
+  canContinue: boolean
+  canPrevious: boolean
+  /** Activity ids a `choice` request may target. */
+  choices: string[]
+  /** LMS controls the delivered activity asks the player to hide. */
+  hiddenControls: HideLmsUiToken[]
+}
+
+/** The engine's tracking status for one activity (rolled up for clusters). */
+export interface ActivityStatus {
+  completionStatus: string
+  successStatus: string
+  score: number | null
+}
+
+export interface SequencingOptions {
+  activityTree: ActivityDefinition
+  collections?: Record<string, SequencingDefinition>
+}
+
+type OverallSequencingProcess = NonNullable<
+  ReturnType<NonNullable<ReturnType<Scorm2004API['getSequencingService']>>['getOverallSequencingProcess']>
+>
+type DeliveredActivity = Parameters<OverallSequencingProcess['getEffectiveHideLmsUi']>[0]
+
 export class Scorm2004Adapter extends ScormRuntimeAdapter {
   readonly scormVersion = '2004' as const
   readonly api: Scorm2004API
+  /** Sequencing the manifest declares that the engine will not evaluate. */
+  readonly sequencingWarnings: readonly string[]
+  private readonly sequenced: boolean
+  private lastDelivered: DeliveredActivity = null
+  /** Id delivered in the current request; scorm-again reports each delivery twice. */
+  private deliveredThisRound: string | null = null
 
-  constructor(sessionId: string, settings?: Partial<Settings>) {
+  /**
+   * Without `sequencing`, navigation requests surface as `navigation-request`
+   * events for the app to resolve in flow order. With it, scorm-again's
+   * SCORM 2004 sequencing engine owns navigation and announces each SCO to
+   * deliver as an `activity-delivered` event; the same runtime then serves
+   * every SCO of the course, reset between deliveries.
+   */
+  constructor(sessionId: string, settings?: Partial<Settings>, sequencing?: SequencingOptions) {
     const apiSettings: Partial<Settings> = { ...LMS_BASE_SETTINGS, ...settings }
     super(sessionId, apiSettings)
-    this.api = new Scorm2004API(apiSettings)
+
+    let warnings: string[] = []
+    let sequencingSettings: Settings['sequencing']
+    if (sequencing) {
+      const built = new SequencingConfigBuilder().build(sequencing.activityTree, sequencing.collections)
+      warnings = built.warnings
+      sequencingSettings = {
+        ...built.settings,
+        eventListeners: {
+          onActivityDelivery: (activity) => this.handleDelivery(activity),
+          onSequencingSessionEnd: (data) =>
+            runtimeEvents.emit('sequencing-session-end', {
+              sessionId: this.sessionId,
+              reason: data.navigationRequest ?? data.reason,
+            }),
+          onSequencingError: (error) =>
+            runtimeEvents.emit('sequencing-error', { sessionId: this.sessionId, message: error }),
+        },
+      }
+    }
+    this.sequencingWarnings = warnings
+    this.sequenced = sequencingSettings !== undefined
+    this.api = new Scorm2004API(sequencingSettings ? { ...apiSettings, sequencing: sequencingSettings } : apiSettings)
+    this.attachApiListeners()
+  }
+
+  get isSequenced(): boolean {
+    return this.sequenced
+  }
+
+  protected get lmsApi() {
+    return this.api
+  }
+
+  protected override afterApiReset(): void {
+    this.attachApiListeners()
+  }
+
+  private attachApiListeners(): void {
     for (const [event, request] of NAVIGATION_EVENTS) {
       this.api.on(event, (target?: unknown) => {
+        const targetId = typeof target === 'string' && target !== '' ? target : undefined
+        if (this.sequenced) {
+          // With an engine, these only fire when it refused the request.
+          runtimeEvents.emit('sequencing-error', {
+            sessionId: this.sessionId,
+            message: `The course requested "${request}${targetId ? ` ${targetId}` : ''}", but its sequencing rules do not allow it.`,
+          })
+          return
+        }
         runtimeEvents.emit('navigation-request', {
           sessionId: this.sessionId,
           request,
-          ...(typeof target === 'string' && target !== '' ? { target } : {}),
+          ...(targetId ? { target: targetId } : {}),
         })
       })
     }
   }
 
-  protected get lmsApi() {
-    return this.api
+  private handleDelivery(activity: { id: string }): void {
+    if (activity.id === this.deliveredThisRound) return
+    this.deliveredThisRound = activity.id
+    this.lastDelivered = activity as DeliveredActivity
+    runtimeEvents.emit('activity-delivered', { sessionId: this.sessionId, activityId: activity.id })
+  }
+
+  private get process(): OverallSequencingProcess | null {
+    return this.api.getSequencingService()?.getOverallSequencingProcess() ?? null
+  }
+
+  /**
+   * Issue an LMS navigation request to the sequencing engine (start, choice,
+   * continue, …). Returns whether the engine accepted it; a delivery, if
+   * any, arrives as an `activity-delivered` event before this returns.
+   */
+  navigate(request: SequencingRequest, targetId?: string): boolean {
+    if (!this.sequenced) return false
+    this.deliveredThisRound = null
+    try {
+      return this.api.processNavigationRequest(request, targetId)
+    } catch (error) {
+      runtimeEvents.emit('sequencing-error', {
+        sessionId: this.sessionId,
+        message: `Navigation "${request}" failed: ${error instanceof Error ? error.message : String(error)}`,
+      })
+      return false
+    }
+  }
+
+  /**
+   * Bring the runtime back to "not initialized" for the next delivered SCO.
+   * The sequencing state (activity tree, attempts, global objectives)
+   * survives; the per-SCO CMI data starts clean.
+   */
+  prepareForDelivery(): void {
+    this.api.reset()
+    this.attachApiListeners()
+    this.process?.updateNavigationValidity()
+  }
+
+  navigationState(): NavigationState | null {
+    const process = this.process
+    if (!process) return null
+    try {
+      process.invalidateNavigationCache()
+      return {
+        canContinue: process.predictContinueEnabled(),
+        canPrevious: process.predictPreviousEnabled(),
+        choices: process.getAvailableChoices(),
+        hiddenControls: process.getEffectiveHideLmsUi(this.lastDelivered),
+      }
+    } catch {
+      // No current activity (e.g. after exitAll): nothing to navigate from.
+      return null
+    }
+  }
+
+  activityStatus(activityId: string): ActivityStatus | null {
+    const data = this.api.getActivityTrackingData(activityId)
+    if (!data) return null
+    return {
+      completionStatus: String(data.completionStatus),
+      successStatus: String(data.successStatus),
+      score: data.score,
+    }
   }
 
   protected launchDataElements(data: ManifestItemLaunchData): Record<string, string | undefined> {
@@ -88,6 +259,8 @@ export class Scorm2004Adapter extends ScormRuntimeAdapter {
   }
 
   terminate(): string {
+    // A SCO-initiated navigation request is processed inside Terminate.
+    this.deliveredThisRound = null
     const result = this.runCall('Terminate', () => this.api.Terminate(''), undefined, undefined, (r) => {
       if (r === 'true') runtimeEvents.emit('terminated', { sessionId: this.sessionId })
     })
