@@ -11,28 +11,56 @@ import { startNetworkMonitor } from './networkMonitor'
 // MIME type guessing
 // ---------------------------------------------------------------------------
 
+// Content types for everything authoring tools commonly ship. A wrong type is
+// not cosmetic: browsers refuse module scripts, stylesheets, and WASM served
+// as application/octet-stream, and media elements may refuse to play.
 const MIME: Record<string, string> = {
   html: 'text/html;charset=utf-8',
   htm: 'text/html;charset=utf-8',
-  js: 'application/javascript',
-  mjs: 'application/javascript',
+  xhtml: 'application/xhtml+xml',
+  js: 'text/javascript',
+  mjs: 'text/javascript',
   css: 'text/css',
   json: 'application/json',
+  map: 'application/json',
   xml: 'application/xml',
+  xsd: 'application/xml',
+  xsl: 'application/xml',
+  txt: 'text/plain;charset=utf-8',
+  csv: 'text/csv',
+  vtt: 'text/vtt',
+  srt: 'text/plain;charset=utf-8',
+  pdf: 'application/pdf',
+  wasm: 'application/wasm',
+  swf: 'application/x-shockwave-flash',
   png: 'image/png',
   jpg: 'image/jpeg',
   jpeg: 'image/jpeg',
   gif: 'image/gif',
   svg: 'image/svg+xml',
   webp: 'image/webp',
+  avif: 'image/avif',
+  bmp: 'image/bmp',
+  ico: 'image/x-icon',
   mp4: 'video/mp4',
+  m4v: 'video/mp4',
+  webm: 'video/webm',
+  ogv: 'video/ogg',
+  mov: 'video/quicktime',
   mp3: 'audio/mpeg',
+  m4a: 'audio/mp4',
+  aac: 'audio/aac',
+  wav: 'audio/wav',
+  ogg: 'audio/ogg',
+  oga: 'audio/ogg',
   woff: 'font/woff',
   woff2: 'font/woff2',
   ttf: 'font/ttf',
+  otf: 'font/otf',
+  eot: 'application/vnd.ms-fontobject',
 }
 
-function mime(path: string): string {
+export function mimeTypeFor(path: string): string {
   const ext = path.split('.').pop()?.toLowerCase() ?? ''
   return MIME[ext] ?? 'application/octet-stream'
 }
@@ -127,7 +155,7 @@ export async function cachePackageFiles(
           sessionId,
           path,
           buffer: bytes.buffer,
-          mimeType: mime(path),
+          mimeType: mimeTypeFor(path),
         })
       }),
     )

@@ -52,6 +52,27 @@ self.addEventListener('message', (event) => {
   }
 })
 
+/**
+ * A readable 404 for files the package does not contain. When the launch
+ * file itself is missing this is what the player shows, so it names the
+ * exact path instead of a bare "Not found".
+ */
+function notFound(pathname) {
+  const packagePath = decodeURIComponent(pathname.split('/').slice(3).join('/'))
+  const escaped = packagePath.replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`)
+  const body = `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Not in package</title></head>
+<body style="margin:0;font:13px/1.5 system-ui,sans-serif;background:#0b0d10;color:#c9d1d9;display:grid;place-items:center;height:100vh">
+<div style="max-width:32rem;padding:1.5rem;text-align:center">
+<p style="font-weight:600;margin:0 0 .5rem">File not found in this package</p>
+<code style="color:#f85149;word-break:break-all">${escaped}</code>
+<p style="color:#7f93ab;margin:.75rem 0 0">Check the resource href in imsmanifest.xml and the file's exact path and letter case inside the zip.</p>
+</div></body></html>`
+  return new Response(body, {
+    status: 404,
+    headers: { 'Content-Type': 'text/html;charset=utf-8' },
+  })
+}
+
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url)
   if (!url.pathname.startsWith('/scorm-files/')) return
@@ -59,7 +80,10 @@ self.addEventListener('fetch', (event) => {
   const startedAt = performance.now()
 
   event.respondWith(
-    caches.match(event.request).then(
+    // Package files are cached by path only. Launch URLs routinely carry a
+    // query string (manifest item parameters, authoring-tool flags), so the
+    // lookup must ignore it or the SCO itself 404s.
+    caches.match(event.request, { ignoreSearch: true }).then(
       (cached) => {
         const hit = cached !== undefined
         const status = hit ? 200 : 404
@@ -78,7 +102,7 @@ self.addEventListener('fetch', (event) => {
         self.clients.matchAll({ type: 'window' }).then((clients) => {
           for (const client of clients) client.postMessage(payload)
         })
-        return cached ?? new Response('Not found', { status: 404 })
+        return cached ?? notFound(url.pathname)
       },
     ),
   )
