@@ -14,12 +14,18 @@ export interface BreakpointMiddlewareOptions {
   onHit: (hit: BreakpointHit) => void
 }
 
+/** The calls a breakpoint can hold. */
+export const BREAKABLE_METHODS: ReadonlySet<ApiCallContext['method']> = new Set(['SetValue', 'Commit'])
+
 /**
  * Pure matcher — exported so both the middleware and its tests exercise the
  * exact same predicate logic.
  */
 export function matchesBreakpoint(breakpoint: Breakpoint, ctx: ApiCallContext): boolean {
   if (!breakpoint.enabled) return false
+  // Only calls whose effect can be deferred can be held (see
+  // ScormRuntimeAdapter.pausedAnswer): SetValue and Commit.
+  if (!BREAKABLE_METHODS.has(ctx.method)) return false
   switch (breakpoint.kind) {
     case 'api-call':
       return (

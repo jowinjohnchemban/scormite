@@ -161,7 +161,7 @@ export abstract class ScormRuntimeAdapter {
     // (frozen) state the breakpoint paused.
     if (this._paused && this.isMutating(ctx.method)) {
       this.park(ctx, fn, settle)
-      return this.pausedAnswer(ctx)
+      return this.pausedAnswer()
     }
 
     for (const mw of this._middleware) {
@@ -169,7 +169,7 @@ export abstract class ScormRuntimeAdapter {
         this._paused = true
         for (const listener of this._pauseListeners) listener(true)
         this.park(ctx, fn, settle)
-        return this.pausedAnswer(ctx)
+        return this.pausedAnswer()
       }
     }
 
@@ -197,9 +197,15 @@ export abstract class ScormRuntimeAdapter {
     )
   }
 
-  /** What the SCO-facing method returns while the call is parked. */
-  private pausedAnswer(ctx: ApiCallContext): string {
-    return ctx.method === 'SetValue' || ctx.method === 'Commit' ? 'true' : 'false'
+  /**
+   * What the SCO receives for a parked call. The SCORM API is synchronous —
+   * JavaScript cannot block the SCO until the tester resumes — so a parked
+   * mutation answers "true" now and really runs, in order, on resume (its
+   * actual result then appears in the API log). Answering "false" would make
+   * the course believe the call failed and change what is being debugged.
+   */
+  private pausedAnswer(): string {
+    return 'true'
   }
 
   /**
