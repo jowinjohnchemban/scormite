@@ -12,8 +12,6 @@ import {
   Bug,
   Clock,
   FileCode,
-  FileText,
-  Gauge,
   ListOrdered,
   ListTree,
   Network,
@@ -22,14 +20,13 @@ import {
 } from 'lucide-react'
 import { ManifestExplorer } from '@/features/manifest'
 import { CmiInspectorPanel } from '@/features/inspector'
-import { ApiMonitorPanel, PerformancePanel } from '@/features/logging'
+import { ApiMonitorPanel } from '@/features/logging'
 import { PackageExplorerPanel } from '@/features/package-loader'
 import { NetworkPanel } from '@/features/player'
 import { TimelinePanel } from '@/features/timeline'
 import { BreakpointsPanel } from '@/features/session'
 import { ValidationPanel } from '@/features/validation'
 import { CourseOutlinePanel } from '@/app/course/CourseOutline'
-import { ReportsPanelWrapper } from './ReportsPanelWrapper'
 import type { PanelDef } from './PanelRegistry'
 
 export const ADVANCED_PANELS: readonly PanelDef[] = [
@@ -106,21 +103,5 @@ export const ADVANCED_PANELS: readonly PanelDef[] = [
     defaultOpen: false,
     icon: Bug,
     component: BreakpointsPanel,
-  },
-  {
-    id: 'performance',
-    title: 'Performance',
-    defaultRegion: 'bottom',
-    defaultOpen: false,
-    icon: Gauge,
-    component: PerformancePanel,
-  },
-  {
-    id: 'reports',
-    title: 'Reports',
-    defaultRegion: 'bottom',
-    defaultOpen: false,
-    icon: FileText,
-    component: ReportsPanelWrapper,
   },
 ]
