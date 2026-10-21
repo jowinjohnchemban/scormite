@@ -1,51 +1,11 @@
-import { useReducer, useEffect } from 'react'
+import { useEffect, useReducer } from 'react'
 import { runtimeEvents, useRuntimeStore } from '@/features/runtime'
-
-export interface CmiSummary {
-  completionStatus: string
-  successStatus: string
-  scoreRaw: string
-  scoreScaled: string
-  location: string
-  totalTime: string
-}
-
-const EMPTY: CmiSummary = {
-  completionStatus: 'unknown',
-  successStatus: 'unknown',
-  scoreRaw: '',
-  scoreScaled: '',
-  location: '',
-  totalTime: '',
-}
-
-function extractSummary(
-  cmi: Record<string, string>,
-  version: '1.2' | '2004',
-): CmiSummary {
-  if (version === '1.2') {
-    return {
-      completionStatus: cmi['cmi.core.lesson_status'] ?? 'not attempted',
-      successStatus: cmi['cmi.core.lesson_status'] ?? '',
-      scoreRaw: cmi['cmi.core.score.raw'] ?? '',
-      scoreScaled: '',
-      location: cmi['cmi.core.lesson_location'] ?? '',
-      totalTime: cmi['cmi.core.total_time'] ?? '',
-    }
-  }
-  return {
-    completionStatus: cmi['cmi.completion_status'] ?? 'unknown',
-    successStatus: cmi['cmi.success_status'] ?? 'unknown',
-    scoreRaw: cmi['cmi.score.raw'] ?? '',
-    scoreScaled: cmi['cmi.score.scaled'] ?? '',
-    location: cmi['cmi.location'] ?? '',
-    totalTime: cmi['cmi.total_time'] ?? '',
-  }
-}
+import { EMPTY_CMI_SUMMARY, summarizeCmi, type CmiSummary } from '@/app/course/summarizeCmi'
 
 /**
- * Derives live CMI state from the active adapter, updating after each API call.
- * Lives in app/hooks/ because it crosses the runtime and player feature boundary.
+ * Live summary of the running SCO's CMI state, re-derived after every API
+ * call. Lives in app/hooks/ because it joins the runtime with the course
+ * summary logic.
  */
 export function useCmiState(): CmiSummary {
   const adapter = useRuntimeStore((s) => s.adapter)
@@ -59,12 +19,11 @@ export function useCmiState(): CmiSummary {
     return runtimeEvents.on('api-call', forceUpdate)
   }, [adapter])
 
-  if (!adapter || !version) return EMPTY
+  if (!adapter || !version) return EMPTY_CMI_SUMMARY
 
   try {
-    const cmi = adapter.getFlattenedCmi()
-    return extractSummary(cmi, version)
+    return summarizeCmi(adapter.getFlattenedCmi(), version)
   } catch {
-    return EMPTY
+    return EMPTY_CMI_SUMMARY
   }
 }

@@ -14,6 +14,7 @@ import {
   FileCode,
   FileText,
   Gauge,
+  ListOrdered,
   ListTree,
   Network,
   Package,
@@ -27,10 +28,19 @@ import { NetworkPanel } from '@/features/player'
 import { TimelinePanel } from '@/features/timeline'
 import { BreakpointsPanel } from '@/features/session'
 import { ValidationPanel } from '@/features/validation'
+import { CourseOutlinePanel } from '@/app/course/CourseOutline'
 import { ReportsPanelWrapper } from './ReportsPanelWrapper'
 import type { PanelDef } from './PanelRegistry'
 
 export const ADVANCED_PANELS: readonly PanelDef[] = [
+  {
+    id: 'course-outline',
+    title: 'Outline',
+    defaultRegion: 'left',
+    defaultOpen: true,
+    icon: ListOrdered,
+    component: CourseOutlinePanel,
+  },
   {
     id: 'manifest-explorer',
     title: 'Manifest',

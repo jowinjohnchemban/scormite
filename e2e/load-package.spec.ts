@@ -28,8 +28,8 @@ test('loads a SCORM 1.2 package and runs the SCO end to end', async ({ page }) =
   await expect(page.getByText('scorm12-basic', { exact: true })).toBeVisible()
   await expect(page.getByText('SCORM 1.2', { exact: true })).toBeVisible()
 
-  // Manifest tree: organization and SCO item are rendered as buttons.
-  await expect(page.getByRole('button', { name: /E2E Org 1.2/i })).toBeVisible()
+  // Course title and the outline's launchable item.
+  await expect(page.getByText('E2E Org 1.2', { exact: true })).toBeVisible()
   await expect(page.getByRole('button', { name: /E2E SCO 1.2/i })).toBeVisible()
 
   // The SCO iframe is launched through the service worker (scorm-files URL).

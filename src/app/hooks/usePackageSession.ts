@@ -1,43 +1,42 @@
 /**
- * Owns the load-a-package-and-start-a-runtime-session flow.
+ * Owns the package session: load a package, deliver its SCOs one at a time,
+ * resume or restart them, follow SCORM 2004 navigation requests, and close.
  *
- * Lives in `app/` because completing it needs four features at once
- * (package-loader, manifest, player, runtime) and no single feature is
- * allowed to reach across to the others. `App` subscribes exactly once for
- * the lifetime of the app (with the current mode as owner) and passes the
- * resulting session down to the active mode shell, so a running SCO survives
- * a Basic ↔ Advanced switch without a second concurrent subscription.
+ * Lives in `app/` because it needs package-loader, manifest, player,
+ * runtime, and every store fed by the runtime at once. `App` subscribes
+ * exactly once and passes the session to whichever mode shell is active, so
+ * a running SCO survives a Basic ↔ Advanced switch.
  */
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { loadZip, PackageLoadError, usePackageStore } from '@/features/package-loader'
-import { ManifestParseError, parseManifest, useManifestStore } from '@/features/manifest'
+import {
+  getLaunchableItems,
+  ManifestParseError,
+  parseManifest,
+  useManifestStore,
+} from '@/features/manifest'
 import {
   cachePackageFiles,
   clearNetworkEntries,
   clearSessionCache,
-  injectApiProxy,
   packageLaunchUrl,
   registerServiceWorker,
   removeApiProxy,
 } from '@/features/player'
-import {
-  createBreakpointMiddleware,
-  createValidationMiddleware,
-  recordingMiddleware,
-  runtimeEvents,
-  Scorm12Adapter,
-  Scorm2004Adapter,
-  useRuntimeStore,
-} from '@/features/runtime'
+import { runtimeEvents, useRuntimeStore } from '@/features/runtime'
 import { getRuntimeProfile, useSettingsStore } from '@/features/settings'
-import { validatorsForProfile } from '@/app/profileRuntime'
 import { useLogStore } from '@/features/logging'
 import { useInspectorStore } from '@/features/inspector'
 import { useTimelineStore } from '@/features/timeline'
 import { useBreakpointStore } from '@/features/session'
 import { ValidationService, useValidationStore } from '@/features/validation'
-import type { ApiCallRecord, Package } from '@/shared/types'
+import { AttemptStore } from '@/app/course/AttemptStore'
+import { CourseNavigator } from '@/app/course/CourseNavigator'
+import { ScoLauncher } from '@/app/course/ScoLauncher'
+import { summarizeCmi } from '@/app/course/summarizeCmi'
+import { useCourseStore, type LaunchRequest } from '@/app/state/courseStore'
+import type { ApiCallRecord, LaunchableItem, Package } from '@/shared/types'
 import { logDevDiagnostic } from '@/shared/lib/devDiagnostics'
 
 // The player serves package files through a service worker; registering is
@@ -56,39 +55,65 @@ function logDevelopmentApiCall(record: ApiCallRecord): void {
 export interface PackageSession {
   pkg: Package | null
   loading: boolean
+  /** Name of the file being opened, while `loading`. */
+  loadingName: string | null
   error: string | null
-  /** `null` until a package is loaded, and briefly during a reload. */
+  /** `null` until a SCO is launched, and while one is being switched. */
   launchUrl: string | null
+  /** Changes on every launch; key the player with it so each launch remounts. */
+  launchKey: number
+  currentItem: LaunchableItem | null
   loadFile: (file: File) => Promise<void>
-  reload: () => void
-  reset: () => void
+  /** Relaunch the current SCO with its stored data (a real LMS resume). */
+  relaunch: () => void
+  /** Discard the current SCO's data and launch it fresh. */
+  newAttempt: () => void
+  /** Discard every SCO's data and start the course from its first item. */
+  restartCourse: () => void
+  /** Close the package and return to the drop zone. */
+  close: () => void
+  dismissError: () => void
+}
+
+/** Clears every store a package session feeds. */
+function resetSessionStores(): void {
+  removeApiProxy()
+  clearNetworkEntries()
+  useRuntimeStore.getState().reset()
+  useLogStore.getState().clearRecords()
+  useInspectorStore.getState().reset()
+  useTimelineStore.getState().reset()
+  useBreakpointStore.getState().reset()
+  useValidationStore.getState().reset()
+  useCourseStore.getState().reset()
+  useManifestStore.getState().clearManifest()
+  usePackageStore.getState().clearPackage()
+}
+
+function loadErrorMessage(e: unknown): string {
+  if (e instanceof PackageLoadError || e instanceof ManifestParseError) return e.message
+  if (e instanceof Error && /service worker/i.test(e.message)) {
+    return 'The package player could not start. Reload the page and try again — private browsing modes that block service workers are not supported.'
+  }
+  return 'An unexpected error occurred while loading the package.'
 }
 
 export function usePackageSession(owner: 'basic' | 'advanced'): PackageSession {
   const pkg = usePackageStore((s) => s.package)
-  const setPackage = usePackageStore((s) => s.setPackage)
-  const setManifest = useManifestStore((s) => s.setManifest)
-  const setAdapter = useRuntimeStore((s) => s.setAdapter)
-  const resetRuntime = useRuntimeStore((s) => s.reset)
-  const runtimeSessionId = useRuntimeStore((s) => s.sessionId)
-  const clearLogs = useLogStore((s) => s.clearRecords)
-  const addLog = useLogStore((s) => s.addRecord)
-  const setCmiBaseline = useInspectorStore((s) => s.setBaseline)
-  const updateCmi = useInspectorStore((s) => s.updateValues)
-  const resetInspector = useInspectorStore((s) => s.reset)
-  const captureSnapshot = useTimelineStore((s) => s.captureSnapshot)
-  const resetTimeline = useTimelineStore((s) => s.reset)
-  const resetBreakpoints = useBreakpointStore((s) => s.reset)
-  const resetValidation = useValidationStore((s) => s.reset)
+  const items = useCourseStore((s) => s.items)
+  const currentItemId = useCourseStore((s) => s.currentItemId)
+  const pendingLaunch = useCourseStore((s) => s.pendingLaunch)
+  const launchKey = useCourseStore((s) => s.launchCount)
 
   const [loading, setLoading] = useState(false)
+  const [loadingName, setLoadingName] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [reloading, setReloading] = useState(false)
-  // Package and runtime state outlive either mode shell. Deriving the launch
-  // URL from both lets a running SCO survive a Basic ↔ Advanced mode switch.
+  const attempts = useRef(new AttemptStore())
+
+  const currentItem = items.find((item) => item.identifier === currentItemId) ?? null
   const launchUrl =
-    pkg && runtimeSessionId && !reloading
-      ? packageLaunchUrl(runtimeSessionId, pkg.launchUrl)
+    pkg && currentItem && pendingLaunch === null
+      ? packageLaunchUrl(pkg.id, currentItem.launchPath)
       : null
 
   useEffect(() => {
@@ -96,101 +121,96 @@ export function usePackageSession(owner: 'basic' | 'advanced'): PackageSession {
     return () => logDevDiagnostic('session.shell.unmounted', { owner })
   }, [owner])
 
-  useEffect(() => {
-    logDevDiagnostic('session.launch-state', {
-      owner,
-      packageId: pkg?.id ?? null,
-      packageName: pkg?.name ?? null,
-      runtimeSessionId,
-      launchUrl,
-      reloading,
-    })
-  }, [owner, pkg, runtimeSessionId, launchUrl, reloading])
-
-  // Subscribed once for the lifetime of the App. Doing this per-load stacked
-  // a fresh listener on every package, duplicating every subsequent log record.
+  // ---------------------------------------------------------------------------
+  // Runtime → stores. Subscribed once for the lifetime of the App; doing this
+  // per launch stacked listeners and duplicated every log record.
+  // ---------------------------------------------------------------------------
   useEffect(() => {
     const unsubApi = runtimeEvents.on('api-call', (record) => {
-      addLog(record)
+      useLogStore.getState().addRecord(record)
       logDevelopmentApiCall(record)
-      logDevDiagnostic('runtime.api-call', {
-        owner,
-        method: record.method,
-        element: record.element ?? null,
-        returnValue: record.returnValue,
-        errorCode: record.errorCode ?? null,
-      })
-      const adapter = useRuntimeStore.getState().adapter
-      const sessionId = useRuntimeStore.getState().sessionId
-      if (!adapter || !sessionId) return
+      const { adapter, sessionId, scormVersion } = useRuntimeStore.getState()
+      if (!adapter || !sessionId || !scormVersion) return
       try {
         const flattened = adapter.getFlattenedCmi()
-        captureSnapshot({ timestamp: record.timestamp, sessionId, data: flattened })
+        useTimelineStore.getState().captureSnapshot({ timestamp: record.timestamp, sessionId, data: flattened })
         // While the timeline is scrubbing a historical snapshot the
-        // inspector keeps showing that instant; only live updates while
-        // following the running session.
+        // inspector keeps showing that instant.
         if (useTimelineStore.getState().cursor === null) {
-          updateCmi(flattened)
+          useInspectorStore.getState().updateValues(flattened)
         }
+        const itemId = useCourseStore.getState().currentItemId
+        if (itemId) useCourseStore.getState().setProgress(itemId, summarizeCmi(flattened, scormVersion))
       } catch {
         // The player may have navigated away while the event was being handled.
       }
     })
-
     const unsubInit = runtimeEvents.on('initialized', () => {
       useRuntimeStore.getState().setInitialized(true)
     })
-
     const unsubTerm = runtimeEvents.on('terminated', () => {
       useRuntimeStore.getState().setTerminated(true)
     })
-
+    // SCORM 2004: the SCO asked the LMS to move on when it terminated.
+    const unsubNav = runtimeEvents.on('navigation-request', (event) => {
+      const course = useCourseStore.getState()
+      const outcome = new CourseNavigator(course.items).resolve(event, course.currentItemId)
+      logDevDiagnostic('session.navigation-request', { owner, ...event, outcome: outcome.kind })
+      if (outcome.kind === 'launch') course.requestLaunch(outcome.itemId, 'resume')
+    })
     return () => {
       unsubApi()
       unsubInit()
       unsubTerm()
+      unsubNav()
     }
-  }, [addLog, updateCmi, captureSnapshot, owner])
+  }, [owner])
 
   // A runtime profile switch applies its scorm-again knobs to the live
-  // adapter immediately. Validators need no handling here — the validation
-  // middleware re-reads the profile from the store on every call.
+  // adapter immediately; later launches pick the profile up on creation.
   useEffect(
     () =>
       useSettingsStore.subscribe((state, previous) => {
         if (state.activeProfileId === previous.activeProfileId) return
         const adapter = useRuntimeStore.getState().adapter
         if (!adapter) return
-        const profile = getRuntimeProfile(state.activeProfileId)
-        adapter.configure(profile.scormAgainOverrides)
-        logDevDiagnostic('settings.profile.changed', {
-          owner,
-          profileId: profile.id,
-          label: profile.label,
-        })
+        adapter.configure(getRuntimeProfile(state.activeProfileId).scormAgainOverrides)
       }),
-    [owner],
+    [],
   )
+
+  // ---------------------------------------------------------------------------
+  // Launching. Runs after React has committed the launch request, i.e. after
+  // the previous SCO's iframe has been removed and its unload handlers have
+  // already called LMSFinish/Terminate on the previous runtime.
+  // ---------------------------------------------------------------------------
+  useEffect(() => {
+    if (!pendingLaunch) return
+    performLaunch(pendingLaunch, attempts.current)
+  }, [pendingLaunch])
 
   const loadFile = useCallback(
     async (file: File) => {
       setLoading(true)
+      setLoadingName(file.name)
       setError(null)
       logDevDiagnostic('package.load.started', { owner, name: file.name, size: file.size })
       try {
         const raw = await loadZip(file)
-        logDevDiagnostic('package.load.parsed', {
-          owner,
-          name: raw.name,
-          scormVersion: raw.scormVersion,
-          files: raw.filePaths.length,
-        })
         const manifest = parseManifest(raw.manifestXml)
+        const launchable = getLaunchableItems(manifest)
+        const first = launchable[0]
+        if (!first) {
+          throw new PackageLoadError(
+            `"${file.name}" has no launchable item: no organization item references a resource with an href.`,
+          )
+        }
 
-        const resourceLaunch =
-          manifest.resources.find((r) => r.scormType === 'sco')?.href ??
-          manifest.resources[0]?.href ??
-          ''
+        // The new package is valid — only now replace the open one.
+        const previous = usePackageStore.getState().package
+        if (previous) clearSessionCache(previous.id)
+        resetSessionStores()
+        attempts.current.clear()
 
         const assembled: Package = {
           id: crypto.randomUUID(),
@@ -199,125 +219,116 @@ export function usePackageSession(owner: 'basic' | 'advanced'): PackageSession {
           scormVersion: raw.scormVersion,
           ...(raw.scormEdition !== undefined ? { scormEdition: raw.scormEdition } : {}),
           manifest,
-          launchUrl: resourceLaunch,
+          launchUrl: first.launchPath,
           loadedAt: new Date(),
         }
 
-        setManifest(manifest)
-        setPackage(assembled)
-        // The archive bytes are discarded after caching, but the file list is
-        // kept so the Package Explorer panel can show the real structure.
+        useManifestStore.getState().setManifest(manifest)
+        usePackageStore.getState().setPackage(assembled)
+        // The archive bytes are discarded after caching; the file list stays
+        // for the Package Explorer.
         usePackageStore.getState().setFilePaths(raw.filePaths)
+        ValidationService.validateManifest(manifest, raw.filePaths, raw.rootFolder)
 
-        // Static validation: manifest-vs-package-file consistency. Runtime
-        // issues stream in live from the validation middleware below.
-        ValidationService.validateManifest(manifest, raw.filePaths)
+        await cachePackageFiles(assembled.id, raw.filePaths, raw.getFile)
+        logDevDiagnostic('package.cache.ready', { owner, packageId: assembled.id, files: raw.filePaths.length })
 
-        const sid = assembled.id
-        await cachePackageFiles(sid, raw.filePaths, raw.getFile)
-        logDevDiagnostic('package.cache.ready', { owner, sessionId: sid, files: raw.filePaths.length })
-
-        const adapter =
-          raw.scormVersion === '1.2' ? new Scorm12Adapter(sid) : new Scorm2004Adapter(sid)
-        // Apply the active runtime profile's scorm-again knobs up front so the
-        // first Initialize already runs under the profile.
-        adapter.configure(
-          getRuntimeProfile(useSettingsStore.getState().activeProfileId).scormAgainOverrides,
-        )
-        adapter.addMiddleware(recordingMiddleware)
-        // Breakpoints pause matching calls *before* they reach scorm-again.
-        // The middleware only signals; the adapter owns the gate, and the
-        // breakpoint store mirrors the pause state for the UI.
-        adapter.addMiddleware(
-          createBreakpointMiddleware({
-            getBreakpoints: () => useBreakpointStore.getState().breakpoints,
-            onHit: (hit) => useBreakpointStore.getState().recordHit(hit),
-          }),
-        )
-        adapter.onPauseChange((paused) =>
-          useBreakpointStore.getState().setPausedFlag(paused),
-        )
-        useBreakpointStore.getState().setResumeHandler(() => adapter.resume())
-
-        // Runtime validation runs on every completed call. The rule list is
-        // re-read from the active runtime profile per call, so switching
-        // profile changes which issues appear without rebuilding the pipeline.
-        // Plugin-contributed validators ride the same pipeline, live — a
-        // plugin registered mid-session takes effect on the next call.
-        adapter.addMiddleware(
-          createValidationMiddleware({
-            getValidators: () => [
-              ...validatorsForProfile(
-                getRuntimeProfile(useSettingsStore.getState().activeProfileId),
-              ),
-            ],
-            onIssue: (issue) => useValidationStore.getState().addIssue(issue),
-          }),
-        )
-
-        setAdapter(adapter, raw.scormVersion)
-        setCmiBaseline(adapter.getFlattenedCmi())
-        injectApiProxy(adapter, raw.scormVersion)
-        logDevDiagnostic('runtime.adapter.ready', {
-          owner,
-          sessionId: sid,
-          scormVersion: raw.scormVersion,
-          launchPath: resourceLaunch,
-        })
-
-        if (import.meta.env.DEV) {
-          console.info('[Scormite session] Package loaded', {
-            name: assembled.name,
-            scormVersion: assembled.scormVersion,
-            sessionId: sid,
-          })
-        }
-
+        const course = useCourseStore.getState()
+        course.setItems(launchable)
+        course.requestLaunch(first.identifier, 'new')
       } catch (e) {
-        logDevDiagnostic('package.load.failed', {
-          owner,
-          error: e instanceof Error ? e.message : String(e),
-        })
-        if (import.meta.env.DEV) {
-          console.error('[Scormite session] Failed to load package', e)
-        }
-        if (e instanceof PackageLoadError || e instanceof ManifestParseError) {
-          setError(e.message)
-        } else {
-          setError('An unexpected error occurred while loading the package.')
-        }
+        logDevDiagnostic('package.load.failed', { owner, error: e instanceof Error ? e.message : String(e) })
+        if (import.meta.env.DEV) console.error('[Scormite session] Failed to load package', e)
+        setError(loadErrorMessage(e))
       } finally {
         setLoading(false)
+        setLoadingName(null)
       }
     },
-    [setPackage, setManifest, setAdapter, setCmiBaseline, owner],
+    [owner],
   )
 
-  const reload = useCallback(() => {
-    if (!runtimeSessionId || !pkg) return
-    // Reset runtime initialization markers and blank the launchUrl briefly
-    // so the iframe remounts cleanly from a fresh document.
-    useRuntimeStore.getState().setInitialized(false)
-    useRuntimeStore.getState().setTerminated(false)
-    setReloading(true)
-    logDevDiagnostic('session.reload.requested', { owner, sessionId: runtimeSessionId })
-    requestAnimationFrame(() => {
-      setReloading(false)
-    })
-  }, [runtimeSessionId, pkg, owner])
+  const relaunch = useCallback(() => {
+    const course = useCourseStore.getState()
+    if (course.currentItemId) course.requestLaunch(course.currentItemId, 'resume')
+  }, [])
 
-  const reset = useCallback(() => {
-    logDevDiagnostic('session.reset.requested', { owner, sessionId: runtimeSessionId })
-    if (runtimeSessionId) clearSessionCache(runtimeSessionId)
-    removeApiProxy()
-    clearNetworkEntries()
-    resetRuntime()
-    clearLogs()
-    resetInspector()
-    resetTimeline()
-    resetBreakpoints()
-    resetValidation()
-    setReloading(false)
-  }, [runtimeSessionId, resetRuntime, clearLogs, resetInspector, resetTimeline, resetBreakpoints, resetValidation, owner])
-  return { pkg, loading, error, launchUrl, loadFile, reload, reset }
+  const newAttempt = useCallback(() => {
+    const course = useCourseStore.getState()
+    if (course.currentItemId) course.requestLaunch(course.currentItemId, 'new')
+  }, [])
+
+  const restartCourse = useCallback(() => {
+    const course = useCourseStore.getState()
+    const first = course.items[0]
+    if (!first) return
+    attempts.current.clear()
+    course.clearProgress()
+    course.requestLaunch(first.identifier, 'new')
+  }, [])
+
+  const close = useCallback(() => {
+    const current = usePackageStore.getState().package
+    logDevDiagnostic('session.close.requested', { owner, packageId: current?.id ?? null })
+    if (current) clearSessionCache(current.id)
+    resetSessionStores()
+    attempts.current.clear()
+    setError(null)
+  }, [owner])
+
+  const dismissError = useCallback(() => setError(null), [])
+
+  return {
+    pkg,
+    loading,
+    loadingName,
+    error,
+    launchUrl,
+    launchKey,
+    currentItem,
+    loadFile,
+    relaunch,
+    newAttempt,
+    restartCourse,
+    close,
+    dismissError,
+  }
+}
+
+/**
+ * Deliver one SCO: store the outgoing SCO's attempt, build a fresh runtime
+ * for the incoming one (resuming its stored attempt unless a new attempt was
+ * asked for), and point the player at it.
+ */
+function performLaunch(request: LaunchRequest, attempts: AttemptStore): void {
+  const course = useCourseStore.getState()
+  const pkg = usePackageStore.getState().package
+  const item = course.items.find((candidate) => candidate.identifier === request.itemId)
+  if (!pkg || !item) return
+
+  const outgoing = useRuntimeStore.getState().adapter
+  if (outgoing && course.currentItemId) {
+    try {
+      attempts.save(course.currentItemId, outgoing.exportAttempt())
+    } catch {
+      // An adapter that cannot render its data simply leaves nothing to resume.
+    }
+  }
+  if (request.mode === 'new') attempts.discard(item.identifier)
+
+  const adapter = new ScoLauncher(pkg).launch(item, attempts.get(item.identifier))
+  useRuntimeStore.getState().setAdapter(adapter, pkg.scormVersion)
+
+  // Each launch is its own replayable run; the API log spans the session.
+  const cmi = adapter.getFlattenedCmi()
+  useTimelineStore.getState().reset()
+  useInspectorStore.getState().setBaseline(cmi)
+  course.setProgress(item.identifier, summarizeCmi(cmi, pkg.scormVersion))
+  course.completeLaunch(item.identifier)
+  logDevDiagnostic('runtime.adapter.ready', {
+    itemId: item.identifier,
+    mode: request.mode,
+    resumed: attempts.has(item.identifier),
+    launchPath: item.launchPath,
+  })
 }

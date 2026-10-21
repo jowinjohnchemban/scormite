@@ -4,10 +4,22 @@ import { BasicModeShell } from '@/app/modes/BasicModeShell'
 import { AdvancedModeShell } from '@/app/modes/AdvancedModeShell'
 import { useMediaQuery } from '@/app/hooks/useMediaQuery'
 import { usePackageSession } from '@/app/hooks/usePackageSession'
+import { useWindowFileDrop } from '@/app/hooks/useWindowFileDrop'
+import { SessionControls } from '@/app/layout/SessionControls'
+import { SessionAlert } from '@/app/layout/SessionAlert'
+import { FileDropOverlay } from '@/app/layout/FileDropOverlay'
+import { ScoEndedBar } from '@/app/course/ScoEndedBar'
 import { PlayerFrame } from '@/features/player'
 import { Button } from '@/components/ui/button'
 import logo from '@/assets/hero.png'
 import { logDevDiagnostic } from '@/shared/lib/devDiagnostics'
+
+interface FrameRect {
+  left: number
+  top: number
+  width: number
+  height: number
+}
 
 export function App() {
   const mode = useAppModeStore((s) => s.mode)
@@ -17,33 +29,21 @@ export function App() {
   useEffect(() => {
     if (!isDesktop && mode === 'advanced') setMode('basic')
   }, [isDesktop, mode, setMode])
-  const mainRef = useRef<HTMLDivElement | null>(null)
-  const [playerFrameRect, setPlayerFrameRect] = useState<{
-    left: number
-    top: number
-    width: number
-    height: number
-  } | null>(null)
+  const mainRef = useRef<HTMLElement | null>(null)
+  const [playerFrameRect, setPlayerFrameRect] = useState<FrameRect | null>(null)
 
   // Single subscription for the whole app: the runtime session (and therefore
   // the running SCO) outlives any one mode shell.
   const session = usePackageSession(mode)
+  const draggingFile = useWindowFileDrop(true, (file) => void session.loadFile(file))
 
   const playerFrameStyle =
     mode === 'basic' || !isDesktop || playerFrameRect === null
       ? isDesktop
-        ? {
-            top: 0,
-            left: 256,
-            right: 0,
-            bottom: 0,
-          }
-        : {
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-          }
+        ? // Clears Basic's 256px sidebar.
+          { top: 0, left: 256, right: 0, bottom: 0 }
+        : // Below Basic's 40vh stacked sidebar on narrow screens.
+          { top: '40vh', left: 0, right: 0, bottom: 0 }
       : {
           position: 'absolute' as const,
           left: playerFrameRect.left,
@@ -68,52 +68,57 @@ export function App() {
 
   return (
     <div className="flex h-screen flex-col">
-      <header className="flex h-10 shrink-0 items-center justify-between border-b border-border-subtle bg-surface-900 px-3 text-sm">
-        <div className="flex items-center gap-2">
-          <img src={logo} alt="SCORMite" className="h-6 w-6 object-contain" />
-          <span className="font-medium tracking-tight">SCORMite</span>
+      <header className="flex h-10 shrink-0 items-center justify-between gap-2 border-b border-border-subtle bg-surface-900 px-3 text-sm">
+        <div className="flex shrink-0 items-center gap-2">
+          <img src={logo} alt="" className="h-6 w-6 object-contain" />
+          <h1 className="font-medium tracking-tight">SCORMite</h1>
         </div>
-        <div className="flex items-center gap-1">
-          <Button
-            size="sm"
-            variant={mode === 'basic' ? 'default' : 'ghost'}
-            onClick={() => {
-              logDevDiagnostic('mode.change.requested', { from: mode, to: 'basic' })
-              setMode('basic')
-            }}
-          >
-            Basic
-          </Button>
-          <Button
-            size="sm"
-            variant={mode === 'advanced' ? 'default' : 'ghost'}
-            disabled={!isDesktop}
-            title={isDesktop ? 'Advanced mode (desktop only)' : 'Advanced mode is only available on wide/desktop screens'}
-            onClick={() => {
-              if (!isDesktop) return
-              logDevDiagnostic('mode.change.requested', { from: mode, to: 'advanced' })
-              setMode('advanced')
-            }}
-          >
-            Advanced
-          </Button>
+        <div className="flex min-w-0 items-center gap-1">
+          <SessionControls session={session} />
+          {session.pkg && <div className="mx-1 h-5 w-px shrink-0 bg-border-subtle" aria-hidden />}
+          <div className="flex shrink-0 items-center gap-1" role="group" aria-label="View mode">
+            <Button
+              size="sm"
+              variant={mode === 'basic' ? 'default' : 'ghost'}
+              aria-pressed={mode === 'basic'}
+              onClick={() => {
+                logDevDiagnostic('mode.change.requested', { from: mode, to: 'basic' })
+                setMode('basic')
+              }}
+            >
+              Basic
+            </Button>
+            <Button
+              size="sm"
+              variant={mode === 'advanced' ? 'default' : 'ghost'}
+              aria-pressed={mode === 'advanced'}
+              disabled={!isDesktop}
+              title={isDesktop ? 'Advanced mode: dockable developer panels' : 'Advanced mode needs a wider screen (1024px+)'}
+              onClick={() => {
+                if (!isDesktop) return
+                logDevDiagnostic('mode.change.requested', { from: mode, to: 'advanced' })
+                setMode('advanced')
+              }}
+            >
+              Advanced
+            </Button>
+          </div>
         </div>
       </header>
+      <SessionAlert message={session.pkg ? session.error : null} onDismiss={session.dismissError} />
       <main ref={mainRef} className="relative min-h-0 flex-1 overflow-hidden">
         {/*
-          Persistent player layer. The SCO iframe must never leave the DOM:
-          detaching it destroys the browsing context and kills the running
-          course. Mode shells are chrome rendered on top of this layer, so a
-          Basic ↔ Advanced switch only swaps chrome — the SCO keeps running.
-          `left-64` clears Basic's 256px sidebar; `left-10` clears Advanced's
-          40px activity bar.
+          Persistent player layer. The SCO iframe must never leave the DOM on
+          a mode switch: detaching it destroys the browsing context and kills
+          the running course. Mode shells are chrome rendered on top of this
+          layer, so a Basic ↔ Advanced switch only swaps chrome. The key only
+          changes on a deliberate (re)launch, which must remount the iframe.
         */}
         <div className="absolute inset-x-0" style={playerFrameStyle}>
-          <PlayerFrame src={session.launchUrl} />
+          <PlayerFrame key={session.launchKey} src={session.launchUrl} />
+          <ScoEndedBar session={session} />
         </div>
-        {!isDesktop ? (
-          <BasicModeShell session={session} />
-        ) : mode === 'basic' ? (
+        {!isDesktop || mode === 'basic' ? (
           <BasicModeShell session={session} />
         ) : (
           <AdvancedModeShell
@@ -122,6 +127,7 @@ export function App() {
           />
         )}
       </main>
+      <FileDropOverlay visible={draggingFile && session.pkg !== null} />
     </div>
   )
 }
