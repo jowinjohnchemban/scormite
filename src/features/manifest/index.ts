@@ -6,4 +6,9 @@
  */
 export { ManifestExplorer } from './components/ManifestExplorer'
 export { useManifestStore } from './state/manifestStore'
-export { parseManifest, ManifestParseError } from './services/ManifestParserService';
+export { parseManifest, ManifestParseError } from './services/ManifestParserService'
+export {
+  applyLaunchParameters,
+  getDefaultOrganization,
+  getLaunchableItems,
+} from './services/launchables'
