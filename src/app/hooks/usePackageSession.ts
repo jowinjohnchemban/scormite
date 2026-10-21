@@ -10,32 +10,25 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { loadZip, PackageLoadError, usePackageStore } from '@/features/package-loader'
+import { usePackageStore } from '@/features/package-loader'
+import { useManifestStore } from '@/features/manifest'
 import {
-  getActivityTree,
-  getLaunchableItems,
-  ManifestParseError,
-  parseManifest,
-  useManifestStore,
-} from '@/features/manifest'
-import {
-  cachePackageFiles,
   clearNetworkEntries,
   clearSessionCache,
   packageLaunchUrl,
   registerServiceWorker,
   removeApiProxy,
 } from '@/features/player'
-import { runtimeEvents, useRuntimeStore, type SequencingOptions } from '@/features/runtime'
+import { runtimeEvents, useRuntimeStore } from '@/features/runtime'
 import { useLogStore } from '@/features/logging'
 import { useInspectorStore } from '@/features/inspector'
 import { useTimelineStore } from '@/features/timeline'
 import { useBreakpointStore } from '@/features/session'
 import { ValidationService, useValidationStore } from '@/features/validation'
-import { CourseSession } from '@/app/course/CourseSession'
+import type { CourseSession } from '@/app/course/CourseSession'
 import { summarizeCmi } from '@/app/course/summarizeCmi'
 import { useCourseStore } from '@/app/state/courseStore'
-import type { ApiCallRecord, LaunchableItem, Manifest, Package } from '@/shared/types'
+import type { ApiCallRecord, LaunchableItem, Package } from '@/shared/types'
 import { logDevDiagnostic } from '@/shared/lib/devDiagnostics'
 
 // The player serves package files through a service worker; registering is
@@ -92,24 +85,8 @@ function resetSessionStores(): void {
   usePackageStore.getState().clearPackage()
 }
 
-function loadErrorMessage(e: unknown): string {
-  if (e instanceof PackageLoadError || e instanceof ManifestParseError) return e.message
-  if (e instanceof Error && /service worker/i.test(e.message)) {
-    return 'The package player could not start. Reload the page and try again — private browsing modes that block service workers are not supported.'
-  }
-  return 'An unexpected error occurred while loading the package.'
-}
-
-/** SCORM 2004 courses are played by the sequencing engine. */
-function sequencingFor(pkg: Package, manifest: Manifest): SequencingOptions | null {
-  if (pkg.scormVersion !== '2004') return null
-  const activityTree = getActivityTree(manifest)
-  if (!activityTree) return null
-  return {
-    activityTree,
-    ...(manifest.sequencingCollections ? { collections: manifest.sequencingCollections } : {}),
-  }
-}
+/** Unzip, parsing, and the runtime load on demand with the first package. */
+const loadOpenPackage = () => import('@/app/course/openPackage')
 
 export function usePackageSession(owner: 'basic' | 'advanced'): PackageSession {
   const pkg = usePackageStore((s) => s.package)
@@ -203,47 +180,46 @@ export function usePackageSession(owner: 'basic' | 'advanced'): PackageSession {
       setError(null)
       logDevDiagnostic('package.load.started', { owner, name: file.name, size: file.size })
       try {
-        const raw = await loadZip(file)
-        const manifest = parseManifest(raw.manifestXml)
-        const launchable = getLaunchableItems(manifest)
-        const first = launchable[0]
-        if (!first) {
-          throw new PackageLoadError(
-            `"${file.name}" has no launchable item: no organization item references a resource with an href.`,
-          )
-        }
+        const { parsePackage, createCourseSession } = await loadOpenPackage()
+        const parsed = await parsePackage(file)
+        const first = parsed.items[0]
+        if (!first) return
 
         // The new package is valid — only now replace the open one.
         teardown()
 
         const assembled: Package = {
           id: crypto.randomUUID(),
-          name: raw.name,
+          name: parsed.name,
           sourceType: 'zip',
-          scormVersion: raw.scormVersion,
-          ...(raw.scormEdition !== undefined ? { scormEdition: raw.scormEdition } : {}),
-          manifest,
+          scormVersion: parsed.scormVersion,
+          ...(parsed.scormEdition !== undefined ? { scormEdition: parsed.scormEdition } : {}),
+          manifest: parsed.manifest,
           launchUrl: first.launchPath,
           loadedAt: new Date(),
         }
 
-        useManifestStore.getState().setManifest(manifest)
+        useManifestStore.getState().setManifest(parsed.manifest)
         usePackageStore.getState().setPackage(assembled)
         // The archive bytes are discarded after caching; the file list stays
         // for the Package Explorer.
-        usePackageStore.getState().setFilePaths(raw.filePaths)
-        ValidationService.validateManifest(manifest, raw.filePaths, raw.rootFolder)
+        usePackageStore.getState().setFilePaths(parsed.filePaths)
+        ValidationService.validateManifest(parsed.manifest, parsed.filePaths, parsed.rootFolder)
 
-        await cachePackageFiles(assembled.id, raw.filePaths, raw.getFile)
-        logDevDiagnostic('package.cache.ready', { owner, packageId: assembled.id, files: raw.filePaths.length })
+        await parsed.cacheFiles(assembled.id)
+        logDevDiagnostic('package.cache.ready', { owner, packageId: assembled.id, files: parsed.filePaths.length })
 
-        const session = new CourseSession(assembled, launchable, sequencingFor(assembled, manifest))
+        const session = createCourseSession(assembled, parsed.items)
         sessionRef.current = session
         session.start()
       } catch (e) {
         logDevDiagnostic('package.load.failed', { owner, error: e instanceof Error ? e.message : String(e) })
         if (import.meta.env.DEV) console.error('[Scormite session] Failed to load package', e)
-        setError(loadErrorMessage(e))
+        setError(
+          e instanceof Error && e.name === 'OpenPackageError'
+            ? e.message
+            : 'An unexpected error occurred while loading the package.',
+        )
       } finally {
         setLoading(false)
         setLoadingName(null)
