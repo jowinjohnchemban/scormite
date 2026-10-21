@@ -24,4 +24,12 @@ export {
 } from './adapter/middleware/validationMiddleware'
 export { runtimeEvents } from './events/RuntimeEventEmitter'
 export { useRuntimeStore } from './state/runtimeStore'
-export type { RuntimeMiddleware, ApiCallContext, ApiCallResult, MiddlewareDecision } from './types';
+export type {
+  RuntimeMiddleware,
+  ApiCallContext,
+  ApiCallResult,
+  AttemptRecord,
+  MiddlewareDecision,
+  NavigationRequest,
+  NavigationRequestEvent,
+} from './types'

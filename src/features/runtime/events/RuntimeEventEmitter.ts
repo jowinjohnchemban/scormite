@@ -1,6 +1,9 @@
 import type { ApiCallRecord, BreakpointHit } from '@/shared/types'
+import type { NavigationRequestEvent } from '../types'
 
 type RuntimeEventMap = {
+  /** Fired when a SCORM 2004 SCO terminates with a pending `adl.nav.request`. */
+  'navigation-request': NavigationRequestEvent
   /** Fired after every SCORM API call completes (post-recording-middleware). */
   'api-call': ApiCallRecord
   /** Fired when a breakpoint pauses execution. */

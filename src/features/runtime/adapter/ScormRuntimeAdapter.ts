@@ -1,5 +1,29 @@
 import type { Settings } from 'scorm-again'
-import type { ApiCallContext, ApiCallResult, RuntimeMiddleware } from '../types'
+import type { ManifestItemLaunchData, ScormVersion } from '@/shared/types'
+import type { AttemptRecord, ApiCallContext, ApiCallResult, RuntimeMiddleware } from '../types'
+
+/** The slice of scorm-again's API surface the LMS-side helpers below rely on. */
+interface LmsDataApi {
+  loadFromFlattenedJSON(json: Record<string, unknown>, CMIElement?: string): void
+  loadFromJSON(json: Record<string, unknown>, CMIElement?: string): void
+  renderCommitCMI(terminateCommit: boolean): unknown
+  renderCMIToJSONObject(): unknown
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
+/**
+ * Settings every adapter starts from. Scormite plays the LMS itself, so
+ * scorm-again never POSTs commits anywhere, and the commit payload is kept as
+ * a JSON tree so `exportAttempt` can round-trip it through `loadFromJSON`.
+ */
+export const LMS_BASE_SETTINGS: Partial<Settings> = {
+  lmsCommitUrl: false,
+  autocommit: false,
+  dataCommitFormat: 'json',
+}
 
 /** A call parked while a breakpoint holds execution. */
 interface PendingCall {
@@ -206,6 +230,23 @@ export abstract class ScormRuntimeAdapter {
     return ctx.method === 'SetValue' || ctx.method === 'Commit' ? 'true' : 'false'
   }
 
+  /**
+   * scorm-again's own explanation of an error code. GetErrorString and
+   * GetDiagnostic only read the API's error state, so asking does not
+   * disturb what the SCO will see from its own GetLastError.
+   */
+  private describeError(
+    errorCode: string,
+  ): Pick<ApiCallResult, 'errorCode' | 'errorString' | 'diagnostic'> {
+    const errorString = this.getErrorString(errorCode)
+    const diagnostic = this.getDiagnostic(errorCode)
+    return {
+      errorCode,
+      ...(errorString ? { errorString } : {}),
+      ...(diagnostic && diagnostic !== errorString ? { diagnostic } : {}),
+    }
+  }
+
   /** Invoke `fn`, run post hooks, then hand the result to `settle`. */
   private execute(
     ctx: ApiCallContext,
@@ -222,7 +263,7 @@ export abstract class ScormRuntimeAdapter {
       returnValue,
       durationMs,
       // SCORM returns the string "0" when no error has occurred.
-      ...(rawError && rawError !== '0' ? { errorCode: rawError } : {}),
+      ...(rawError && rawError !== '0' ? this.describeError(rawError) : {}),
       timestamp: Date.now(),
     }
 
@@ -231,6 +272,72 @@ export abstract class ScormRuntimeAdapter {
     settle?.(returnValue)
 
     return returnValue
+  }
+
+  // ---------------------------------------------------------------------------
+  // LMS-side data: what an LMS supplies before launch and stores after it
+  // ---------------------------------------------------------------------------
+
+  abstract readonly scormVersion: ScormVersion
+
+  /** The scorm-again instance, as seen by the LMS-side helpers. */
+  protected abstract get lmsApi(): LmsDataApi
+
+  /**
+   * Version-specific mapping of manifest launch data to CMI elements, plus
+   * whatever an LMS always provides (e.g. `credit`).
+   */
+  protected abstract launchDataElements(data: ManifestItemLaunchData): Record<string, string | undefined>
+
+  /** Version-specific: turn a stored attempt into the data a relaunch starts from. */
+  protected abstract resumeData(cmi: Record<string, unknown>): Record<string, unknown>
+
+  /**
+   * Seed the manifest's per-item launch data (launch_data, mastery score,
+   * completion threshold, …) before the SCO initializes, the way an LMS
+   * does. Each element loads separately so one malformed manifest value
+   * cannot keep the others out.
+   */
+  seedLaunchData(data: ManifestItemLaunchData): void {
+    for (const [element, value] of Object.entries(this.launchDataElements(data))) {
+      if (value === undefined || value === '') continue
+      try {
+        this.lmsApi.loadFromFlattenedJSON({ [element]: value })
+      } catch {
+        // scorm-again rejects values that violate the data model; the SCO
+        // then simply sees the element's default, as it would on an LMS.
+      }
+    }
+  }
+
+  /**
+   * Snapshot this attempt as an LMS would store it at the end of the
+   * session: scorm-again's terminate-commit payload, including the
+   * accumulated `total_time`.
+   */
+  exportAttempt(): AttemptRecord {
+    const rendered = this.lmsApi.renderCommitCMI(true)
+    const data = isRecord(rendered) ? rendered : this.lmsApi.renderCMIToJSONObject()
+    return {
+      scormVersion: this.scormVersion,
+      data: structuredClone(isRecord(data) ? data : {}),
+    }
+  }
+
+  /**
+   * Load a previously stored attempt before Initialize, so the SCO resumes
+   * with its suspend_data, location, score, objectives, and interactions.
+   * `entry` is derived from how the previous session exited.
+   */
+  restoreAttempt(record: AttemptRecord): void {
+    if (record.scormVersion !== this.scormVersion) return
+    const cmi = record.data['cmi']
+    if (!isRecord(cmi)) return
+    try {
+      this.lmsApi.loadFromJSON({ cmi: this.resumeData(structuredClone(cmi)) })
+    } catch {
+      // A corrupt record degrades to a fresh attempt rather than a crash.
+    }
   }
 
   // ---------------------------------------------------------------------------
