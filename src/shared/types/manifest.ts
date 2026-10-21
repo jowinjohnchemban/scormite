@@ -5,6 +5,12 @@
  * without violating the ESLint feature-boundary rules.
  */
 
+import type {
+  CompletionThresholdDefinition,
+  HideLmsUiToken,
+  SequencingDefinition,
+} from './sequencing'
+
 export interface ManifestMetadata {
   schema?: string
   schemaVersion?: string
@@ -45,12 +51,20 @@ export interface ManifestItem {
   parameters?: string
   /** Launch data to seed into the runtime before the SCO initializes. */
   launchData?: ManifestItemLaunchData
+  /** SCORM 2004 `<imsss:sequencing>` for this activity. */
+  sequencing?: SequencingDefinition
+  /** SCORM 2004 structured `adlcp:completionThreshold`. */
+  completionThreshold?: CompletionThresholdDefinition
+  /** SCORM 2004 `adlnav:hideLMSUI` tokens. */
+  hideLmsUi?: HideLmsUiToken[]
   children: ManifestItem[]
 }
 
 export interface ManifestOrganization {
   identifier: string
   title: string
+  /** SCORM 2004 sequencing for the root activity (the organization). */
+  sequencing?: SequencingDefinition
   items: ManifestItem[]
 }
 
@@ -96,4 +110,6 @@ export interface Manifest {
   organizations: ManifestOrganization[]
   resources: ManifestResource[]
   metadata: ManifestMetadata
+  /** SCORM 2004 `<imsss:sequencingCollection>` entries by `ID`. */
+  sequencingCollections?: Record<string, SequencingDefinition>
 }

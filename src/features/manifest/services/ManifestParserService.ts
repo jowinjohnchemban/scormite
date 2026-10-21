@@ -18,6 +18,10 @@ import type {
   ManifestOrganization,
   ManifestResource,
 } from '@/shared/types'
+import { SequencingParser } from './SequencingParser'
+import { attr, child, isNode, localName, text, toArray } from './xmlNode'
+
+const SEQUENCING = new SequencingParser()
 
 export class ManifestParseError extends Error {
   constructor(message: string) {
@@ -44,61 +48,6 @@ const PARSER = new XMLParser({
   // Parse attribute values as strings (SCORM identifiers can look numeric).
   parseAttributeValue: false,
 })
-
-// ---------------------------------------------------------------------------
-// Namespace-agnostic node access
-// ---------------------------------------------------------------------------
-
-type RawNode = Record<string, unknown>
-
-function isNode(value: unknown): value is RawNode {
-  return typeof value === 'object' && value !== null && !Array.isArray(value)
-}
-
-/** `adlcp:scormType` → `scormtype`. */
-function localName(qualified: string): string {
-  const colon = qualified.indexOf(':')
-  return (colon >= 0 ? qualified.slice(colon + 1) : qualified).toLowerCase()
-}
-
-/** First child element whose local name matches `name`. */
-function child(node: unknown, name: string): unknown {
-  if (!isNode(node)) return undefined
-  const target = name.toLowerCase()
-  for (const [key, value] of Object.entries(node)) {
-    if (key.startsWith('@_') || key === '#text') continue
-    if (localName(key) === target) return value
-  }
-  return undefined
-}
-
-/**
- * Attribute value by local name. An exact unprefixed match wins so that,
- * e.g., `type` never resolves to a stray `xsi:type`.
- */
-function attr(node: unknown, name: string): string | undefined {
-  if (!isNode(node)) return undefined
-  const exact = node[`@_${name}`]
-  if (typeof exact === 'string') return exact
-  const target = name.toLowerCase()
-  for (const [key, value] of Object.entries(node)) {
-    if (!key.startsWith('@_') || typeof value !== 'string') continue
-    if (localName(key.slice(2)) === target) return value
-  }
-  return undefined
-}
-
-/** Text content of a simple element (plain string, or `#text` beside attributes). */
-function text(value: unknown): string | undefined {
-  if (typeof value === 'string') return value
-  if (isNode(value) && typeof value['#text'] === 'string') return value['#text']
-  return undefined
-}
-
-function toArray(value: unknown): unknown[] {
-  if (value === undefined || value === null) return []
-  return Array.isArray(value) ? value : [value]
-}
 
 // ---------------------------------------------------------------------------
 // xml:base resolution
@@ -165,6 +114,8 @@ export function parseManifest(xml: string): Manifest {
   const defaultOrgId = attr(organizationsNode, 'default')
   const resourceBases = [attr(manifest, 'base'), attr(resourcesNode, 'base')]
 
+  const sequencingCollections = SEQUENCING.parseCollections(manifest)
+
   return {
     ...(defaultOrgId !== undefined ? { defaultOrganizationIdentifier: defaultOrgId } : {}),
     organizations: toArray(child(organizationsNode, 'organization')).map(parseOrganization),
@@ -172,6 +123,7 @@ export function parseManifest(xml: string): Manifest {
       parseResource(r, resourceBases),
     ),
     metadata: parseMetadata(child(manifest, 'metadata')),
+    ...(sequencingCollections !== undefined ? { sequencingCollections } : {}),
   }
 }
 
@@ -193,9 +145,11 @@ function parseMetadata(raw: unknown): ManifestMetadata {
 }
 
 function parseOrganization(raw: unknown): ManifestOrganization {
+  const sequencing = SEQUENCING.parseFor(raw)
   return {
     identifier: attr(raw, 'identifier') ?? '',
     title: text(child(raw, 'title')) ?? '',
+    ...(sequencing !== undefined ? { sequencing } : {}),
     items: toArray(child(raw, 'item')).map(parseItem),
   }
 }
@@ -205,6 +159,9 @@ function parseItem(raw: unknown): ManifestItem {
   const identifierref = attr(raw, 'identifierref')
   const parameters = attr(raw, 'parameters')
   const launchData = parseLaunchData(raw)
+  const sequencing = SEQUENCING.parseFor(raw)
+  const completionThreshold = SEQUENCING.parseCompletionThreshold(raw)
+  const hideLmsUi = SEQUENCING.parseHideLmsUi(raw)
   return {
     identifier: attr(raw, 'identifier') ?? '',
     title: text(child(raw, 'title')) ?? '',
@@ -212,6 +169,9 @@ function parseItem(raw: unknown): ManifestItem {
     isvisible,
     ...(parameters ? { parameters } : {}),
     ...(Object.keys(launchData).length > 0 ? { launchData } : {}),
+    ...(sequencing !== undefined ? { sequencing } : {}),
+    ...(completionThreshold !== undefined ? { completionThreshold } : {}),
+    ...(hideLmsUi !== undefined ? { hideLmsUi } : {}),
     children: toArray(child(raw, 'item')).map(parseItem),
   }
 }

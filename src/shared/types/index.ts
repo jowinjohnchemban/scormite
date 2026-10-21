@@ -12,3 +12,20 @@ export type { ApiCallRecord, CmiSnapshot, Session, ScormApiMethod } from './sess
 export type { Breakpoint, BreakpointHit, BreakpointKind } from './breakpoint'
 export type { ValidationIssue, ValidationSeverity, ValidationSource } from './validation'
 export type { IScormAdapter } from './adapter'
+export type {
+  ActivityDefinition,
+  CompletionThresholdDefinition,
+  ConditionCombination,
+  HideLmsUiToken,
+  ObjectiveDefinition,
+  ObjectiveMapDefinition,
+  RollupConditionDefinition,
+  RollupConsiderationRequirement,
+  RollupConsiderationsDefinition,
+  RollupRuleDefinition,
+  RuleConditionDefinition,
+  SequencingControlsDefinition,
+  SequencingDefinition,
+  SequencingRuleDefinition,
+  SequencingRulesDefinition,
+} from './sequencing'

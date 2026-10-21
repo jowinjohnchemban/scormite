@@ -12,3 +12,4 @@ export {
   getDefaultOrganization,
   getLaunchableItems,
 } from './services/launchables'
+export { getActivityTree } from './services/activityTree'
