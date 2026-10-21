@@ -1,4 +1,38 @@
-import type { ScormApiMethod } from '@/shared/types'
+import type { ScormApiMethod, ScormVersion } from '@/shared/types'
+
+/**
+ * What an LMS would persist for one attempt of one SCO: scorm-again's
+ * terminate-commit payload (the full `cmi` tree, with `total_time` already
+ * accumulated). Feeding it back through `restoreAttempt` relaunches the SCO
+ * the way a real LMS resumes it.
+ */
+export interface AttemptRecord {
+  scormVersion: ScormVersion
+  /** `{ cmi: { … } }` exactly as scorm-again renders it. */
+  data: Record<string, unknown>
+}
+
+/**
+ * SCORM 2004 navigation requests a SCO can leave in `adl.nav.request` for
+ * the LMS to act on after Terminate. scorm-again parses the request and
+ * raises it; the adapter forwards it as a `navigation-request` event.
+ */
+export type NavigationRequest =
+  | 'continue'
+  | 'previous'
+  | 'choice'
+  | 'jump'
+  | 'exit'
+  | 'exitAll'
+  | 'abandon'
+  | 'abandonAll'
+
+export interface NavigationRequestEvent {
+  sessionId: string
+  request: NavigationRequest
+  /** Target activity identifier for `choice` / `jump`. */
+  target?: string
+}
 
 /** Context available to pre-call middleware hooks. */
 export interface ApiCallContext {
@@ -13,6 +47,10 @@ export interface ApiCallResult extends ApiCallContext {
   returnValue: string
   durationMs: number
   errorCode?: string
+  /** scorm-again's explanation of `errorCode`. */
+  errorString?: string
+  /** scorm-again's diagnostic for `errorCode`, when it differs from `errorString`. */
+  diagnostic?: string
   timestamp: number
 }
 

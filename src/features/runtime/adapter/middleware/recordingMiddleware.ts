@@ -21,6 +21,8 @@ export const recordingMiddleware: RuntimeMiddleware = {
       ...(result.element !== undefined ? { element: result.element } : {}),
       ...(result.value !== undefined ? { value: result.value } : {}),
       ...(result.errorCode !== undefined ? { errorCode: result.errorCode } : {}),
+      ...(result.errorString !== undefined ? { errorString: result.errorString } : {}),
+      ...(result.diagnostic !== undefined ? { diagnostic: result.diagnostic } : {}),
     }
     runtimeEvents.emit('api-call', record)
   },

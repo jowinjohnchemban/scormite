@@ -1,21 +1,69 @@
 import { Scorm2004API } from 'scorm-again'
 import type { Settings } from 'scorm-again'
-import { ScormRuntimeAdapter } from './ScormRuntimeAdapter'
+import type { ManifestItemLaunchData } from '@/shared/types'
+import { LMS_BASE_SETTINGS, ScormRuntimeAdapter } from './ScormRuntimeAdapter'
 import { normalizeFlattenedCmi } from './normalizeFlattenedCmi'
 import { runtimeEvents } from '../events/RuntimeEventEmitter'
+import type { NavigationRequest } from '../types'
+
+/**
+ * scorm-again raises one listener event per navigation request it parses out
+ * of `adl.nav.request` at Terminate. The adapter forwards each as a typed
+ * `navigation-request` runtime event; acting on it is the LMS's (the app's)
+ * job.
+ */
+const NAVIGATION_EVENTS: readonly (readonly [string, NavigationRequest])[] = [
+  ['SequenceNext', 'continue'],
+  ['SequencePrevious', 'previous'],
+  ['SequenceChoice', 'choice'],
+  ['SequenceJump', 'jump'],
+  ['SequenceExit', 'exit'],
+  ['SequenceExitAll', 'exitAll'],
+  ['SequenceAbandon', 'abandon'],
+  ['SequenceAbandonAll', 'abandonAll'],
+]
 
 export class Scorm2004Adapter extends ScormRuntimeAdapter {
+  readonly scormVersion = '2004' as const
   readonly api: Scorm2004API
 
   constructor(sessionId: string, settings?: Partial<Settings>) {
-    // Disable HTTP commits — Scormite manages persistence itself.
-    const apiSettings: Partial<Settings> = {
-      lmsCommitUrl: false,
-      autocommit: false,
-      ...settings,
-    }
+    const apiSettings: Partial<Settings> = { ...LMS_BASE_SETTINGS, ...settings }
     super(sessionId, apiSettings)
     this.api = new Scorm2004API(apiSettings)
+    for (const [event, request] of NAVIGATION_EVENTS) {
+      this.api.on(event, (target?: unknown) => {
+        runtimeEvents.emit('navigation-request', {
+          sessionId: this.sessionId,
+          request,
+          ...(typeof target === 'string' && target !== '' ? { target } : {}),
+        })
+      })
+    }
+  }
+
+  protected get lmsApi() {
+    return this.api
+  }
+
+  protected launchDataElements(data: ManifestItemLaunchData): Record<string, string | undefined> {
+    return {
+      'cmi.launch_data': data.dataFromLms,
+      'cmi.completion_threshold': data.completionThreshold,
+      'cmi.scaled_passing_score': data.scaledPassingScore,
+      'cmi.time_limit_action': data.timeLimitAction,
+    }
+  }
+
+  /** `cmi.entry` is `resume` only after a suspended exit; exit/session_time start blank. */
+  protected resumeData(cmi: Record<string, unknown>): Record<string, unknown> {
+    const next: Record<string, unknown> = {
+      ...cmi,
+      entry: cmi['exit'] === 'suspend' ? 'resume' : '',
+    }
+    delete next['exit']
+    delete next['session_time']
+    return next
   }
 
   /**
@@ -31,9 +79,9 @@ export class Scorm2004Adapter extends ScormRuntimeAdapter {
     const result = this.runCall(
       'Initialize',
       () => {
-        // The adapter outlives the SCO iframe (mode switches remount it); reset
-        // the single-session scorm-again state machine so a restarting course
-        // can initialize again instead of failing with error 101.
+        // A SCO may call Initialize again after Terminate in the same page;
+        // reset the single-session scorm-again state machine so that works
+        // instead of failing with error 101.
         this.resetApiIfNeeded(this.api)
         return this.api.Initialize('')
       },

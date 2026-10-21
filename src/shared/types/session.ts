@@ -27,6 +27,10 @@ export interface ApiCallRecord {
   durationMs: number
   /** scorm-again error code string, if non-zero after the call. */
   errorCode?: string
+  /** scorm-again's GetErrorString for `errorCode`, e.g. "Incorrect Data Type". */
+  errorString?: string
+  /** scorm-again's GetDiagnostic, when it says more than `errorString`. */
+  diagnostic?: string
 }
 
 export interface CmiSnapshot {
