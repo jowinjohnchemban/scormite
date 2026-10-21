@@ -61,6 +61,19 @@ describe('detectScormVersion', () => {
     expect(detectScormVersion('')).toBeNull()
   })
 
+  it('detects 2004 2nd edition from the CAM 1.3 schemaversion', () => {
+    const xml = '<metadata><schemaversion>CAM 1.3</schemaversion></metadata>'
+    expect(detectScormVersion(xml)).toEqual({ version: '2004', edition: '2nd' })
+  })
+
+  it('runs SCORM 1.1 packages on the 1.2 runtime', () => {
+    expect(detectScormVersion('<metadata><schemaversion>1.1</schemaversion></metadata>')).toEqual({
+      version: '1.2',
+    })
+    const ns = '<manifest xmlns:adlcp="http://www.adlnet.org/xsd/adl_cp_rootv1p1"/>'
+    expect(detectScormVersion(ns)).toEqual({ version: '1.2' })
+  })
+
   it('prefers explicit metadata over a conflicting namespace', () => {
     const xml = '<metadata><schemaversion>2004 3rd Edition</schemaversion></metadata><manifest xmlns:adlcp="http://www.adlnet.org/xsd/adlcp_rootv1p2"/>'
     expect(detectScormVersion(xml)).toEqual({ version: '2004', edition: '3rd' })

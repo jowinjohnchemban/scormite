@@ -1,5 +1,7 @@
 /**
- * Detects the SCORM version (1.2 vs 2004) from raw imsmanifest.xml text.
+ * Detects the SCORM runtime version (1.2 vs 2004) and, for 2004, the edition
+ * (2nd / 3rd / 4th) from raw imsmanifest.xml text. SCORM 1.1 packages map to
+ * the 1.2 runtime.
  *
  * Strategy:
  *   1. Check <metadata><schema> + <schemaversion> — most reliable.
@@ -15,8 +17,12 @@ export interface DetectedVersion {
   edition?: ScormEdition
 }
 
-/** SCORM 1.2 namespace indicator. */
-const NS_12 = 'adlcp_rootv1p2'
+/**
+ * SCORM 1.2 namespace indicators. SCORM 1.1 (`adl_cp_rootv1p1`) is included:
+ * its runtime API is the `window.API` / `LMS*` surface 1.2 kept, so 1.1
+ * packages run on the 1.2 runtime exactly as they do on production LMSs.
+ */
+const NS_12 = ['adlcp_rootv1p2', 'adl_cp_rootv1p1', 'adlcp_rootv1p1']
 /** SCORM 2004 namespace indicators. */
 const NS_2004 = ['adlcp_v1p3', 'adlseq_v1p3', 'adlnav_v1p3', 'imsss_v1p0']
 
@@ -27,8 +33,12 @@ export function detectScormVersion(manifestXml: string): DetectedVersion | null 
   )
   if (schemaVersionMatch) {
     const sv = schemaVersionMatch[1]?.trim() ?? ''
-    if (/^1\.2$/i.test(sv)) {
+    if (/^1\.[12]$/.test(sv)) {
       return { version: '1.2' }
+    }
+    // "CAM 1.3" is the schemaversion the SCORM 2004 2nd Edition spec mandates.
+    if (/^CAM\s*1\.3$/i.test(sv)) {
+      return { version: '2004', edition: '2nd' }
     }
     if (/2004\s*4th/i.test(sv)) {
       return { version: '2004', edition: '4th' }
@@ -46,7 +56,7 @@ export function detectScormVersion(manifestXml: string): DetectedVersion | null 
   }
 
   // --- Strategy 2: XML namespace detection ---
-  if (manifestXml.includes(NS_12)) {
+  if (NS_12.some((ns) => manifestXml.includes(ns))) {
     return { version: '1.2' }
   }
   for (const ns of NS_2004) {
