@@ -8,9 +8,12 @@
  * this shell only provides chrome.
  */
 
+import { useState } from 'react'
 import { Trash2 } from 'lucide-react'
 import { DropZone } from '@/features/package-loader'
 import { useCmiState } from '@/app/hooks/useCmiState'
+import { useMediaQuery } from '@/app/hooks/useMediaQuery'
+import { cn } from '@/shared/lib/utils'
 import type { PackageSession } from '@/app/hooks/usePackageSession'
 import { CourseOutline } from '@/app/course/CourseOutline'
 import { LandingContent } from '@/app/landing/LandingContent'
@@ -188,11 +191,65 @@ function BasicApiLog() {
 }
 
 // ---------------------------------------------------------------------------
+// Narrow screens: the same content in tabs, so each part gets the full height
+// ---------------------------------------------------------------------------
+
+type SidebarTab = 'course' | 'status' | 'log'
+
+function CompactSidebar() {
+  const [tab, setTab] = useState<SidebarTab>('course')
+  const callCount = useLogStore((s) => s.records.length)
+  const tabs: { id: SidebarTab; label: string }[] = [
+    { id: 'course', label: 'Course' },
+    { id: 'status', label: 'Status' },
+    { id: 'log', label: callCount > 0 ? `Log (${callCount})` : 'Log' },
+  ]
+  return (
+    <>
+      <div role="tablist" aria-label="Session details" className="flex h-9 shrink-0 border-b border-border-subtle">
+        {tabs.map((entry) => (
+          <button
+            key={entry.id}
+            type="button"
+            role="tab"
+            id={`sidebar-tab-${entry.id}`}
+            aria-selected={tab === entry.id}
+            aria-controls="sidebar-panel"
+            onClick={() => setTab(entry.id)}
+            className={cn(
+              'flex-1 border-b-2 text-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-accent',
+              tab === entry.id ? 'border-accent text-slate-100' : 'border-transparent text-slate-500 hover:text-slate-300',
+            )}
+          >
+            {entry.label}
+          </button>
+        ))}
+      </div>
+      <div id="sidebar-panel" role="tabpanel" aria-labelledby={`sidebar-tab-${tab}`} className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        {tab === 'course' && (
+          <>
+            <PackageHeader />
+            <CourseOutline className="min-h-0 flex-1" />
+          </>
+        )}
+        {tab === 'status' && (
+          <div className="min-h-0 overflow-y-auto">
+            <CmiSummaryPanel />
+          </div>
+        )}
+        {tab === 'log' && <BasicApiLog />}
+      </div>
+    </>
+  )
+}
+
+// ---------------------------------------------------------------------------
 // Shell
 // ---------------------------------------------------------------------------
 
 export function BasicModeShell({ session }: { session: PackageSession }) {
   const { pkg, loading, error } = session
+  const isDesktop = useMediaQuery('(min-width: 1024px)')
 
   return (
     <div className="pointer-events-none absolute inset-0 flex flex-col overflow-hidden lg:flex-row">
@@ -205,15 +262,21 @@ export function BasicModeShell({ session }: { session: PackageSession }) {
         </div>
       ) : (
         <>
-          {/* Left: full-width on mobile, 256px sidebar on desktop */}
+          {/* Left: a 256px sidebar on desktop; above the player, tabbed, on narrow screens */}
           <aside
             aria-label="Session"
             className="pointer-events-auto flex h-[40vh] w-full shrink-0 flex-col overflow-hidden border-b border-border-subtle bg-surface-900 lg:h-full lg:w-64 lg:border-b-0 lg:border-r"
           >
-            <PackageHeader />
-            <CourseOutline className="max-h-[35%] shrink-0 border-b border-border-subtle" />
-            <CmiSummaryPanel />
-            <BasicApiLog />
+            {isDesktop ? (
+              <>
+                <PackageHeader />
+                <CourseOutline className="max-h-[35%] shrink-0 border-b border-border-subtle" />
+                <CmiSummaryPanel />
+                <BasicApiLog />
+              </>
+            ) : (
+              <CompactSidebar />
+            )}
           </aside>
 
           {/* Right: transparent space over the persistent player */}

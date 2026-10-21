@@ -1,19 +1,24 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import { useAppModeStore } from '@/app/state/appModeStore'
 import { useCourseStore } from '@/app/state/courseStore'
 import { BasicModeShell } from '@/app/modes/BasicModeShell'
-import { AdvancedModeShell } from '@/app/modes/AdvancedModeShell'
 import { useMediaQuery } from '@/app/hooks/useMediaQuery'
 import { usePackageSession } from '@/app/hooks/usePackageSession'
 import { useWindowFileDrop } from '@/app/hooks/useWindowFileDrop'
 import { SessionControls } from '@/app/layout/SessionControls'
 import { SessionAlert } from '@/app/layout/SessionAlert'
 import { FileDropOverlay } from '@/app/layout/FileDropOverlay'
+import { ErrorBoundary } from '@/app/layout/ErrorBoundary'
 import { ScoEndedBar } from '@/app/course/ScoEndedBar'
 import { PlayerFrame } from '@/features/player'
 import { Button } from '@/components/ui/button'
 import logo from '@/assets/hero.png'
 import { logDevDiagnostic } from '@/shared/lib/devDiagnostics'
+
+// The dock and its panels are only downloaded when Advanced mode is opened.
+const AdvancedModeShell = lazy(() =>
+  import('@/app/modes/AdvancedModeShell').then((module) => ({ default: module.AdvancedModeShell })),
+)
 
 interface FrameRect {
   left: number
@@ -81,8 +86,9 @@ export function App() {
         </div>
         <div className="flex min-w-0 items-center gap-1">
           <SessionControls session={session} />
-          {session.pkg && <div className="mx-1 h-5 w-px shrink-0 bg-border-subtle" aria-hidden />}
-          <div className="flex shrink-0 items-center gap-1" role="group" aria-label="View mode">
+          {/* Advanced mode needs a wide screen, so the switch only appears where it works. */}
+          {session.pkg && <div className="mx-1 hidden h-5 w-px shrink-0 bg-border-subtle lg:block" aria-hidden />}
+          <div className="hidden shrink-0 items-center gap-1 lg:flex" role="group" aria-label="View mode">
             <Button
               size="sm"
               variant={mode === 'basic' ? 'default' : 'ghost'}
@@ -125,14 +131,18 @@ export function App() {
           <PlayerFrame key={session.launchKey} src={session.launchUrl} />
           <ScoEndedBar session={session} />
         </div>
-        {!isDesktop || mode === 'basic' ? (
-          <BasicModeShell session={session} />
-        ) : (
-          <AdvancedModeShell
-            session={session}
-            onCenterRegionRectChange={handleAdvancedCenterRect}
-          />
-        )}
+        <ErrorBoundary resetKey={session.pkg?.id ?? null}>
+          {!isDesktop || mode === 'basic' ? (
+            <BasicModeShell session={session} />
+          ) : (
+            <Suspense fallback={null}>
+              <AdvancedModeShell
+                session={session}
+                onCenterRegionRectChange={handleAdvancedCenterRect}
+              />
+            </Suspense>
+          )}
+        </ErrorBoundary>
       </main>
       <FileDropOverlay visible={draggingFile && session.pkg !== null} />
     </div>
