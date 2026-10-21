@@ -14,10 +14,9 @@ you don't have to hunt through 12 folders to remember the shape of
 | `CmiSnapshot` | `session` | Full CMI tree at a point in time, for diff/replay |
 | `TimelineEvent` | `timeline` | Lifecycle/CMI-change/navigation/sequencing/error event |
 | `ValidationIssue` | `validation` | Static or runtime validation finding |
-| `Breakpoint` | `session` | Pause condition (API call / CMI set / score / objective) |
+| `Breakpoint` | `session` | Hold condition on a SetValue / Commit (element, value, score threshold, objective change) |
 | `FileTreeNode` | `package-loader` | Package file-tree node (path, name, children, isLaunchFile) |
 | `NetworkEntry` | `player` | One SW `FETCH_EVENT` (path, cache hit/miss, status, duration ms) |
-| `PerformanceMetrics` | `logging` | Aggregated API-call timings (total, avg, P95, top-5, per-method) |
 | `LaunchableItem` | `manifest` (type in `shared/types/manifest.ts`) | Organization item with a launchable resource: identifier, title, depth, launch path (parameters applied), launch data |
 | `ManifestItemLaunchData` | `manifest` (type in `shared/types/manifest.ts`) | Per-item data an LMS seeds into the runtime (launch data, mastery score, time limit, completion threshold, passing score) |
 | `AttemptRecord` | `runtime` | scorm-again's terminate-commit payload for one SCO attempt; restored on relaunch |

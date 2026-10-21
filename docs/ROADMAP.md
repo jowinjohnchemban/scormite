@@ -71,6 +71,10 @@ build (`pnpm run build`), lint clean (`pnpm run lint`), and typecheck
       (JSON/CSV/Markdown/HTML export). *Exit criteria:* generated report
       contains manifest summary, runtime summary, timeline, logs, and
       renders correctly as standalone HTML.
+      *Milestone 17:* export moved to the header (the Reports panel only
+      duplicated it); reports gained per-item course results and error
+      explanations, CSV became a single API-log table, Markdown cells are
+      escaped, and the HTML report prints cleanly.
 - [x] **Milestone 13 — Plugin system.** `PluginHost`, `PluginApi`,
       panel/command/validator registration. *Exit criteria:* a trivial
       sample plugin registers and appears in the UI without touching core
@@ -84,8 +88,9 @@ build (`pnpm run build`), lint clean (`pnpm run lint`), and typecheck
       `localStorage` keys, and the browser quota estimate (12 KB of 2.1 GB
       used), Performance shows per-call timings (18 calls, avg 0.8 ms,
       P95 5.4 ms) with top-5 slowest and per-method breakdown.
-      *The Storage panel was removed in Milestone 17* (not reachable from
-      the UI).
+      *Storage and Performance were removed in Milestone 17* — Storage was
+      unreachable; Performance's in-memory call timings did not reflect LMS
+      performance (per-method counts moved to the API Monitor).
 - [x] **Milestone 15 — Hardening.** *Exit criteria:* axe-core audit passes
       on both modes; Vitest coverage targets enforced; Playwright e2e suite
       runs against sample packages; CI is green across unit + e2e.

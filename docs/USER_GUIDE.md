@@ -63,16 +63,14 @@ from **Panels** in the toolbar:
 | Panel | Use it to |
 |---|---|
 | Outline | Navigate the course (as in Basic mode) |
-| Manifest | Browse the organizations, items, and resources of `imsmanifest.xml` |
-| Package | Browse the files in the zip; the launch file is marked |
-| CMI Inspector | See the live data model; changed values are highlighted |
-| API Monitor | See every API call with timing and results |
+| Manifest | Browse the organizations, items, and resources of `imsmanifest.xml`; expand an item to see its resource, href, parameters, launch data, and sequencing |
+| Package | Browse the files in the zip; launch files are marked |
+| CMI Inspector | See the live data model; changed values are highlighted; filter by path or value |
+| API Monitor | See every API call, how often each method was called, and why failed calls failed ("Failed only" filter) |
 | Timeline | Scrub through the run and see the data model at any point |
-| Breakpoints | Pause the course before a specific `SetValue` is applied, inspect, then resume |
+| Breakpoints | Hold a specific `SetValue` or `Commit` before it is applied, inspect the data, then resume. The course keeps running and is told the call succeeded; held calls are applied in order on Resume |
 | Validation | See every packaging and runtime issue |
-| Network | See each file the course requested and whether it was found |
-| Performance | See API call timings (average, P95, slowest calls) |
-| Reports | Export the QA report |
+| Network | See each file the course requested and which are missing from the package ("Missing only" filter) |
 
 Panels can be dragged between the left, right, and bottom docks, resized,
 and closed; the layout is remembered. **Panels › Reset layout** restores
@@ -92,5 +90,7 @@ explains each one.
 
 **Report** in the header downloads the session as an HTML report (to read
 or attach), Markdown, JSON (for tooling), or CSV (the API calls, for a
-spreadsheet). It contains the package and runtime summary, every API call,
-the timeline, and all validation issues.
+spreadsheet). The HTML, Markdown, and JSON reports contain the package
+summary, each item's result, the runtime summary, all validation issues,
+every API call with error explanations, and the current item's data
+changes; the HTML report prints cleanly.

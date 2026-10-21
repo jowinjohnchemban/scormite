@@ -138,28 +138,39 @@ the code, not just hidden:
   fixed rule set modelled on SCORM Cloud (`LMS_BASE_SETTINGS` in
   `ScormRuntimeAdapter.ts`), and every runtime validation rule always runs.
 
-## Advanced-Mode inspection panels (M14)
+## Advanced-mode panels
 
-Three panels complete the Advanced-Mode dock, all fed by real data:
+Every panel in `src/app/layout/panels.ts` (`ADVANCED_PANELS`) shows real
+data from the running session and earns its place by answering a question a
+tester actually has:
 
-- **Package Explorer** (`package-loader`): pure tree-building logic in
-  `services/fileTree.ts`; `PackageExplorerPanel` renders it with a
-  launch-file badge. The tree view is a subcomponent keyed by `pkg.id` so
-  React remounts it per package instead of setting state in an effect.
-- **Network** (`player`): the service worker (`public/sw.js`) broadcasts a
-  `FETCH_EVENT` message (path, cache hit/miss, HTTP status, duration ms)
-  for every package-file fetch to **all window clients** via
-  `self.clients.matchAll({ type: 'window' })` — the SCO lives in a
-  sandboxed iframe, so `event.clientId` alone would never reach the app
-  UI. `networkMonitor.ts` listens on the window side and records into
-  `useNetworkStore`; `NetworkPanel` renders the live log. The SW activates
-  immediately (`skipWaiting` + `clients.claim`).
-- **Performance** (`logging`): `performanceMetrics.ts` aggregates
-  `ApiCallRecord`s (total, errors, avg, P95, max ms, top-5 slowest,
-  per-method breakdown); `PerformancePanel` renders the cards.
+| Panel | Owner | Answers |
+|---|---|---|
+| Outline | `app/course` | Where am I in the course, what may I open next, how did each item end? |
+| Manifest | `manifest` | What exactly did the manifest declare for this item (resource, href, parameters, launch data, sequencing)? |
+| Package | `package-loader` | Which files are in the zip, and which are launch files? |
+| CMI Inspector | `inspector` | What is in the data model now, and what just changed? (filter by path or value) |
+| Validation | `validation` | What is wrong with the package or the run? |
+| API Monitor | `logging` | What did the course call, with what, and why did a call fail? (per-method counts, failed-only filter) |
+| Network | `player` | Which files did the course request, and which are missing from the package? |
+| Timeline | `timeline` | What did the data model look like at any earlier point of this attempt? |
+| Breakpoints | `session` | What is the state just before a specific SetValue / Commit is applied? |
 
-They are registered in `src/app/layout/panels.ts` (`ADVANCED_PANELS`)
-alongside the Outline panel added in M16.
+**Network.** The service worker (`public/sw.js`) posts a `FETCH_EVENT`
+for every package-file fetch to **all window clients** — the SCO lives in a
+sandboxed iframe, so `event.clientId` alone would never reach the app UI.
+`networkMonitor.ts` records them into `useNetworkStore`.
+
+**Breakpoints.** The SCORM API is synchronous: a SCO cannot be made to wait.
+A breakpoint therefore *holds* a matching `SetValue` or `Commit` — and every
+mutation after it, Terminate included — answering `"true"` at once and
+applying the held calls in order on Resume. Initialize, Terminate, and reads
+are never breakpoint targets, because holding them would mean lying to the
+course about whether it started or what a value is.
+
+**Removed for not earning their place:** Performance (in-memory API call
+timings say nothing about LMS performance; per-method counts moved to the
+API Monitor) and Reports (duplicated the header's Report export).
 
 ## Accessibility (M15)
 
