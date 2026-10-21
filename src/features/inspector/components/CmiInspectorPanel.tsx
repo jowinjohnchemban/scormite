@@ -48,7 +48,7 @@ export function CmiInspectorPanel() {
           placeholder="Filter path or value"
           value={filter}
           onChange={(event) => setFilter(event.target.value)}
-          className="h-6 min-w-0 flex-1 rounded-sm border border-border-subtle bg-surface-800 px-2 text-[11px] text-slate-200 outline-none placeholder:text-slate-600 focus-visible:ring-1 focus-visible:ring-accent"
+          className="h-6 min-w-28 flex-1 rounded-sm border border-border-subtle bg-surface-800 px-2 text-[11px] text-slate-200 outline-none placeholder:text-slate-600 focus-visible:ring-1 focus-visible:ring-accent"
         />
         <label className="flex shrink-0 cursor-pointer items-center gap-1.5 text-[11px] text-slate-400">
           <input
