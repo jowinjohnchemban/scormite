@@ -1,0 +1,67 @@
+name: Deploy
+
+# Continuous deployment to Cloudflare Workers: every commit on main that
+# passes CI is built and deployed. It runs only where the repository is
+# configured for it — the CLOUDFLARE_ACCOUNT_ID variable and the
+# CLOUDFLARE_API_TOKEN secret — so forks and other hosts skip it.
+# See docs/deployment.md.
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# One deployment at a time, in order; never cancel one halfway.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy to Cloudflare
+    if: >-
+      vars.CLOUDFLARE_ACCOUNT_ID != '' &&
+      (github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: production
+      url: https://scormite.jowinjc.in
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # The commit CI passed, and full history for the sitemap's lastmod.
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 11.20.0
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm run build
+        env:
+          # The commit shown on the About page (GITHUB_SHA can differ for workflow_run).
+          COMMIT_REF: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      - name: Deploy
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          wranglerVersion: 4.148.0
+          packageManager: pnpm
+          command: deploy

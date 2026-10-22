@@ -48,10 +48,22 @@ The build generates these files; nothing in `public/` needs editing:
 ## Hosts
 
 **Cloudflare Workers.** `wrangler.jsonc` deploys `dist/` as static Worker
-assets with SPA fallback; `_headers` is applied. With Workers Builds
-(repository connected in the dashboard), use build command `pnpm run build`,
-deploy command `npx wrangler deploy`, and, for preview URLs per branch,
-non-production branch deploy command `npx wrangler versions upload`. By hand:
+assets with SPA fallback; `_headers` is applied. Deploy it one of three ways:
+
+- **GitHub Actions** (`.github/workflows/deploy.yml`): every commit on `main`
+  that passes CI is built and deployed, and the deployment is recorded in the
+  repository's `production` environment. Set it up once: in Cloudflare create
+  an API token from the **Edit Cloudflare Workers** template; in the GitHub
+  repository add it as the secret `CLOUDFLARE_API_TOKEN` and your Cloudflare
+  account ID as the variable `CLOUDFLARE_ACCOUNT_ID`. Without the variable the
+  workflow does nothing, so forks are unaffected. Run it by hand from the
+  Actions tab (**Deploy → Run workflow**). Use this or Workers Builds, not
+  both, so each commit is deployed once.
+- **Workers Builds** (repository connected in the Cloudflare dashboard): build
+  command `pnpm run build`, deploy command `npx wrangler deploy`, and, for
+  preview URLs per branch, non-production branch deploy command
+  `npx wrangler versions upload`.
+- **By hand:**
 
 ```bash
 pnpm run build

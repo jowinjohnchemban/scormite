@@ -196,14 +196,15 @@ updated in the same change. Debatable architectural choices get a
 
 ### Automation
 
-| Workflow                | Runs on                                      | Does                                                                                                                                      |
-| ----------------------- | -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| `ci.yml`                | Pushes to `main`, pull requests, merge queue | Audits shipped dependencies, then lint, format, typecheck, unit tests with coverage, build; and the e2e suite in the Playwright container |
-| `pr-title.yml`          | Pull requests                                | Requires a Conventional Commits title — the squash-merged commit message on `main`                                                        |
-| `codeql.yml`            | `main`, pull requests, weekly                | CodeQL security and quality analysis (public repository only)                                                                             |
-| `dependency-review.yml` | Pull requests                                | Fails on a newly added dependency with a high-severity advisory (public repository only)                                                  |
-| `release.yml`           | Tags `v*.*.*`                                | Checks the tag matches `package.json`, tests, builds, and publishes a GitHub release with the CHANGELOG notes and the built site as a zip |
-| Dependabot              | Mondays                                      | Grouped dependency and Actions updates (see [Setup](#setup))                                                                              |
+| Workflow                | Runs on                                      | Does                                                                                                                                                             |
+| ----------------------- | -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ci.yml`                | Pushes to `main`, pull requests, merge queue | Audits shipped dependencies, then lint, format, typecheck, unit tests with coverage, build; and the e2e suite in the Playwright container                        |
+| `pr-title.yml`          | Pull requests                                | Requires a Conventional Commits title — the squash-merged commit message on `main`                                                                               |
+| `codeql.yml`            | `main`, pull requests, weekly                | CodeQL security and quality analysis (public repository only)                                                                                                    |
+| `dependency-review.yml` | Pull requests                                | Fails on a newly added dependency with a high-severity advisory (public repository only)                                                                         |
+| `deploy.yml`            | CI passing on `main`; by hand                | Builds the commit CI passed and deploys it to Cloudflare Workers (`production` environment); only where `CLOUDFLARE_ACCOUNT_ID` / `CLOUDFLARE_API_TOKEN` are set |
+| `release.yml`           | Tags `v*.*.*`                                | Checks the tag matches `package.json`, tests, builds, and publishes a GitHub release with the CHANGELOG notes and the built site as a zip                        |
+| Dependabot              | Mondays                                      | Grouped dependency and Actions updates (see [Setup](#setup))                                                                                                     |
 
 Workflows get a read-only token unless a job needs more (CodeQL uploads
 results; the release job creates the release).
@@ -240,10 +241,9 @@ ids with `gh api repos/jowinjohnchemban/scormite/rulesets`.)
 
 ### Deployment
 
-The live site is built and deployed by the hosting platform from `main`
-(Cloudflare Workers Builds today; preview URLs for other branches, which are
-kept out of search engines). See [Deployment](deployment.md); nothing in
-GitHub Actions holds deployment credentials.
+The live site is deployed from `main` by `deploy.yml` once CI passes,
+using the `CLOUDFLARE_API_TOKEN` secret (scoped to Workers) and the
+`CLOUDFLARE_ACCOUNT_ID` variable. See [Deployment](deployment.md#hosts).
 
 ## Brand
 
