@@ -14,7 +14,11 @@
 function normalizeValue(value: unknown): string {
   if (typeof value === 'string') return value
   if (value === null || value === undefined) return ''
-  if (typeof value === 'object') return JSON.stringify(value)
+  if (typeof value === 'object') {
+    // An empty collection (no interactions or objectives yet) holds no data;
+    // show it as empty rather than as a literal "{}".
+    return Object.keys(value).length === 0 ? '' : JSON.stringify(value)
+  }
   return String(value)
 }
 

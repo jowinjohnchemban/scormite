@@ -111,7 +111,12 @@ export class Scorm12Adapter extends ScormRuntimeAdapter {
 
   getFlattenedCmi(): Record<string, string> {
     // scorm-again can emit non-string leaves (numbers, booleans, empty objects);
-    // normalize so every consumer sees only strings.
-    return normalizeFlattenedCmi(this.api.getFlattenedCMI())
+    // normalize so every consumer sees only strings. Its JSON export leaves out
+    // the LMS-maintained cmi.core.total_time, which the SCO can read and a tester
+    // needs to see, so it is added from the data model.
+    return {
+      ...normalizeFlattenedCmi(this.api.getFlattenedCMI()),
+      'cmi.core.total_time': this.api.cmi.core.total_time,
+    }
   }
 }
