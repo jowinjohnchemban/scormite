@@ -1,21 +1,9 @@
-/**
- * The bottom dock: a VS Code-style tab strip over a single content area.
- * Tabs are drag sources (re-dock elsewhere) and drop targets (reorder).
- */
+/** The bottom dock: a tab strip over a single content area (ARIA tabs pattern). */
 
 import { useCallback, useRef } from 'react'
 import { X } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
-import {
-  useActivePanelId,
-  usePanelRegistry,
-  useVisiblePanelIds,
-  type DockRegion,
-  type PanelDef,
-} from './PanelRegistry'
-import { usePanelDragSource, usePanelDropTarget } from './usePanelDrag'
-
-const REGION: DockRegion = 'bottom'
+import { useActiveBottomPanelId, usePanelRegistry, useVisiblePanelIds, type PanelDef } from './PanelRegistry'
 
 interface DockTabProps {
   panel: PanelDef
@@ -26,13 +14,6 @@ interface DockTabProps {
 }
 
 function DockTab({ panel, isActive, onSelect, onClose, onKeyDown }: DockTabProps) {
-  const move = usePanelRegistry((s) => s.move)
-  const dragSource = usePanelDragSource(panel.id)
-  const { isOver, dropProps } = usePanelDropTarget({
-    onDrop: (draggedId) => move(draggedId, REGION, panel.id),
-    accepts: (draggedId) => draggedId !== panel.id,
-  })
-
   const Icon = panel.icon
 
   return (
@@ -47,12 +28,9 @@ function DockTab({ panel, isActive, onSelect, onClose, onKeyDown }: DockTabProps
       onClick={onSelect}
       onDoubleClick={onClose}
       onKeyDown={onKeyDown}
-      {...dragSource}
-      {...dropProps}
       className={cn(
-        'group flex shrink-0 cursor-grab items-center gap-1.5 py-1.5 pl-2.5 pr-2 text-xs active:cursor-grabbing',
+        'group flex shrink-0 items-center gap-1.5 py-1.5 pl-2.5 pr-2 text-xs',
         'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-accent',
-        isOver && 'border-l-2 border-l-accent',
         isActive
           ? 'border-t border-t-accent bg-surface-950 text-slate-100'
           : 'border-t border-t-transparent text-slate-500 hover:text-slate-300',
@@ -65,18 +43,12 @@ function DockTab({ panel, isActive, onSelect, onClose, onKeyDown }: DockTabProps
 }
 
 export function DockTabStrip() {
-  const panelIds = useVisiblePanelIds(REGION)
-  const activeId = useActivePanelId(REGION)
+  const panelIds = useVisiblePanelIds('bottom')
+  const activeId = useActiveBottomPanelId()
   const definitions = usePanelRegistry((s) => s.definitions)
-  const setActiveTab = usePanelRegistry((s) => s.setActiveTab)
+  const setActiveBottomTab = usePanelRegistry((s) => s.setActiveBottomTab)
   const close = usePanelRegistry((s) => s.close)
-  const move = usePanelRegistry((s) => s.move)
   const stripRef = useRef<HTMLDivElement>(null)
-
-  // Dropping on the empty part of the strip docks the panel at the end.
-  const { isActive, isOver, dropProps } = usePanelDropTarget({
-    onDrop: (draggedId) => move(draggedId, REGION),
-  })
 
   const onTabKeyDown = useCallback(
     (event: React.KeyboardEvent) => {
@@ -96,13 +68,13 @@ export function DockTabStrip() {
       const current = activeId ? panelIds.indexOf(activeId) : 0
       const next = panelIds[(current + delta + panelIds.length) % panelIds.length]
       if (!next) return
-      setActiveTab(REGION, next)
+      setActiveBottomTab(next)
       // Roving tabindex: focus follows selection, per the ARIA tabs pattern.
       stripRef.current
         ?.querySelector<HTMLButtonElement>(`#dock-tab-${CSS.escape(next)}`)
         ?.focus()
     },
-    [panelIds, activeId, setActiveTab, close],
+    [panelIds, activeId, setActiveBottomTab, close],
   )
 
   if (panelIds.length === 0) return null
@@ -111,22 +83,13 @@ export function DockTabStrip() {
   const ActiveComponent = activePanel?.component
 
   return (
-    <div
-      {...dropProps}
-      data-testid={`dock-region-${REGION}`}
-      className={cn(
-        'pointer-events-auto flex h-full flex-col overflow-hidden',
-        isActive && 'ring-1 ring-inset ring-border-subtle',
-        isOver && 'ring-2 ring-accent',
-      )}
-    >
+    <div data-testid="dock-region-bottom" className="pointer-events-auto flex h-full flex-col overflow-hidden">
       <div className="flex items-stretch border-b border-border-subtle bg-surface-900">
         <div
           ref={stripRef}
           role="tablist"
           aria-label="Bottom dock panels"
           aria-orientation="horizontal"
-          title="Click a tab to show its panel. Double-click the close icon to remove a panel."
           className="flex min-w-0 flex-1 items-stretch overflow-x-auto"
         >
           {panelIds.map((id) => {
@@ -137,7 +100,7 @@ export function DockTabStrip() {
                 key={id}
                 panel={panel}
                 isActive={id === activeId}
-                onSelect={() => setActiveTab(REGION, id)}
+                onSelect={() => setActiveBottomTab(id)}
                 onClose={() => close(id)}
                 onKeyDown={onTabKeyDown}
               />

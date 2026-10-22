@@ -1,10 +1,9 @@
-/** Small shared pieces of the dock: resize handles, panel chrome, drop affordances. */
+/** Small shared pieces of the dock: resize handles and panel chrome. */
 
 import { Separator as PanelResizeHandle } from 'react-resizable-panels'
 import { X } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
-import { usePanelRegistry, type DockRegion, type PanelDef } from './PanelRegistry'
-import { usePanelDragSource, usePanelDropTarget } from './usePanelDrag'
+import { usePanelRegistry, type PanelDef } from './PanelRegistry'
 
 export function ResizeHandle({
   orientation,
@@ -25,34 +24,15 @@ export function ResizeHandle({
   )
 }
 
-interface PanelChromeProps {
-  panel: PanelDef
-  /** Region the panel is currently docked in; a drop here inserts before it. */
-  region: DockRegion
-}
-
-/** Title bar for a stacked (non-tabbed) panel: drag grip, title, close. */
-export function PanelChrome({ panel, region }: PanelChromeProps) {
+/** Title bar for a stacked (non-tabbed) panel: title and close. */
+export function PanelChrome({ panel }: { panel: PanelDef }) {
   const close = usePanelRegistry((s) => s.close)
-  const move = usePanelRegistry((s) => s.move)
-  const dragSource = usePanelDragSource(panel.id)
-  const { isOver, dropProps } = usePanelDropTarget({
-    onDrop: (draggedId) => move(draggedId, region, panel.id),
-    accepts: (draggedId) => draggedId !== panel.id,
-  })
-
   const Icon = panel.icon
 
   return (
     <div
-      {...dragSource}
-      {...dropProps}
       data-testid={`panel-header-${panel.id}`}
-      className={cn(
-        'flex h-7 shrink-0 cursor-grab items-center justify-between gap-2 border-b px-2 active:cursor-grabbing',
-        'border-border-subtle bg-surface-900',
-        isOver && 'border-t-2 border-t-accent',
-      )}
+      className="flex h-7 shrink-0 items-center justify-between gap-2 border-b border-border-subtle bg-surface-900 px-2"
     >
       <div className="flex min-w-0 items-center gap-1.5">
         <Icon className="size-3.5 shrink-0 text-slate-500" aria-hidden />

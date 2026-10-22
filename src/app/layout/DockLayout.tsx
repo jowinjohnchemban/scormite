@@ -1,22 +1,20 @@
 /**
  * The Advanced Mode dock.
  *
- *   ┌────┬──────────────────────────────┬────┐
- *   │ A  │  left dock │ center │ right  │ A  │   ← workspace group (horizontal)
- *   │ c  ├──────────────────────────────┤ c  │
- *   │ t  │        bottom dock           │ t  │   ← shell group (vertical)
- *   └────┴──────────────────────────────┴────┘
+ *   ┌──────────────────────────────┐
+ *   │  left dock │ center │ right   │   ← workspace group (horizontal)
+ *   ├──────────────────────────────┤
+ *   │        bottom dock (tabs)     │   ← shell group (vertical)
+ *   └──────────────────────────────┘
  *
- * Which panels live in which dock comes from `PanelRegistry`; how large each
- * dock is comes from react-resizable-panels' own persistence. Both survive a
- * reload, and "Reset layout" in the toolbar clears both.
+ * Each panel's dock is fixed by its definition. Which panels are shown and how
+ * large each dock is both survive a reload; "Reset layout" clears both.
  */
 
 import { useMemo, type ReactNode } from 'react'
 import { Group, Panel, useDefaultLayout } from 'react-resizable-panels'
 import { dockGroupId } from './dockStorage'
 import { useVisiblePanelIds } from './PanelRegistry'
-import { ActivityBar } from './ActivityBar'
 import { DockRegionStack } from './DockRegionStack'
 import { DockTabStrip } from './DockTabStrip'
 import { ResizeHandle } from './DockPrimitives'
@@ -58,8 +56,6 @@ export function DockLayout({ center }: DockLayoutProps) {
 
   return (
     <div className="flex h-full min-h-0 overflow-hidden">
-      <ActivityBar side="left" />
-
       <div className="min-w-0 flex-1">
         <Group
           orientation="vertical"
@@ -105,8 +101,6 @@ export function DockLayout({ center }: DockLayoutProps) {
           )}
         </Group>
       </div>
-
-      <ActivityBar side="right" />
     </div>
   )
 }

@@ -148,6 +148,10 @@ the code, not just hidden:
 - The **plugin system** (M13), the **Storage** panel (M14), and the
   **Console** panel (M7) — none was reachable from the UI any more.
 
+- **Moving panels between docks** (drag-and-drop, per-panel L / R / B dock
+  buttons) and the **activity bars** — layout furniture that added
+  controls and odd layout states without helping anyone test a package.
+
 - **Runtime profiles** (Strict ADL / SCORM Cloud / Moodle / Canvas /
   SuccessFactors / Cornerstone) only toggled three SCORM 1.2 status
   switches and were never verified against those LMSs. The runtime uses one
@@ -155,6 +159,13 @@ the code, not just hidden:
   `ScormRuntimeAdapter.ts`), and every runtime validation rule always runs.
 
 ## Advanced-mode panels
+
+Each panel has a fixed home dock, set in its definition (`region`), and a
+purpose group (`group`: course / runtime / problems) the Panels menu uses.
+`PanelRegistry` persists only show/hide choices and the active bottom tab;
+dock sizes are persisted by react-resizable-panels. Moving panels between
+docks was removed (see "Removed features").
+
 
 Every panel in `src/app/layout/panels.ts` (`ADVANCED_PANELS`) shows real
 data from the running session and earns its place by answering a question a
