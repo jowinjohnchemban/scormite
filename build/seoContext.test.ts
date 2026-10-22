@@ -16,10 +16,25 @@ describe('resolveIndexing', () => {
     expect(resolveIndexing({})).toBe(true)
   })
 
+  it('follows Cloudflare: only a build of the production branch is indexed', () => {
+    expect(resolveIndexing({ WORKERS_CI: '1', WORKERS_CI_BRANCH: 'main' })).toBe(true)
+    expect(resolveIndexing({ WORKERS_CI: '1', WORKERS_CI_BRANCH: 'docs/standardise' })).toBe(false)
+    expect(resolveIndexing({ CF_PAGES: '1', CF_PAGES_BRANCH: 'main' })).toBe(true)
+    expect(resolveIndexing({ CF_PAGES: '1', CF_PAGES_BRANCH: 'preview' })).toBe(false)
+    expect(resolveIndexing({ WORKERS_CI_BRANCH: 'release', SEO_PRODUCTION_BRANCH: 'release' })).toBe(true)
+  })
+
   it('follows Vercel: production is indexed, previews are not', () => {
     expect(resolveIndexing({ VERCEL_ENV: 'production' })).toBe(true)
     expect(resolveIndexing({ VERCEL_ENV: 'preview' })).toBe(false)
     expect(resolveIndexing({ VERCEL_ENV: 'development' })).toBe(false)
+  })
+
+  it('follows Netlify: production is indexed, deploy previews and branch deploys are not', () => {
+    expect(resolveIndexing({ NETLIFY: 'true', CONTEXT: 'production' })).toBe(true)
+    expect(resolveIndexing({ NETLIFY: 'true', CONTEXT: 'deploy-preview' })).toBe(false)
+    expect(resolveIndexing({ NETLIFY: 'true', CONTEXT: 'branch-deploy' })).toBe(false)
+    expect(resolveIndexing({ CONTEXT: 'deploy-preview' })).toBe(true)
   })
 
   it('lets SEO_INDEX decide, over the platform', () => {

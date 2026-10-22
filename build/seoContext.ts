@@ -28,13 +28,19 @@ export interface SeoBuildContext {
 
 /**
  * Whether search engines may index this deployment: `SEO_INDEX=false` (or
- * `VITE_SEO_INDEX`) turns it off, `true` forces it on; otherwise Vercel
- * preview and development builds are not indexed, everything else is.
+ * `VITE_SEO_INDEX`) turns it off, `true` forces it on — this works on any
+ * host. Unset, a preview build is recognised on the platforms that announce
+ * one: Cloudflare Workers Builds and Pages (a branch other than
+ * `SEO_PRODUCTION_BRANCH`, default `main`), Vercel (`VERCEL_ENV`), and
+ * Netlify (`CONTEXT`). Every other build is indexed.
  */
 export function resolveIndexing(env: Readonly<Record<string, string | undefined>>): boolean {
   const explicit = env['SEO_INDEX'] || env['VITE_SEO_INDEX']
   if (explicit) return !['false', '0', 'no'].includes(explicit.toLowerCase())
+  const cloudflareBranch = env['WORKERS_CI_BRANCH'] || env['CF_PAGES_BRANCH']
+  if (cloudflareBranch) return cloudflareBranch === (env['SEO_PRODUCTION_BRANCH'] || 'main')
   if (env['VERCEL_ENV']) return env['VERCEL_ENV'] === 'production'
+  if (env['NETLIFY'] && env['CONTEXT']) return env['CONTEXT'] === 'production'
   return true
 }
 
