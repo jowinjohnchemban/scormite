@@ -133,7 +133,7 @@ describe('CourseSession — sequenced (SCORM 2004)', () => {
 
   it('does not duplicate sequencing warnings when the course restarts', () => {
     const unsupported = `<imsss:sequencing><imsss:rollupRules><imsss:rollupRule childActivitySet="all">
-      <imsss:rollupConditions><imsss:rollupCondition operator="not" condition="satisfied"/></imsss:rollupConditions>
+      <imsss:rollupConditions><imsss:rollupCondition condition="timeLimitExceeded"/></imsss:rollupConditions>
       <imsss:rollupAction action="notSatisfied"/></imsss:rollupRule></imsss:rollupRules></imsss:sequencing>`
     session = sessionFor('2004', unsupported)
     const count = () => useValidationStore.getState().issues.filter((i) => i.ruleId === 'sequencing.unsupported').length

@@ -102,7 +102,7 @@ configured from the manifest's IMS Simple Sequencing:
 | `controlMode` (choice, choiceExit, flow, forwardOnly, useCurrentAttempt…) |                                                                                                    |
 | Pre-, exit-, and post-condition rules                                     | All IMS conditions, `not`, `all` / `any`, `measureThreshold`                                       |
 | `limitConditions`                                                         | `attemptLimit`, `attemptAbsoluteDurationLimit`                                                     |
-| Rollup rules and rollup controls                                          | Single-condition rules, and multi-condition rules combined with `all`                              |
+| Rollup rules and rollup controls                                          | All actions; conditions combined with `all` or `any`, negated with `not`; `attemptLimitExceeded`   |
 | `adlseq:rollupConsiderations`, `constrainedChoiceConsiderations`          |                                                                                                    |
 | Objectives, global objectives (`mapInfo`, extended `adlseq:mapInfo`)      |                                                                                                    |
 | `randomizationControls`, `deliveryControls`                               |                                                                                                    |
@@ -118,10 +118,9 @@ Declared sequencing the engine cannot evaluate faithfully is **not**
 approximated; it is left out and reported as a `sequencing.unsupported`
 warning:
 
-- rollup conditions with `operator="not"`;
-- rollup rules combining several conditions with `any` (the IMS default);
-- rollup conditions `attemptLimitExceeded`, `timeLimitExceeded`,
-  `outsideAvailableTimeRange`;
+- rollup conditions `timeLimitExceeded` and `outsideAvailableTimeRange`
+  (scorm-again evaluates them in sequencing rules but not yet in rollup
+  rules);
 - rule actions placed in the wrong rule type;
 - objectives and limit conditions inside a shared sequencing collection.
 
