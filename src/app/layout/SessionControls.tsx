@@ -84,12 +84,12 @@ function RestartMenu({ session }: { session: PackageSession }) {
 }
 
 function ReportMenu() {
-  const { reportData, exportReport } = useReportExport()
+  const { ready, exportReport } = useReportExport()
   return (
     <Menu
       closeOnSelect
       align="end"
-      disabled={reportData === null}
+      disabled={!ready}
       title="Download a QA report of this session"
       ariaLabel="Export report"
       label={
