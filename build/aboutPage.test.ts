@@ -3,6 +3,7 @@
  * build details say, and that every value is escaped.
  */
 
+import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
@@ -72,9 +73,10 @@ describe('creditsFromBundle', () => {
 describe('resolveBuildInfo', () => {
   const now = new Date('2026-10-22T09:30:00Z')
 
-  it('takes the commit from the host and hides the placeholder 0.0.0 version', () => {
+  it('takes the version from package.json and the commit from the host', () => {
+    const { version } = JSON.parse(readFileSync(path.join(root, 'package.json'), 'utf8')) as { version: string }
     const info = resolveBuildInfo({ WORKERS_CI_COMMIT_SHA: 'abcdef1234567' }, root, now)
-    expect(info).toEqual({ version: null, commit: 'abcdef1', builtAt: '2026-10-22 09:30 UTC' })
+    expect(info).toEqual({ version, commit: 'abcdef1', builtAt: '2026-10-22 09:30 UTC' })
   })
 
   it('falls back to git for the commit', () => {

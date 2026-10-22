@@ -73,6 +73,8 @@ export function renderStructuredData(config: SiteSeoConfig, origin: string): unk
           url: config.author.url,
           sameAs: config.author.profiles,
         },
+        license: `https://spdx.org/licenses/${config.source.license}.html`,
+        isAccessibleForFree: true,
         isPartOf: { '@id': `${url}#website` },
       },
       {
@@ -161,6 +163,7 @@ ${config.summary}
 ## App
 
 - [${config.name}](${origin}/): open the app and drop a SCORM .zip to start
+- [Source code](${config.source.url}): open source under the ${config.source.license} licence
 
 ## Docs
 

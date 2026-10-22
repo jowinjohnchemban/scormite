@@ -1,7 +1,33 @@
 {
   "name": "scormite",
+  "version": "1.0.0",
+  "description": "Test, debug, and validate SCORM 1.2 and 2004 packages in your browser before uploading them to an LMS.",
+  "license": "MIT",
+  "author": {
+    "name": "Jowin John Chemban",
+    "email": "scormite@jowinjc.in",
+    "url": "https://jowinjc.in"
+  },
+  "homepage": "https://scormite.jowinjc.in",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jowinjohnchemban/scormite.git"
+  },
+  "bugs": {
+    "url": "https://github.com/jowinjohnchemban/scormite/issues"
+  },
+  "keywords": [
+    "scorm",
+    "scorm-1.2",
+    "scorm-2004",
+    "scorm-player",
+    "scorm-debugger",
+    "e-learning",
+    "lms",
+    "imsmanifest",
+    "scorm-again"
+  ],
   "private": true,
-  "version": "0.0.0",
   "type": "module",
   "sideEffects": [
     "**/*.css"

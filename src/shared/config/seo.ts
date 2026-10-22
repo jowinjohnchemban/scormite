@@ -31,6 +31,8 @@ export interface SiteSeoConfig {
   name: string
   /** Who designed and built SCORMite: the About page credit and the JSON-LD author. */
   author: SeoAuthor
+  /** Where the source code is published, and under which licence (SPDX id). */
+  source: { url: string; license: string }
   /** `<title>` — keyword-first, under ~65 characters. */
   title: string
   /** Meta / OG description — under ~160 characters. */
@@ -65,6 +67,7 @@ export const siteSeoConfig: SiteSeoConfig = {
     url: 'https://jowinjc.in',
     profiles: ['https://github.com/jowinjohnchemban'],
   },
+  source: { url: 'https://github.com/jowinjohnchemban/scormite', license: 'MIT' },
   title: 'SCORMite – SCORM Tester & Debugger for SCORM 1.2 and 2004',
   description:
     'Test SCORM 1.2 and 2004 packages in your browser before uploading to your LMS. Play the course, see what it tracks, catch packaging errors, export QA reports.',
@@ -153,6 +156,10 @@ export const siteSeoConfig: SiteSeoConfig = {
       question: 'How do I test resume?',
       answer:
         'Go partway through the course, then choose Restart › Relaunch (resume). Choose New attempt to start over with no saved data.',
+    },
+    {
+      question: 'Is SCORMite free and open source?',
+      answer: 'Yes. SCORMite is free to use and open source under the MIT licence; the source code is on GitHub.',
     },
     {
       question: 'Does it work with Storyline, Rise, Captivate, iSpring or Lectora?',

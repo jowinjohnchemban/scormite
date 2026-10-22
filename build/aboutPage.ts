@@ -208,6 +208,7 @@ export function renderAboutBody({ config, build, credits, diagramSvg, preview }:
           ${heading('about-author', 'Made by')}
           <p class="text-sm text-slate-300">Designed and developed by ${link(author.url, author.name)}.</p>
           <p class="mt-1 text-xs text-slate-400">${link(author.url, new URL(author.url).hostname)}${profileLinks ? ` · ${profileLinks}` : ''}</p>
+          <p class="mt-3 text-sm text-slate-300">${escapeHtml(config.name)} is open source under the ${escapeHtml(config.source.license)} licence: ${link(config.source.url, 'source code on GitHub')}.</p>
         </section>
 
         <section aria-labelledby="about-build">
