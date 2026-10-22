@@ -184,7 +184,7 @@ export const packageRootValidator: StaticValidator = {
 }
 
 /** The full static rule set, run in this order by `validateManifest`. */
-export const STATIC_VALIDATORS: readonly StaticValidator[] = [
+const STATIC_VALIDATORS: readonly StaticValidator[] = [
   packageRootValidator,
   missingLaunchFileValidator,
   missingResourceFileValidator,

@@ -63,7 +63,7 @@ function download(content: string, filename: string, mimeType: string): void {
 }
 
 /** The report as of now, from the stores' current state. */
-export function buildCurrentReport(): ReportData | null {
+function buildCurrentReport(): ReportData | null {
   const pkg = usePackageStore.getState().package
   const manifest = useManifestStore.getState().manifest
   if (!pkg || !manifest) return null

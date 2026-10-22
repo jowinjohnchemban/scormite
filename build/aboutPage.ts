@@ -16,7 +16,7 @@ import type { Plugin } from 'vite'
 import type { SiteSeoConfig } from '../src/shared/config/seo.js'
 import { analyzeArchitecture, renderArchitectureSvg, themeColors } from './architecture.js'
 
-export const ABOUT_PAGE = '/about/index.html'
+const ABOUT_PAGE = '/about/index.html'
 const PLACEHOLDER = '<div id="about"></div>'
 
 export interface PackageCredit {
@@ -99,7 +99,7 @@ export function creditsFromBundle(
 }
 
 /** The dev server has no bundle: credit the direct dependencies instead. */
-export function creditsFromDependencies(root: string): PackageCredit[] {
+function creditsFromDependencies(root: string): PackageCredit[] {
   const pkg = JSON.parse(readFileSync(path.join(root, 'package.json'), 'utf8')) as {
     dependencies?: Record<string, string>
   }

@@ -3,4 +3,4 @@
  * courses, and its header control.
  */
 export { LearnerMenu } from './components/LearnerMenu'
-export { useLearnerStore, learnerIdProblem, LEARNER_STORAGE_KEY } from './state/learnerStore'
+export { useLearnerStore, learnerIdProblem } from './state/learnerStore'

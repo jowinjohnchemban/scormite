@@ -1,5 +1,5 @@
 /** Browser event name for development-only Scormite diagnostics. */
-export const SCORMITE_DIAGNOSTIC_EVENT = 'scormite:diagnostic'
+const SCORMITE_DIAGNOSTIC_EVENT = 'scormite:diagnostic'
 
 export interface ScormiteDiagnostic {
   type: string

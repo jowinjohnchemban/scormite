@@ -2,14 +2,14 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { LearnerInfo } from '@/shared/types'
 
-export const LEARNER_STORAGE_KEY = 'scormite-learner'
+const LEARNER_STORAGE_KEY = 'scormite-learner'
 
 interface LearnerState extends LearnerInfo {
   setLearner: (learner: LearnerInfo) => void
 }
 
 /** What a course sees until the tester sets a learner. */
-export const DEFAULT_LEARNER: LearnerInfo = { id: 'test-learner', name: 'Learner, Test' }
+const DEFAULT_LEARNER: LearnerInfo = { id: 'test-learner', name: 'Learner, Test' }
 
 /**
  * The learner identity SCORMite reports to courses, remembered in this

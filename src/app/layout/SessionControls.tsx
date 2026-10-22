@@ -13,7 +13,7 @@ import { REPORT_FORMATS, useReportExport } from '@/app/hooks/useReportExport'
 import { useCourseStore } from '@/app/state/courseStore'
 
 /** Hidden file input + the trigger that opens it. */
-export function OpenPackageButton({ session }: { session: PackageSession }) {
+function OpenPackageButton({ session }: { session: PackageSession }) {
   const inputRef = useRef<HTMLInputElement>(null)
   return (
     <>
