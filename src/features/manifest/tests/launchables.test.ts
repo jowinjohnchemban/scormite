@@ -104,6 +104,11 @@ describe('resolveXmlBase', () => {
     expect(resolveXmlBase([undefined], './index.html')).toBe('index.html')
   })
 
+  it('treats an absolute base as a directory too', () => {
+    expect(resolveXmlBase(['https://cdn.example.com/course'], 'index.html')).toBe('https://cdn.example.com/course/index.html')
+    expect(resolveXmlBase(['https://cdn.example.com/course', 'sub'], 'a.html')).toBe('https://cdn.example.com/course/sub/a.html')
+  })
+
   it('leaves absolute URLs alone', () => {
     expect(resolveXmlBase(['content/'], 'https://example.com/x.html')).toBe(
       'https://example.com/x.html',

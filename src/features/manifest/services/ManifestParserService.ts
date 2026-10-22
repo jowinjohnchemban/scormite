@@ -67,7 +67,8 @@ export function resolveXmlBase(bases: (string | undefined)[], href: string): str
   for (const base of bases) {
     if (!base) continue
     if (ABSOLUTE_URL.test(base)) {
-      path = base
+      // An absolute base restarts the chain — still as a directory.
+      path = base.endsWith('/') ? base : `${base}/`
       continue
     }
     path += base.endsWith('/') ? base : `${base}/`
