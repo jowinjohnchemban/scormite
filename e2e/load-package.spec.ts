@@ -19,7 +19,7 @@ test('loads a SCORM 1.2 package and runs the SCO end to end', async ({ page }) =
   await page.goto('/')
 
   // Empty state: drop zone is the entry point.
-  await expect(page.getByRole('button', { name: /Drop SCORM ZIP here/i })).toBeVisible()
+  await expect(page.getByRole('button', { name: /Drop a SCORM package here/i })).toBeVisible()
 
   // Feed the zip through the hidden file input.
   await page.setInputFiles('input[type="file"]', packageZip)

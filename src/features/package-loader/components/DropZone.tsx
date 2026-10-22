@@ -51,7 +51,8 @@ export function DropZone({ onFile, loading = false, error = null }: DropZoneProp
     <div className="flex h-full flex-col items-center justify-center gap-6 p-8">
       <div
         role="button"
-        aria-label="Drop SCORM ZIP here or click to browse"
+        // No aria-label: the name is the visible text, so voice control users can
+        // say what they see (WCAG 2.5.3 Label in Name).
         tabIndex={0}
         className={cn(
           'flex w-full max-w-lg cursor-pointer flex-col items-center gap-3 rounded-lg border-2 border-dashed px-8 py-12 text-center transition-colors',

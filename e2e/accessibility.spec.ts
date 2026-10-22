@@ -34,7 +34,7 @@ async function violations(page: Page): Promise<string[]> {
 
 test('the start page meets WCAG 2.1 AA', async ({ page }) => {
   await page.goto('/')
-  await expect(page.getByRole('button', { name: /Drop SCORM ZIP here/i })).toBeVisible()
+  await expect(page.getByRole('button', { name: /Drop a SCORM package here/i })).toBeVisible()
   expect(await violations(page)).toEqual([])
 })
 

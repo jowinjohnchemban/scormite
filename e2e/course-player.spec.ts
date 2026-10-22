@@ -48,7 +48,7 @@ test('navigates a multi-SCO 1.2 course and resumes each SCO like an LMS', async 
 
   // Close returns to the empty state.
   await page.getByRole('button', { name: /Close/ }).click()
-  await expect(page.getByRole('button', { name: /Drop SCORM ZIP here/i })).toBeVisible()
+  await expect(page.getByRole('button', { name: /Drop a SCORM package here/i })).toBeVisible()
 })
 
 test('follows a SCORM 2004 continue navigation request to the next SCO', async ({ page }) => {
