@@ -25,7 +25,6 @@ import { useTimelineStore } from '@/features/timeline'
 import { useValidationStore } from '@/features/validation'
 import type { LaunchableItem, Package, ValidationIssue } from '@/shared/types'
 import {
-  flowAvailability,
   useCourseStore,
   type LaunchMode,
   type LaunchRequest,
@@ -54,6 +53,8 @@ export class CourseSession {
   private engine: Scorm2004Adapter | null = null
   /** How the engine's next delivery should be launched. */
   private nextDeliveryMode: LaunchMode = 'resume'
+  /** True while this session itself is asking the engine to navigate. */
+  private navigating = false
   private readonly unsubscribers: (() => void)[] = []
 
   constructor(pkg: Package, items: readonly LaunchableItem[], sequencing: SequencingOptions | null) {
@@ -100,6 +101,9 @@ export class CourseSession {
     }
 
     const outgoing = useRuntimeStore.getState().adapter
+    // Calls a breakpoint is holding belong to the SCO being left; applying
+    // them later would write its data into the next SCO's runtime.
+    outgoing?.discardHeldCalls()
     if (outgoing && course.currentItemId) {
       try {
         this.attempts.save(course.currentItemId, outgoing.exportAttempt())
@@ -143,14 +147,20 @@ export class CourseSession {
       return
     }
     this.nextDeliveryMode = intent.mode
-    engine.navigate(intent.request, intent.targetId)
-    if (useCourseStore.getState().pendingLaunch) return
+    this.engineNavigate(engine, intent.request, intent.targetId)
 
+    // Re-read: the engine may have delivered an activity or ended the course.
+    const after = useCourseStore.getState()
+    if (after.pendingLaunch) return
     this.nextDeliveryMode = 'resume'
+    if (after.endedReason) {
+      after.completeNavigation()
+      return
+    }
     const label = intent.request === 'choice' ? `"${this.navigator.find(intent.targetId)?.title ?? intent.targetId}"` : intent.request
-    course.setNotice(`The course's sequencing rules do not allow ${label} right now.`)
-    if (course.currentItemId && !course.endedReason) course.requestLaunch(course.currentItemId, 'resume')
-    else course.completeNavigation()
+    after.setNotice(`The course's sequencing rules do not allow ${label} right now.`)
+    if (after.currentItemId) after.requestLaunch(after.currentItemId, 'resume')
+    else after.completeNavigation()
   }
 
   /**
@@ -160,21 +170,13 @@ export class CourseSession {
   refresh(): void {
     const course = useCourseStore.getState()
     const engine = this.engine
-    if (!engine) {
-      course.setNavigation(flowAvailability([...this.items], course.currentItemId))
-      return
-    }
+    // Flow mode's availability is derived from the item order where it is shown.
+    if (!engine) return
     const state = engine.navigationState()
-    course.setNavigation(
-      state
-        ? {
-            canContinue: state.canContinue,
-            canPrevious: state.canPrevious,
-            choices: state.choices,
-            hiddenControls: state.hiddenControls,
-          }
-        : { canContinue: false, canPrevious: false, choices: [], hiddenControls: [] },
-    )
+    const navigation = state
+      ? { canContinue: state.canContinue, canPrevious: state.canPrevious, choices: state.choices, hiddenControls: state.hiddenControls }
+      : { canContinue: false, canPrevious: false, choices: [], hiddenControls: [] }
+    if (JSON.stringify(navigation) !== JSON.stringify(course.navigation)) course.setNavigation(navigation)
 
     // The engine's rolled-up status is what its rules act on; show it for
     // every item other than the running one (whose live CMI is richer).
@@ -185,7 +187,7 @@ export class CourseSession {
       if (!status) continue
       const known = course.progress[item.identifier]
       if (ENGINE_STATUS_UNKNOWN.has(status.completionStatus) && !known) continue
-      progress[item.identifier] = {
+      const next: CmiSummary = {
         completionStatus: ENGINE_STATUS_UNKNOWN.has(status.completionStatus)
           ? (known?.completionStatus ?? 'not attempted')
           : status.completionStatus,
@@ -194,8 +196,11 @@ export class CourseSession {
         location: known?.location ?? '',
         time: known?.time ?? '',
       }
+      if (!known || known.completionStatus !== next.completionStatus || known.successStatus !== next.successStatus) {
+        progress[item.identifier] = next
+      }
     }
-    course.mergeProgress(progress)
+    if (Object.keys(progress).length > 0) course.mergeProgress(progress)
   }
 
   /** Stop listening to the runtime. The session is unusable afterwards. */
@@ -204,10 +209,23 @@ export class CourseSession {
     this.engine = null
   }
 
+  private engineNavigate(engine: Scorm2004Adapter, request: Parameters<Scorm2004Adapter['navigate']>[0], targetId?: string): void {
+    this.navigating = true
+    try {
+      engine.navigate(request, targetId)
+    } finally {
+      this.navigating = false
+    }
+  }
+
   private startEngine(sequencing: SequencingOptions): boolean {
     const course = useCourseStore.getState()
     const validation = useValidationStore.getState()
     const engine = this.launcher.createSequencedRuntime(sequencing)
+    // A restart builds a new engine; its warnings replace the previous ones.
+    useValidationStore.setState((state) => ({
+      issues: state.issues.filter((i) => !(i.source === 'manifest' && i.ruleId.startsWith('sequencing.'))),
+    }))
     validation.addIssues(
       engine.sequencingWarnings.map((message) =>
         issue({ severity: 'warning', source: 'manifest', ruleId: 'sequencing.unsupported', message }),
@@ -217,7 +235,7 @@ export class CourseSession {
     course.setSequenced(true)
     useRuntimeStore.getState().setAdapter(engine, '2004')
     this.nextDeliveryMode = 'new'
-    engine.navigate('start')
+    this.engineNavigate(engine, 'start')
     if (useCourseStore.getState().pendingLaunch) return true
 
     this.engine = null
@@ -239,7 +257,15 @@ export class CourseSession {
     this.unsubscribers.push(
       runtimeEvents.on('activity-delivered', (event) => {
         if (!fromEngine(event.sessionId)) return
-        useCourseStore.getState().requestLaunch(event.activityId, this.nextDeliveryMode)
+        const course = useCourseStore.getState()
+        // The unloading SCO's own navigation request was processed while the
+        // learner's request waits: the learner's explicit choice wins; a
+        // relative continue / previous yields to the SCO's delivery.
+        if (!this.navigating && course.pendingNavigation) {
+          if (course.pendingNavigation.request === 'choice') return
+          course.completeNavigation()
+        }
+        course.requestLaunch(event.activityId, this.nextDeliveryMode)
         this.nextDeliveryMode = 'resume'
       }),
       runtimeEvents.on('sequencing-session-end', (event) => {
@@ -263,6 +289,8 @@ export class CourseSession {
       runtimeEvents.on('navigation-request', (event) => {
         if (event.sessionId !== this.pkg.id || this.engine) return
         const course = useCourseStore.getState()
+        // The learner already chose where to go; the unloading SCO's request is moot.
+        if (course.pendingLaunch || course.pendingNavigation) return
         const outcome = this.navigator.resolve(event, course.currentItemId)
         if (outcome.kind === 'launch') course.requestLaunch(outcome.itemId, 'resume')
         if (outcome.kind === 'end') course.setEnded(event.request)

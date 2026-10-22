@@ -28,13 +28,13 @@ test('navigates a multi-SCO 1.2 course and resumes each SCO like an LMS', async 
   // First SCO: launch data + mastery score from the manifest, item
   // parameters on the launch URL (served despite the query string), fresh entry.
   await expect(playerBody(page)).toContainText(
-    'lesson-one | entry= | suspend= | launch_data=from-manifest | mastery=70 | query=?mode=test',
+    'lesson-one | entry=ab-initio | suspend= | launch_data=from-manifest | mastery=70 | query=?mode=test',
     { timeout: 15_000 },
   )
 
   // Next item from the outline.
   await outline.getByRole('button', { name: 'Next item' }).click()
-  await expect(playerBody(page)).toContainText('lesson-two | entry= |')
+  await expect(playerBody(page)).toContainText('lesson-two | entry=ab-initio |')
   await expect(outline.getByText('Item 2 of 2')).toBeVisible()
 
   // Back to the first: it resumes from its suspended attempt.
@@ -44,7 +44,7 @@ test('navigates a multi-SCO 1.2 course and resumes each SCO like an LMS', async 
   // New attempt discards the stored data.
   await page.getByRole('button', { name: 'Restart' }).click()
   await page.getByRole('menuitem', { name: /New attempt/ }).click()
-  await expect(playerBody(page)).toContainText('lesson-one | entry= | suspend= |')
+  await expect(playerBody(page)).toContainText('lesson-one | entry=ab-initio | suspend= |')
 
   // Close returns to the empty state.
   await page.getByRole('button', { name: /Close/ }).click()

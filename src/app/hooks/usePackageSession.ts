@@ -26,7 +26,7 @@ import { useTimelineStore } from '@/features/timeline'
 import { useBreakpointStore } from '@/features/session'
 import { ValidationService, useValidationStore } from '@/features/validation'
 import type { CourseSession } from '@/app/course/CourseSession'
-import { summarizeCmi } from '@/app/course/summarizeCmi'
+import { summarizeCmi, type CmiSummary } from '@/app/course/summarizeCmi'
 import { useCourseStore } from '@/app/state/courseStore'
 import type { ApiCallRecord, LaunchableItem, Package } from '@/shared/types'
 import { logDevDiagnostic } from '@/shared/lib/devDiagnostics'
@@ -35,8 +35,26 @@ import { logDevDiagnostic } from '@/shared/lib/devDiagnostics'
 // idempotent and only needs to happen once per document.
 void registerServiceWorker()
 
-/** Calls that can change tracking data, and so navigation availability. */
-const TRACKING_METHODS = new Set<ApiCallRecord['method']>(['Initialize', 'SetValue', 'Commit', 'Terminate'])
+/** Calls after which the engine's view of the course may have changed. */
+const TRACKING_METHODS = new Set<ApiCallRecord['method']>(['Initialize', 'Commit', 'Terminate'])
+/** SetValue elements that feed status, scoring, or sequencing. */
+const TRACKING_ELEMENTS = /status|score|objectives|progress_measure|exit|adl.nav/
+
+function changesTracking(record: ApiCallRecord): boolean {
+  if (TRACKING_METHODS.has(record.method)) return true
+  return record.method === 'SetValue' && TRACKING_ELEMENTS.test(record.element ?? '')
+}
+
+function sameSummary(a: CmiSummary | undefined, b: CmiSummary): boolean {
+  return (
+    a !== undefined &&
+    a.completionStatus === b.completionStatus &&
+    a.successStatus === b.successStatus &&
+    a.score === b.score &&
+    a.location === b.location &&
+    a.time === b.time
+  )
+}
 
 function logDevelopmentApiCall(record: ApiCallRecord): void {
   if (!import.meta.env.DEV) return
@@ -95,15 +113,19 @@ export function usePackageSession(owner: 'basic' | 'advanced'): PackageSession {
   const pendingLaunch = useCourseStore((s) => s.pendingLaunch)
   const pendingNavigation = useCourseStore((s) => s.pendingNavigation)
   const launchKey = useCourseStore((s) => s.launchCount)
+  const endedReason = useCourseStore((s) => s.endedReason)
 
   const [loading, setLoading] = useState(false)
   const [loadingName, setLoadingName] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const sessionRef = useRef<CourseSession | null>(null)
+  /** One load at a time: overlapping loads would interleave teardown and setup. */
+  const loadingRef = useRef(false)
 
   const currentItem = items.find((item) => item.identifier === currentItemId) ?? null
+  // Nothing plays once the course has ended — until a relaunch or restart.
   const launchUrl =
-    pkg && currentItem && pendingLaunch === null && pendingNavigation === null
+    pkg && currentItem && pendingLaunch === null && pendingNavigation === null && endedReason === null
       ? packageLaunchUrl(pkg.id, currentItem.launchPath)
       : null
 
@@ -125,9 +147,14 @@ export function usePackageSession(owner: 'basic' | 'advanced'): PackageSession {
         if (useTimelineStore.getState().cursor === null) {
           useInspectorStore.getState().updateValues(flattened)
         }
-        const itemId = useCourseStore.getState().currentItemId
-        if (itemId) useCourseStore.getState().setProgress(itemId, summarizeCmi(flattened, scormVersion))
-        if (TRACKING_METHODS.has(record.method)) sessionRef.current?.refresh()
+        const course = useCourseStore.getState()
+        if (course.currentItemId) {
+          const summary = summarizeCmi(flattened, scormVersion)
+          if (!sameSummary(course.progress[course.currentItemId], summary)) {
+            course.setProgress(course.currentItemId, summary)
+          }
+        }
+        if (changesTracking(record)) sessionRef.current?.refresh()
       } catch {
         // The player may have navigated away while the event was being handled.
       }
@@ -175,21 +202,29 @@ export function usePackageSession(owner: 'basic' | 'advanced'): PackageSession {
 
   const loadFile = useCallback(
     async (file: File) => {
+      if (loadingRef.current) return
+      loadingRef.current = true
       setLoading(true)
       setLoadingName(file.name)
       setError(null)
       logDevDiagnostic('package.load.started', { owner, name: file.name, size: file.size })
+      const packageId = crypto.randomUUID()
       try {
         const { parsePackage, createCourseSession } = await loadOpenPackage()
         const parsed = await parsePackage(file)
         const first = parsed.items[0]
         if (!first) return
 
-        // The new package is valid — only now replace the open one.
+        // Cache the new package's files under its own id first: if that
+        // fails, the open package is untouched and keeps running.
+        await parsed.cacheFiles(packageId)
+        logDevDiagnostic('package.cache.ready', { owner, packageId, files: parsed.filePaths.length })
+
+        // The new package is ready — only now replace the open one.
         teardown()
 
         const assembled: Package = {
-          id: crypto.randomUUID(),
+          id: packageId,
           name: parsed.name,
           sourceType: 'zip',
           scormVersion: parsed.scormVersion,
@@ -198,7 +233,6 @@ export function usePackageSession(owner: 'basic' | 'advanced'): PackageSession {
           launchUrl: first.launchPath,
           loadedAt: new Date(),
         }
-
         useManifestStore.getState().setManifest(parsed.manifest)
         usePackageStore.getState().setPackage(assembled)
         // The archive bytes are discarded after caching; the file list stays
@@ -206,13 +240,12 @@ export function usePackageSession(owner: 'basic' | 'advanced'): PackageSession {
         usePackageStore.getState().setFilePaths(parsed.filePaths)
         ValidationService.validateManifest(parsed.manifest, parsed.filePaths, parsed.rootFolder)
 
-        await parsed.cacheFiles(assembled.id)
-        logDevDiagnostic('package.cache.ready', { owner, packageId: assembled.id, files: parsed.filePaths.length })
-
         const session = createCourseSession(assembled, parsed.items)
         sessionRef.current = session
         session.start()
       } catch (e) {
+        // Drop whatever was cached for a package that never became the open one.
+        if (usePackageStore.getState().package?.id !== packageId) clearSessionCache(packageId)
         logDevDiagnostic('package.load.failed', { owner, error: e instanceof Error ? e.message : String(e) })
         if (import.meta.env.DEV) console.error('[Scormite session] Failed to load package', e)
         setError(
@@ -221,6 +254,7 @@ export function usePackageSession(owner: 'basic' | 'advanced'): PackageSession {
             : 'An unexpected error occurred while loading the package.',
         )
       } finally {
+        loadingRef.current = false
         setLoading(false)
         setLoadingName(null)
       }

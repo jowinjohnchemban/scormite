@@ -27,17 +27,9 @@ export function PlayerFrame({ src, className, onLoad }: PlayerFrameProps) {
     iframeRef.current.src = src
   }, [src])
 
+  // Between launches (and after a course ends) there is nothing to show.
   if (!src) {
-    return (
-      <div
-        className={cn(
-          'flex h-full items-center justify-center text-sm text-slate-500',
-          className,
-        )}
-      >
-        No package loaded.
-      </div>
-    )
+    return <div className={cn('h-full bg-surface-950', className)} />
   }
 
   return (
