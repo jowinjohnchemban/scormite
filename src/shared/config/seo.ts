@@ -81,7 +81,7 @@ export const siteSeoConfig: SiteSeoConfig = {
   ],
   themeColor: '#101317',
   backgroundColor: '#0b0d10',
-  favicon: '/logo.png',
+  favicon: '/logo.svg',
   ogImage: '/og-image.png',
   ogImageAlt: 'SCORMite — test, debug and validate SCORM 1.2 and 2004 packages in your browser',
   twitterSite: '@scormite',

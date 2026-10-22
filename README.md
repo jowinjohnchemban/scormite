@@ -1,6 +1,8 @@
-# SCORMite
+<p align="center"><img src="public/logo.svg" width="96" height="96" alt="SCORMite logo: an open package with a small cube — the mite — inside"></p>
 
-**Test, debug and validate SCORM packages in your browser.**
+<h1 align="center">SCORMite</h1>
+
+<p align="center"><strong>Test, debug and validate SCORM packages in your browser.</strong></p>
 
 [![CI](https://github.com/jowinjohnchemban/scormite/actions/workflows/ci.yml/badge.svg)](https://github.com/jowinjohnchemban/scormite/actions/workflows/ci.yml)
 ![SCORM 1.2](https://img.shields.io/badge/SCORM-1.2-2f6fb0)

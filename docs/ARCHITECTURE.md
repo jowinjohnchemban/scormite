@@ -241,7 +241,7 @@ exactly; treat it as a stand-in for the real CLI run.
 | Format | Prettier | defaults, via `pnpm run format` |
 | Unit tests + coverage | Vitest + @vitest/coverage-v8 | `vitest.config.ts` (`src/**` and `build/**` tests; thresholds 35/20/30/35, `pnpm run test:coverage`) |
 | SEO / metadata | Vite plugin `build/seoPlugin.ts` | Renders head tags, JSON-LD, no-JS fallback, robots.txt, sitemap.xml, llms.txt, manifest.webmanifest from `src/shared/config/seo.ts`; set `VITE_SITE_URL` per deployment |
-| Brand images | `scripts/make-brand-assets.mjs` | Renders `public/og-image.png` and app icons with Playwright Chromium (outputs committed) |
+| Brand | `scripts/brand/mark.mjs`, `scripts/make-brand-assets.mjs` | The logo is generated from parameters on a 2:1 pixel-isometric integer grid (pixel-exact at native sizes): `logo-mark.svg` (dark surfaces), `logo-mark-24.svg` (24 px header), `logo.svg` (tile: favicon, README), PNG icons, and the social image — all committed |
 | E2E | Playwright | `playwright.config.ts` (`e2e/`, auto-starts dev server, committed fixtures in `e2e/fixtures/`) |
 | CI | GitHub Actions | `.github/workflows/ci.yml` (unit + e2e jobs) |
 

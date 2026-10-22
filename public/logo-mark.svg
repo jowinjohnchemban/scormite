@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" shape-rendering="crispEdges" role="img" aria-label="SCORMite">
+  <polygon points="4,18 16,12 28,18 28,26 16,20 4,26" fill="#1f242c"/>
+  <polygon points="4,26 16,20 28,26 16,32" fill="#0b0d10"/>
+  <polygon points="12,18 16,20 16,22 12,20" fill="#2ea043"/>
+  <polygon points="20,18 16,20 16,22 20,20" fill="#1f7a34"/>
+  <polygon points="16,16 20,18 16,20 12,18" fill="#3fb950"/>
+  <polygon points="4,18 16,24 16,32 4,26" fill="#2f6fb0"/>
+  <polygon points="28,18 16,24 16,32 28,26" fill="#1d4a78"/>
+  <polygon points="4,7 16,13 16,15 4,9" fill="#2f6fb0"/>
+  <polygon points="28,7 16,13 16,15 28,9" fill="#1d4a78"/>
+  <polygon points="4,7 16,1 28,7 16,13" fill="#4da3ff"/>
+</svg>
