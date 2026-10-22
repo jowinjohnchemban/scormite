@@ -4,6 +4,17 @@ All notable changes to SCORMite are recorded here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- **Switching to Advanced mode after the site was updated** failed with
+  "Failed to fetch dynamically imported module" when the tab had been open
+  across a deployment. Advanced mode and the package runtime are now fetched
+  in the background once the page has loaded, so switching modes and opening
+  a package keep working. If a file is still missing, SCORMite explains that
+  it was updated and offers a reload, and Basic mode keeps running.
+
 ## [1.0.0] — 2026-10-22
 
 First public release, under the MIT licence.

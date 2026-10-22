@@ -30,6 +30,8 @@ import { summarizeCmi, type CmiSummary } from '@/app/course/summarizeCmi'
 import { useCourseStore } from '@/app/state/courseStore'
 import type { ApiCallRecord, LaunchableItem, Package } from '@/shared/types'
 import { logDevDiagnostic } from '@/shared/lib/devDiagnostics'
+import { isStaleBuildError, STALE_BUILD_MESSAGE } from '@/app/staleBuild'
+import { loadOpenPackage } from '@/app/onDemandModules'
 
 // The player serves package files through a service worker; registering is
 // idempotent and only needs to happen once per document.
@@ -102,9 +104,6 @@ function resetSessionStores(): void {
   useManifestStore.getState().clearManifest()
   usePackageStore.getState().clearPackage()
 }
-
-/** Unzip, parsing, and the runtime load on demand with the first package. */
-const loadOpenPackage = () => import('@/app/course/openPackage')
 
 export function usePackageSession(owner: 'basic' | 'advanced'): PackageSession {
   const pkg = usePackageStore((s) => s.package)
@@ -264,7 +263,9 @@ export function usePackageSession(owner: 'basic' | 'advanced'): PackageSession {
         setError(
           e instanceof Error && e.name === 'OpenPackageError'
             ? e.message
-            : 'An unexpected error occurred while loading the package.',
+            : isStaleBuildError(e)
+              ? `${STALE_BUILD_MESSAGE} The package was not opened.`
+              : 'An unexpected error occurred while loading the package.',
         )
       } finally {
         loadingRef.current = false
