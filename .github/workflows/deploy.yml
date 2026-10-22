@@ -15,7 +15,8 @@ on:
 permissions:
   contents: read
 
-# One deployment at a time, in order; never cancel one halfway.
+# One deployment at a time; never cancel one halfway. Order is enforced by
+# deploying a commit only while it is still main's tip (see the first step).
 concurrency:
   group: deploy-production
   cancel-in-progress: false
@@ -32,36 +33,58 @@ jobs:
     environment:
       name: production
       url: https://scormite.jowinjc.in
+    env:
+      COMMIT: ${{ github.event.workflow_run.head_sha || github.sha }}
     steps:
+      # CI runs for consecutive commits can finish out of order: deploy only the
+      # commit that is still main's tip, so an older one never replaces a newer
+      # deployment. A later commit's own deployment follows.
+      - name: Check the commit is still main's tip
+        id: tip
+        run: |
+          tip=$(git ls-remote "https://github.com/${GITHUB_REPOSITORY}.git" refs/heads/main | cut -f1)
+          if [ "$tip" = "$COMMIT" ]; then
+            echo "deploy=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "main has moved on to $tip; skipping $COMMIT" >> "$GITHUB_STEP_SUMMARY"
+            echo "deploy=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - uses: actions/checkout@v7
+        if: steps.tip.outputs.deploy == 'true'
         with:
           # The commit CI passed, and full history for the sitemap's lastmod.
-          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+          ref: ${{ env.COMMIT }}
           fetch-depth: 0
 
       - uses: pnpm/action-setup@v6
+        if: steps.tip.outputs.deploy == 'true'
         with:
           version: 11.20.0
 
       - uses: actions/setup-node@v7
+        if: steps.tip.outputs.deploy == 'true'
         with:
           node-version: 24
           cache: pnpm
 
       - name: Install dependencies
+        if: steps.tip.outputs.deploy == 'true'
         run: pnpm install --frozen-lockfile
 
       - name: Build
+        if: steps.tip.outputs.deploy == 'true'
         run: pnpm run build
         env:
           # The commit shown on the About page (GITHUB_SHA can differ for workflow_run).
-          COMMIT_REF: ${{ github.event.workflow_run.head_sha || github.sha }}
+          COMMIT_REF: ${{ env.COMMIT }}
 
+      # Wrangler (pinned) runs through npx, outside the project's pnpm install:
+      # its dependencies (workerd, sharp) have install scripts that pnpm's
+      # build allow-list would block.
       - name: Deploy
-        uses: cloudflare/wrangler-action@v4
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
-          wranglerVersion: 4.148.0
-          packageManager: pnpm
-          command: deploy
+        if: steps.tip.outputs.deploy == 'true'
+        run: npx --yes wrangler@4.148.0 deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
