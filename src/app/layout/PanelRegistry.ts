@@ -1,12 +1,16 @@
 /**
- * PanelRegistry — the single source of truth for Advanced Mode's dock layout.
+ * PanelRegistry — which Advanced-mode panels exist, where each lives, and
+ * which are shown.
  *
- * Features register their panels here (via `register`); the registry owns
- * *where* each panel is docked, whether it is visible, and the order within
- * a region. Panel definitions themselves are runtime-only — only the layout
- * (order / hidden / active tab) is persisted, so a panel added in a future
- * release picks up its `defaultRegion` + `defaultOpen` without clobbering
- * the placement the user chose for everything else.
+ * Every panel has a fixed home dock chosen for what it is used for (course
+ * structure on the left, runtime state on the right, logs and tools in the
+ * bottom tabs). Testers show, hide, and resize panels; moving them between
+ * docks was removed because it added controls and layout states without
+ * helping anyone test a package.
+ *
+ * Persisted: only the tester's show/hide choices and the active bottom tab.
+ * Definitions are registered at runtime, so a panel added in a later release
+ * appears with its default visibility.
  */
 
 import { create } from 'zustand'
@@ -16,249 +20,117 @@ import type { ComponentType } from 'react'
 import type { LucideIcon } from 'lucide-react'
 import { clearStoredPanelSizes, PANEL_LAYOUT_STORAGE_KEY } from './dockStorage'
 
-export const DOCK_REGIONS = ['left', 'right', 'bottom'] as const
+/** A dock. The center region is reserved for the player. */
+export type DockRegion = 'left' | 'right' | 'bottom'
 
-/** A dockable region. The center region is reserved for the player and is not dockable. */
-export type DockRegion = (typeof DOCK_REGIONS)[number]
+/** What a panel is for — how the Panels menu groups them. */
+export type PanelGroup = 'course' | 'runtime' | 'problems'
 
 export interface PanelDef {
   id: string
   title: string
-  /** Region this panel docks to the first time it is ever registered. */
-  defaultRegion: DockRegion
-  /** Whether it is visible the first time it is ever registered. */
+  group: PanelGroup
+  /** The panel's home dock. */
+  region: DockRegion
+  /** Whether it is shown until the tester says otherwise. */
   defaultOpen: boolean
   component: ComponentType
   icon: LucideIcon
 }
 
-type RegionOrder = Record<DockRegion, string[]>
-
-/** The persisted slice: everything a reload must restore. */
-interface DockLayoutState {
-  /** Panel ids per region, in display order. May contain ids with no current definition. */
-  order: RegionOrder
-  /** Ids the user has explicitly closed. */
-  hidden: string[]
-  /** Active tab per region (only tabbed regions use this). */
-  activeTab: Partial<Record<DockRegion, string>>
+/** The persisted slice. */
+interface PanelLayoutState {
+  /** Explicit show (true) / hide (false) choices, by panel id. */
+  visibility: Record<string, boolean>
+  /** Active tab of the bottom dock. */
+  activeBottomTab: string | null
 }
 
-interface PanelRegistryState extends DockLayoutState {
-  /** Registered definitions, keyed by id. Not persisted. */
+interface PanelRegistryState extends PanelLayoutState {
+  /** Registered definitions, in registration (display) order. Not persisted. */
   definitions: Record<string, PanelDef>
-  /** Id of the panel currently being dragged, or null. Not persisted. */
-  draggingId: string | null
+  order: string[]
 
   register: (panel: PanelDef) => void
-  unregister: (id: string) => void
   open: (id: string) => void
   close: (id: string) => void
   toggle: (id: string) => void
-  /** Dock `id` into `region`, inserting before `beforeId` when given (else append). */
-  move: (id: string, region: DockRegion, beforeId?: string) => void
-  setActiveTab: (region: DockRegion, id: string) => void
-  /** Discard all user layout customisation, including stored panel sizes. */
+  setActiveBottomTab: (id: string) => void
+  /** Restore default visibility and panel sizes. */
   resetLayout: () => void
-  beginDrag: (id: string) => void
-  endDrag: () => void
 }
 
-const emptyOrder = (): RegionOrder => ({ left: [], right: [], bottom: [] })
-
-function regionOf(order: RegionOrder, id: string): DockRegion | undefined {
-  return DOCK_REGIONS.find((region) => order[region].includes(id))
-}
-
-function isKnown(order: RegionOrder, id: string): boolean {
-  return regionOf(order, id) !== undefined
-}
-
-/** Layout seeded purely from panel definitions — i.e. what a first-run user sees. */
-function defaultLayoutFor(definitions: Record<string, PanelDef>): DockLayoutState {
-  const order = emptyOrder()
-  const hidden: string[] = []
-  for (const panel of Object.values(definitions)) {
-    order[panel.defaultRegion].push(panel.id)
-    if (!panel.defaultOpen) hidden.push(panel.id)
-  }
-  return { order, hidden, activeTab: {} }
-}
-
-/** First visible panel in `region`, excluding `excludeId`. */
-function firstVisible(
-  state: Pick<PanelRegistryState, 'order' | 'hidden' | 'definitions'>,
-  region: DockRegion,
-  excludeId?: string,
-): string | undefined {
-  return state.order[region].find(
-    (id) =>
-      id !== excludeId &&
-      state.definitions[id] !== undefined &&
-      !state.hidden.includes(id),
-  )
+function isVisible(state: Pick<PanelRegistryState, 'definitions' | 'visibility'>, id: string): boolean {
+  return state.visibility[id] ?? state.definitions[id]?.defaultOpen ?? false
 }
 
 export const usePanelRegistry = create<PanelRegistryState>()(
   persist(
     (set, get) => ({
-      order: emptyOrder(),
-      hidden: [],
-      activeTab: {},
+      visibility: {},
+      activeBottomTab: null,
       definitions: {},
-      draggingId: null,
+      order: [],
 
       register: (panel) =>
-        set((s) => {
-          if (s.definitions[panel.id]) return {}
-          const definitions = { ...s.definitions, [panel.id]: panel }
-          // A panel already present in the persisted order keeps whatever
-          // placement and visibility the user last left it in.
-          if (isKnown(s.order, panel.id)) return { definitions }
-          return {
-            definitions,
-            order: {
-              ...s.order,
-              [panel.defaultRegion]: [...s.order[panel.defaultRegion], panel.id],
-            },
-            hidden: panel.defaultOpen ? s.hidden : [...s.hidden, panel.id],
-          }
-        }),
-
-      // Layout entries survive unregistration on purpose: a panel that comes
-      // back (HMR, a plugin re-registering) returns to where the user put it.
-      unregister: (id) =>
-        set((s) => {
-          if (!s.definitions[id]) return {}
-          const definitions = { ...s.definitions }
-          delete definitions[id]
-          return { definitions }
-        }),
+        set((s) =>
+          s.definitions[panel.id]
+            ? {}
+            : { definitions: { ...s.definitions, [panel.id]: panel }, order: [...s.order, panel.id] },
+        ),
 
       open: (id) =>
-        set((s) => {
-          const region = regionOf(s.order, id)
-          return {
-            hidden: s.hidden.filter((h) => h !== id),
-            ...(region ? { activeTab: { ...s.activeTab, [region]: id } } : {}),
-          }
-        }),
+        set((s) => ({
+          visibility: { ...s.visibility, [id]: true },
+          ...(s.definitions[id]?.region === 'bottom' ? { activeBottomTab: id } : {}),
+        })),
 
-      close: (id) =>
-        set((s) => {
-          if (s.hidden.includes(id)) return {}
-          const hidden = [...s.hidden, id]
-          const region = regionOf(s.order, id)
-          if (!region || s.activeTab[region] !== id) return { hidden }
-          // Closing the active tab promotes the next visible sibling.
-          const next = firstVisible({ ...s, hidden }, region)
-          const activeTab = { ...s.activeTab }
-          if (next === undefined) delete activeTab[region]
-          else activeTab[region] = next
-          return { hidden, activeTab }
-        }),
+      close: (id) => set((s) => ({ visibility: { ...s.visibility, [id]: false } })),
 
       toggle: (id) => {
-        const { hidden, open, close } = get()
-        if (hidden.includes(id)) open(id)
-        else close(id)
+        const state = get()
+        if (isVisible(state, id)) state.close(id)
+        else state.open(id)
       },
 
-      move: (id, region, beforeId) =>
-        set((s) => {
-          if (id === beforeId) return {}
-          const from = regionOf(s.order, id)
-          const order = emptyOrder()
-          for (const r of DOCK_REGIONS) order[r] = s.order[r].filter((p) => p !== id)
-          const index = beforeId ? order[region].indexOf(beforeId) : -1
-          if (index >= 0) order[region].splice(index, 0, id)
-          else order[region].push(id)
-
-          const hidden = s.hidden.filter((h) => h !== id)
-          const activeTab = { ...s.activeTab, [region]: id }
-          // The source region may have just lost its active tab.
-          if (from && from !== region && s.activeTab[from] === id) {
-            const next = firstVisible({ ...s, order, hidden }, from)
-            if (next === undefined) delete activeTab[from]
-            else activeTab[from] = next
-          }
-          return { order, hidden, activeTab }
-        }),
-
-      setActiveTab: (region, id) =>
-        set((s) => ({ activeTab: { ...s.activeTab, [region]: id } })),
+      setActiveBottomTab: (id) => set({ activeBottomTab: id }),
 
       resetLayout: () => {
         clearStoredPanelSizes()
-        set((s) => defaultLayoutFor(s.definitions))
+        set({ visibility: {}, activeBottomTab: null })
       },
-
-      beginDrag: (id) => set({ draggingId: id }),
-      endDrag: () => set({ draggingId: null }),
     }),
     {
       name: PANEL_LAYOUT_STORAGE_KEY,
-      // Definitions are re-registered on every mount; drag state is ephemeral.
-      partialize: (s): DockLayoutState => ({
-        order: s.order,
-        hidden: s.hidden,
-        activeTab: s.activeTab,
-      }),
-      // A version bump from a release that changed region names would otherwise
-      // rehydrate an order object missing a region key.
-      merge: (persisted, current) => {
-        const saved = persisted as Partial<DockLayoutState> | undefined
-        return {
-          ...current,
-          ...saved,
-          order: { ...emptyOrder(), ...saved?.order },
-          hidden: saved?.hidden ?? [],
-          activeTab: saved?.activeTab ?? {},
-        }
-      },
+      version: 2,
+      partialize: (s): PanelLayoutState => ({ visibility: s.visibility, activeBottomTab: s.activeBottomTab }),
+      // Layouts saved before panels had fixed homes (version < 2) described
+      // dock placement; only fresh defaults make sense for them.
+      migrate: () => ({ visibility: {}, activeBottomTab: null }),
     },
   ),
 )
 
 // ---------------------------------------------------------------------------
-// Selectors
-//
-// These return arrays, so they go through `useShallow` — zustand v5 compares
-// snapshots with Object.is, and a freshly-built array every call would
-// re-render on every store write (and trip React's getSnapshot cache warning).
+// Selectors — arrays go through `useShallow` so a fresh array per call does
+// not re-render on every store write.
 // ---------------------------------------------------------------------------
 
-/** All registered panels docked in `region`, in display order (visible or not). */
-export function useRegionPanelIds(region: DockRegion): string[] {
-  return usePanelRegistry(
-    useShallow((s) => s.order[region].filter((id) => s.definitions[id] !== undefined)),
-  )
-}
-
-/** Registered *and* visible panels docked in `region`, in display order. */
+/** Visible panels of a dock, in display order. */
 export function useVisiblePanelIds(region: DockRegion): string[] {
   return usePanelRegistry(
-    useShallow((s) =>
-      s.order[region].filter(
-        (id) => s.definitions[id] !== undefined && !s.hidden.includes(id),
-      ),
-    ),
+    useShallow((s) => s.order.filter((id) => s.definitions[id]?.region === region && isVisible(s, id))),
   )
 }
 
-export function usePanelDef(id: string): PanelDef | undefined {
-  return usePanelRegistry((s) => s.definitions[id])
+export function usePanelVisible(id: string): boolean {
+  return usePanelRegistry((s) => isVisible(s, id))
 }
 
-/** The active tab for a tabbed region, falling back to its first visible panel. */
-export function useActivePanelId(region: DockRegion): string | undefined {
+/** The bottom dock's active tab, falling back to its first visible panel. */
+export function useActiveBottomPanelId(): string | undefined {
   return usePanelRegistry((s) => {
-    const active = s.activeTab[region]
-    const usable =
-      active !== undefined &&
-      s.order[region].includes(active) &&
-      s.definitions[active] !== undefined &&
-      !s.hidden.includes(active)
-    return usable ? active : firstVisible(s, region)
+    const visible = s.order.filter((id) => s.definitions[id]?.region === 'bottom' && isVisible(s, id))
+    return s.activeBottomTab !== null && visible.includes(s.activeBottomTab) ? s.activeBottomTab : visible[0]
   })
 }

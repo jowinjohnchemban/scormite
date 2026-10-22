@@ -83,9 +83,11 @@ from **Panels** in the toolbar:
 | Validation | See every packaging and runtime issue |
 | Network | See each file the course requested and which are missing from the package ("Missing only" filter) |
 
-Panels can be dragged between the left, right, and bottom docks, resized,
-and closed; the layout is remembered. **Panels › Reset layout** restores
-the default.
+Each panel has a fixed place — course structure on the left, runtime state
+on the right, logs and tools as tabs at the bottom. Show or hide panels from
+**Panels** (grouped into Course, Runtime, and Problems), close one with its ×,
+and drag the dividers to resize; your choices are remembered. **Panels ›
+Reset layout** restores the defaults.
 
 ## 5. Check for problems
 

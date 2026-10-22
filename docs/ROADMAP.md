@@ -30,6 +30,10 @@ build (`pnpm run build`), lint clean (`pnpm run lint`), and typecheck
 - [x] **Milestone 6 — Advanced Mode shell + Dock layout.** `DockLayout`,
       `PanelRegistry`, persistent layout, top toolbar. *Exit criteria:*
       panels can be dragged/resized/closed/reopened; layout survives reload.
+      *Milestone 17:* moving panels between docks (drag-and-drop, per-panel
+      dock buttons) and the activity bars were removed — layout furniture
+      that did not help test a package. Panels have fixed homes and can be
+      shown, hidden, and resized.
 - [x] **Milestone 7 — API Monitor, CMI Inspector, Console.** Live-updating
       panels wired to `logStore`/`runtimeStore`. *Exit criteria:* every
       SCORM API call appears in the monitor within one frame; CMI tree
