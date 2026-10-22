@@ -27,7 +27,7 @@ const METHODS: ScormApiMethod[] = ['SetValue', 'Commit']
 
 const inputClass =
   'h-7 min-w-0 rounded-sm border border-border-subtle bg-surface-800 px-2 text-xs ' +
-  'text-slate-200 outline-none placeholder:text-slate-600 focus-visible:ring-1 focus-visible:ring-accent'
+  'text-slate-200 outline-none placeholder:text-slate-500 focus-visible:ring-1 focus-visible:ring-accent'
 
 /**
  * Breakpoint CRUD + pause control. The list shows what each breakpoint

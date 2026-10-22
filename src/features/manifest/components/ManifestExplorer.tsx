@@ -138,7 +138,7 @@ function TreeItem({
             <span className="shrink-0 rounded bg-accent/15 px-1 text-[10px] text-accent">seq</span>
           )}
           {item.identifierref && (
-            <span className={cn('ml-auto shrink-0 text-[10px]', resource ? 'text-slate-600' : 'text-red-400')}>
+            <span className={cn('ml-auto shrink-0 text-[10px]', resource ? 'text-slate-500' : 'text-red-400')}>
               {item.identifierref}
             </span>
           )}

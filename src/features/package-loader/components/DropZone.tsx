@@ -104,7 +104,7 @@ export function DropZone({ onFile, loading = false, error = null }: DropZoneProp
               <p className="mt-1 text-xs text-slate-500">
                 or click to browse
               </p>
-              <p className="mt-2 text-[10px] tracking-wide text-slate-600">
+              <p className="mt-2 text-[10px] tracking-wide text-slate-500">
                 .zip &middot; SCORM 1.2 &amp; 2004 &middot; runs locally &mdash; your package never leaves this tab
               </p>
             </div>

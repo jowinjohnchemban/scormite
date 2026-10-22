@@ -14,6 +14,10 @@ const axeSource = readFileSync(path.join(root, 'node_modules', 'axe-core', 'axe.
 const fixture = (name: string) => path.join(root, 'e2e', 'fixtures', name)
 
 async function violations(page: Page): Promise<string[]> {
+  // Park the pointer so the audit never depends on which element the last
+  // click left hovered. Text on hover backgrounds is kept at slate-500 or
+  // lighter instead (see docs/architecture.md#accessibility).
+  await page.mouse.move(0, 0)
   await page.addScriptTag({ content: axeSource })
   return page.evaluate(async () => {
     // Runs in the page; the e2e tsconfig has no DOM types, so type what is used.
