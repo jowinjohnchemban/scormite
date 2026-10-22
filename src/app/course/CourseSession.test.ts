@@ -84,7 +84,15 @@ describe('CourseSession — flow mode (SCORM 1.2)', () => {
     const manifest = parseManifest(manifestXml('2004'))
     const items = getLaunchableItems(manifest)
     session = new CourseSession(
-      { id: 'pkg-flow', name: 'flow', sourceType: 'zip', scormVersion: '2004', manifest, launchUrl: 'a.html', loadedAt: new Date() },
+      {
+        id: 'pkg-flow',
+        name: 'flow',
+        sourceType: 'zip',
+        scormVersion: '2004',
+        manifest,
+        launchUrl: 'a.html',
+        loadedAt: new Date(),
+      },
       items,
       null,
     )

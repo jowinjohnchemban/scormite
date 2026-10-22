@@ -25,11 +25,9 @@ test('loads a SCORM 2004 4th Edition package and runs the SCO end to end', async
   await expect(page.getByRole('button', { name: /E2E SCO 2004/i })).toBeVisible()
 
   const player = page.frameLocator('iframe[title="SCORM Package"]')
-  await expect(page.locator('iframe[title="SCORM Package"]')).toHaveAttribute(
-    'src',
-    /\/scorm-files\//,
-    { timeout: 15_000 },
-  )
+  await expect(page.locator('iframe[title="SCORM Package"]')).toHaveAttribute('src', /\/scorm-files\//, {
+    timeout: 15_000,
+  })
 
   // The 2004 SCO ran against API_1484_11.
   await expect(player.locator('body')).toContainText('init=', { timeout: 15_000 })

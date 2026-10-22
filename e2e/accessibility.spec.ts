@@ -23,7 +23,12 @@ async function violations(page: Page): Promise<string[]> {
     // Runs in the page; the e2e tsconfig has no DOM types, so type what is used.
     const page = globalThis as unknown as {
       document: unknown
-      axe: { run: (context: unknown, options: object) => Promise<{ violations: { id: string; nodes: { target: string[] }[] }[] }> }
+      axe: {
+        run: (
+          context: unknown,
+          options: object,
+        ) => Promise<{ violations: { id: string; nodes: { target: string[] }[] }[] }>
+      }
     }
     const result = await page.axe.run(page.document, {
       runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'] },

@@ -40,7 +40,9 @@ export function CmiInspectorPanel() {
           {entries.length === all.length ? `${all.length} fields` : `${entries.length} of ${all.length} fields`}
         </span>
         {isReplay && (
-          <span className="rounded-sm bg-amber-400/15 px-1.5 py-0.5 text-[10px] font-medium text-amber-300">Replay</span>
+          <span className="rounded-sm bg-amber-400/15 px-1.5 py-0.5 text-[10px] font-medium text-amber-300">
+            Replay
+          </span>
         )}
         <input
           type="search"
@@ -65,7 +67,10 @@ export function CmiInspectorPanel() {
       ) : entries.length === 0 ? (
         <p className="p-3 text-xs text-slate-600">No fields match.</p>
       ) : (
-        <div tabIndex={0} className="min-h-0 overflow-auto font-mono text-[11px] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-accent">
+        <div
+          tabIndex={0}
+          className="min-h-0 overflow-auto font-mono text-[11px] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-accent"
+        >
           {entries.map(([path, value]) => {
             const depth = path.split('.').length - 1
             const changed = changedPaths.includes(path)

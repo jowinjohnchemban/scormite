@@ -108,7 +108,9 @@ export function App() {
               variant={mode === 'advanced' ? 'default' : 'ghost'}
               aria-pressed={mode === 'advanced'}
               disabled={!isDesktop}
-              title={isDesktop ? 'Advanced mode: dockable developer panels' : 'Advanced mode needs a wider screen (1024px+)'}
+              title={
+                isDesktop ? 'Advanced mode: dockable developer panels' : 'Advanced mode needs a wider screen (1024px+)'
+              }
               onClick={() => {
                 if (!isDesktop) return
                 logDevDiagnostic('mode.change.requested', { from: mode, to: 'advanced' })
@@ -139,10 +141,7 @@ export function App() {
             <BasicModeShell session={session} />
           ) : (
             <Suspense fallback={null}>
-              <AdvancedModeShell
-                session={session}
-                onCenterRegionRectChange={handleAdvancedCenterRect}
-              />
+              <AdvancedModeShell session={session} onCenterRegionRectChange={handleAdvancedCenterRect} />
             </Suspense>
           )}
         </ErrorBoundary>

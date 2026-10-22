@@ -7,10 +7,6 @@
  */
 export { BreakpointsPanel } from './components'
 export { useBreakpointStore } from './state/breakpointStore'
-export {
-  BreakpointService,
-  describeBreakpoint,
-  validateBreakpointDraft,
-} from './services/BreakpointService'
+export { BreakpointService, describeBreakpoint, validateBreakpointDraft } from './services/BreakpointService'
 export type { BreakpointDraft } from './services/BreakpointService'
 export type { ResumeHandler } from './state/breakpointStore'

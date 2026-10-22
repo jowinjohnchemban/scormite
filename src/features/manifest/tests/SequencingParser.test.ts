@@ -150,9 +150,7 @@ describe('SequencingParser via parseManifest', () => {
         ],
       },
       primaryObjective: { objectiveID: 'quiz-pass', satisfiedByMeasure: true, minNormalizedMeasure: 0.7, mapInfo: [] },
-      objectives: [
-        { objectiveID: 'gate', mapInfo: [{ targetObjectiveID: 'g-intro', readSatisfiedStatus: true }] },
-      ],
+      objectives: [{ objectiveID: 'gate', mapInfo: [{ targetObjectiveID: 'g-intro', readSatisfiedStatus: true }] }],
       attemptLimit: 3,
       attemptAbsoluteDurationLimit: 'PT1H',
     })

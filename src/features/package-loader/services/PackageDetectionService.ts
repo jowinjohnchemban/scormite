@@ -28,9 +28,7 @@ const NS_2004 = ['adlcp_v1p3', 'adlseq_v1p3', 'adlnav_v1p3', 'imsss_v1p0']
 
 export function detectScormVersion(manifestXml: string): DetectedVersion | null {
   // --- Strategy 1: schema + schemaversion metadata ---
-  const schemaVersionMatch = /<schemaversion[^>]*>\s*([^<]+?)\s*<\/schemaversion>/i.exec(
-    manifestXml,
-  )
+  const schemaVersionMatch = /<schemaversion[^>]*>\s*([^<]+?)\s*<\/schemaversion>/i.exec(manifestXml)
   if (schemaVersionMatch) {
     const sv = schemaVersionMatch[1]?.trim() ?? ''
     if (/^1\.[12]$/.test(sv)) {

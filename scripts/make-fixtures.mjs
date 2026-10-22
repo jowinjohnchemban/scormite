@@ -436,10 +436,7 @@ const packages = [
   {
     // The single most common packaging mistake: zipping the course folder.
     file: 'scorm12-folder-wrapped.zip',
-    entries: [
-      pinned('Wrapped Course/imsmanifest.xml', MANIFEST_12),
-      pinned('Wrapped Course/index.html', SCO_12),
-    ],
+    entries: [pinned('Wrapped Course/imsmanifest.xml', MANIFEST_12), pinned('Wrapped Course/index.html', SCO_12)],
   },
 ]
 

@@ -25,7 +25,10 @@ export function SessionAlert({
   if (!message) return null
   const style = TONES[tone]
   return (
-    <div role={style.role} className={cn('flex shrink-0 items-start gap-2 border-b px-3 py-1.5 text-xs', style.className)}>
+    <div
+      role={style.role}
+      className={cn('flex shrink-0 items-start gap-2 border-b px-3 py-1.5 text-xs', style.className)}
+    >
       <p className="min-w-0 flex-1 py-1">{message}</p>
       <Button variant="ghost" size="icon" className="size-6" aria-label="Dismiss message" onClick={onDismiss}>
         <X aria-hidden />

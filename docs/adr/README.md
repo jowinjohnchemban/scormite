@@ -5,8 +5,8 @@ record is written when a choice could reasonably have gone another way — a
 new dependency direction, a new boundary rule, a library swap — so the
 reasoning outlives the commit that introduced it.
 
-| Record | Status |
-|---|---|
+| Record                                                                                      | Status   |
+| ------------------------------------------------------------------------------------------- | -------- |
 | [0001 — Enforce architecture boundaries via ESLint](0001-eslint-architecture-boundaries.md) | Accepted |
 
 ## Adding a record

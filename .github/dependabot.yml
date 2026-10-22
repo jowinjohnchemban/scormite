@@ -21,11 +21,11 @@ updates:
       # One PR for all security fixes found at the same time.
       security:
         applies-to: security-updates
-        patterns: ["*"]
+        patterns: ['*']
     ignore:
       # Tracks the Node version CI and the container run (24); bump it with them.
-      - dependency-name: "@types/node"
-        update-types: ["version-update:semver-major"]
+      - dependency-name: '@types/node'
+        update-types: ['version-update:semver-major']
 
   - package-ecosystem: github-actions
     directory: /
@@ -37,4 +37,4 @@ updates:
       include: scope
     groups:
       actions:
-        patterns: ["*"]
+        patterns: ['*']

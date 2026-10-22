@@ -70,7 +70,9 @@ export function BreakpointsPanel() {
     <section className="flex h-full min-h-0 flex-col" aria-label="Breakpoints">
       <header className="flex h-8 shrink-0 items-center justify-between border-b border-border-subtle px-2">
         <span className="text-[11px] text-slate-500">
-          {breakpoints.length === 0 ? 'No breakpoints' : `${breakpoints.length} breakpoint${breakpoints.length === 1 ? '' : 's'}`}
+          {breakpoints.length === 0
+            ? 'No breakpoints'
+            : `${breakpoints.length} breakpoint${breakpoints.length === 1 ? '' : 's'}`}
         </span>
         {breakpoints.length > 0 && (
           <Button variant="ghost" size="sm" onClick={() => BreakpointService.clear()}>
@@ -92,12 +94,14 @@ export function BreakpointsPanel() {
         </div>
       )}
 
-      <div tabIndex={0} className="min-h-0 flex-1 overflow-auto p-3 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-accent">
+      <div
+        tabIndex={0}
+        className="min-h-0 flex-1 overflow-auto p-3 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-accent"
+      >
         {breakpoints.length === 0 ? (
           <p className="text-xs text-slate-600">
-            A breakpoint holds a matching SetValue or Commit before it reaches the
-            runtime, so you can inspect the data first. The course keeps running and
-            receives "true"; held calls are applied in order when you resume.
+            A breakpoint holds a matching SetValue or Commit before it reaches the runtime, so you can inspect the data
+            first. The course keeps running and receives "true"; held calls are applied in order when you resume.
           </p>
         ) : (
           <ul className="space-y-1" aria-label="Breakpoint list">

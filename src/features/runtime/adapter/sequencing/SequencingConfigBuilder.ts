@@ -68,10 +68,7 @@ export interface BuiltSequencing {
 export class SequencingConfigBuilder {
   private warnings: string[] = []
 
-  build(
-    tree: ActivityDefinition,
-    collections: Record<string, SequencingDefinition> | undefined,
-  ): BuiltSequencing {
+  build(tree: ActivityDefinition, collections: Record<string, SequencingDefinition> | undefined): BuiltSequencing {
     this.warnings = []
     const activityTree = this.activity(tree)
     const settings: SequencingSettings = { activityTree }
@@ -109,8 +106,12 @@ export class SequencingConfigBuilder {
     ) {
       out.deliveryControls = {
         ...(delivery.tracked !== undefined ? { tracked: delivery.tracked } : {}),
-        ...(delivery.completionSetByContent !== undefined ? { completionSetByContent: delivery.completionSetByContent } : {}),
-        ...(delivery.objectiveSetByContent !== undefined ? { objectiveSetByContent: delivery.objectiveSetByContent } : {}),
+        ...(delivery.completionSetByContent !== undefined
+          ? { completionSetByContent: delivery.completionSetByContent }
+          : {}),
+        ...(delivery.objectiveSetByContent !== undefined
+          ? { objectiveSetByContent: delivery.objectiveSetByContent }
+          : {}),
       }
     }
     const rules = this.rules(seq, where)
@@ -129,7 +130,12 @@ export class SequencingConfigBuilder {
 
   private collection(id: string, def: SequencingDefinition): CollectionSettings {
     const where = `sequencing collection "${id}"`
-    if (def.primaryObjective || def.objectives || def.attemptLimit !== undefined || def.attemptAbsoluteDurationLimit !== undefined) {
+    if (
+      def.primaryObjective ||
+      def.objectives ||
+      def.attemptLimit !== undefined ||
+      def.attemptAbsoluteDurationLimit !== undefined
+    ) {
       this.warn(`${where}: objectives and limit conditions in a shared collection are not applied.`)
     }
     const out: CollectionSettings = {}
@@ -148,10 +154,21 @@ export class SequencingConfigBuilder {
     if (!c) return undefined
     const out: Record<string, unknown> = {}
     const keys = [
-      'choice', 'choiceExit', 'flow', 'forwardOnly', 'useCurrentAttemptObjectiveInfo',
-      'useCurrentAttemptProgressInfo', 'preventActivation', 'constrainChoice',
-      'rollupObjectiveSatisfied', 'rollupProgressCompletion', 'objectiveMeasureWeight',
-      'selectCount', 'reorderChildren', 'selectionTiming', 'randomizationTiming',
+      'choice',
+      'choiceExit',
+      'flow',
+      'forwardOnly',
+      'useCurrentAttemptObjectiveInfo',
+      'useCurrentAttemptProgressInfo',
+      'preventActivation',
+      'constrainChoice',
+      'rollupObjectiveSatisfied',
+      'rollupProgressCompletion',
+      'objectiveMeasureWeight',
+      'selectCount',
+      'reorderChildren',
+      'selectionTiming',
+      'randomizationTiming',
     ] as const
     for (const key of keys) {
       if (c[key] !== undefined) out[key] = c[key]
@@ -220,7 +237,9 @@ export class SequencingConfigBuilder {
       return null
     }
     if (rule.conditions.length > 1 && rule.conditionCombination === 'any') {
-      this.warn(`${where}: rollup rules combining several conditions with "any" are not supported by the runtime; the rule was ignored.`)
+      this.warn(
+        `${where}: rollup rules combining several conditions with "any" are not supported by the runtime; the rule was ignored.`,
+      )
       return null
     }
     const conditions: RollupRuleSettings['conditions'] = []

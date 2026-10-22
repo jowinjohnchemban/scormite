@@ -34,6 +34,5 @@ export const useRuntimeStore = create<RuntimeState>((set) => ({
     }),
   setInitialized: (isInitialized) => set({ isInitialized }),
   setTerminated: (isTerminated) => set({ isTerminated }),
-  reset: () =>
-    set({ adapter: null, sessionId: null, scormVersion: null, isInitialized: false, isTerminated: false }),
+  reset: () => set({ adapter: null, sessionId: null, scormVersion: null, isInitialized: false, isTerminated: false }),
 }))

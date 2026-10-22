@@ -25,7 +25,10 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     return { error }
   }
 
-  static getDerivedStateFromProps(props: ErrorBoundaryProps, state: ErrorBoundaryState): Partial<ErrorBoundaryState> | null {
+  static getDerivedStateFromProps(
+    props: ErrorBoundaryProps,
+    state: ErrorBoundaryState,
+  ): Partial<ErrorBoundaryState> | null {
     return props.resetKey === state.resetKey ? null : { error: null, resetKey: props.resetKey }
   }
 
@@ -42,7 +45,10 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     if (!error) return this.props.children
     return (
       <div className="pointer-events-auto absolute inset-0 flex items-center justify-center bg-surface-950 p-6">
-        <div role="alert" className="max-w-md space-y-3 rounded-md border border-border-subtle bg-surface-900 p-4 text-sm">
+        <div
+          role="alert"
+          className="max-w-md space-y-3 rounded-md border border-border-subtle bg-surface-900 p-4 text-sm"
+        >
           <p className="font-medium text-slate-100">Part of the interface failed to display.</p>
           <p className="break-words font-mono text-xs text-red-400">{error.message}</p>
           <p className="text-xs text-slate-400">

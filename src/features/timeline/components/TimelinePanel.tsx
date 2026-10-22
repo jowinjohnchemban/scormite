@@ -4,7 +4,10 @@ import { cn } from '@/shared/lib/utils'
 
 function timestamp(value: number): string {
   return new Date(value).toLocaleTimeString(undefined, {
-    hour: '2-digit', minute: '2-digit', second: '2-digit', fractionalSecondDigits: 3,
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    fractionalSecondDigits: 3,
   })
 }
 
@@ -26,11 +29,7 @@ export function TimelinePanel() {
   const current = cursor === null ? snapshots.length - 1 : cursor
 
   if (snapshots.length === 0) {
-    return (
-      <p className="p-3 text-xs text-slate-600">
-        CMI state changes will appear here as the course runs.
-      </p>
-    )
+    return <p className="p-3 text-xs text-slate-600">CMI state changes will appear here as the course runs.</p>
   }
 
   const selected = snapshots[current]
@@ -45,7 +44,10 @@ export function TimelinePanel() {
         </Button>
       </header>
 
-      <div tabIndex={0} className="min-h-0 flex-1 space-y-2 overflow-auto p-3 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-accent">
+      <div
+        tabIndex={0}
+        className="min-h-0 flex-1 space-y-2 overflow-auto p-3 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-accent"
+      >
         <input
           aria-label="Timeline position"
           type="range"

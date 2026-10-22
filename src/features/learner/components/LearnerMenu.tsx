@@ -24,9 +24,7 @@ function LearnerForm() {
 
   return (
     <form onSubmit={submit} className="space-y-2.5 text-xs">
-      <p className="text-slate-400">
-        The learner SCORMite reports to courses. Applies from the next launch.
-      </p>
+      <p className="text-slate-400">The learner SCORMite reports to courses. Applies from the next launch.</p>
       <label className="block space-y-1">
         <span className="text-slate-300">Learner ID</span>
         <input

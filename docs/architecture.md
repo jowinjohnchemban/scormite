@@ -77,20 +77,20 @@ SCORMite plays the LMS for one course session. The course-session logic
 lives in `src/app/course/` (the app layer, because it joins package-loader,
 manifest, runtime, player, session, and validation):
 
-| Piece | Kind | Responsibility |
-|---|---|---|
-| `getLaunchableItems` / `getActivityTree` (`features/manifest`) | pure functions | Launchable items in flow order (launch paths per the CAM `parameters` rules, `xml:base` applied); the SCORM 2004 activity tree with each activity's parsed `imsss` sequencing (`SequencingParser`) |
-| `CourseSession` | class | One open package: starts the course, delivers SCOs, hands learner navigation to the engine, stores / restores attempts, publishes progress and navigation availability |
-| `ScoLauncher` | class | Builds runtimes (a fresh one per SCO, or one sequenced runtime per course) with the middleware pipeline, and delivers an item into a runtime: manifest launch data + stored attempt + `window.API` proxy |
-| `CourseNavigator` | class | Flow-mode previous / next and resolution of SCO navigation requests |
-| `AttemptStore` | class | The LMS's persistence for the session: last stored attempt per item |
-| `SessionPersistence` | class | Saved progress across reloads (IndexedDB behind a `KeyValueStore`): attempts, progress, current item, serialized sequencing state; keyed by manifest hash + zip size; saved on Commit (coalesced), Terminate and every delivery |
-| `useCourseStore` (`app/state`) | Zustand | Items, current item, progress, navigation availability, pending launch / navigation; `go()` is the one entry point for navigation |
-| `usePackageSession` (`app/hooks`) | hook | React glue: load / close packages, run pending launches and navigation through the `CourseSession` |
+| Piece                                                          | Kind           | Responsibility                                                                                                                                                                                                                  |
+| -------------------------------------------------------------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `getLaunchableItems` / `getActivityTree` (`features/manifest`) | pure functions | Launchable items in flow order (launch paths per the CAM `parameters` rules, `xml:base` applied); the SCORM 2004 activity tree with each activity's parsed `imsss` sequencing (`SequencingParser`)                              |
+| `CourseSession`                                                | class          | One open package: starts the course, delivers SCOs, hands learner navigation to the engine, stores / restores attempts, publishes progress and navigation availability                                                          |
+| `ScoLauncher`                                                  | class          | Builds runtimes (a fresh one per SCO, or one sequenced runtime per course) with the middleware pipeline, and delivers an item into a runtime: manifest launch data + stored attempt + `window.API` proxy                        |
+| `CourseNavigator`                                              | class          | Flow-mode previous / next and resolution of SCO navigation requests                                                                                                                                                             |
+| `AttemptStore`                                                 | class          | The LMS's persistence for the session: last stored attempt per item                                                                                                                                                             |
+| `SessionPersistence`                                           | class          | Saved progress across reloads (IndexedDB behind a `KeyValueStore`): attempts, progress, current item, serialized sequencing state; keyed by manifest hash + zip size; saved on Commit (coalesced), Terminate and every delivery |
+| `useCourseStore` (`app/state`)                                 | Zustand        | Items, current item, progress, navigation availability, pending launch / navigation; `go()` is the one entry point for navigation                                                                                               |
+| `usePackageSession` (`app/hooks`)                              | hook           | React glue: load / close packages, run pending launches and navigation through the `CourseSession`                                                                                                                              |
 
 **Two ways to play a course.**
 
-- *SCORM 2004 — sequenced.* The activity tree goes to scorm-again's SCORM
+- _SCORM 2004 — sequenced._ The activity tree goes to scorm-again's SCORM
   2004 sequencing engine (`SequencingConfigBuilder` maps it; anything the
   engine cannot evaluate faithfully is reported as a `sequencing.unsupported`
   warning instead of approximated). One runtime serves the whole course:
@@ -102,22 +102,22 @@ manifest, runtime, player, session, and validation):
   Previous / Next honour `hideLMSUI`, and statuses come from the engine's
   rollup. If the engine cannot start the course it falls back to flow mode
   with a `sequencing.start-failed` warning.
-- *SCORM 1.2 (and the fallback) — flow.* A fresh runtime per SCO, as
+- _SCORM 1.2 (and the fallback) — flow._ A fresh runtime per SCO, as
   scorm-again's multi-SCO guidance prescribes; navigation in manifest
   order, and a 2004 SCO's `adl.nav.request` is resolved by
   `CourseNavigator`.
 
 **LMS-side data flow** — scorm-again end to end:
 
-- *Before Initialize* — `seedLaunchData()` loads the item's manifest data
+- _Before Initialize_ — `seedLaunchData()` loads the item's manifest data
   (`datafromlms`, `masteryscore`, `maxtimeallowed`, `timelimitaction`,
   `completionThreshold`, primary-objective `minNormalizedMeasure`) plus
   `cmi.core.credit` through `loadFromFlattenedJSON`.
-- *Leaving a SCO* — `exportAttempt()` stores scorm-again's terminate-commit
+- _Leaving a SCO_ — `exportAttempt()` stores scorm-again's terminate-commit
   payload (`renderCommitCMI(true)`, which accumulates `total_time`).
-- *Resuming* — `restoreAttempt()` feeds that record to `loadFromJSON` with
+- _Resuming_ — `restoreAttempt()` feeds that record to `loadFromJSON` with
   `entry` set to `resume` after a `suspend` exit (blank otherwise).
-- *Errors* — every failed call records scorm-again's `GetErrorString` and
+- _Errors_ — every failed call records scorm-again's `GetErrorString` and
   `GetDiagnostic` on its `ApiCallRecord`; refused navigation requests
   become `sequencing.request-refused` warnings.
 
@@ -130,7 +130,7 @@ exception code), which the adapter turns into a readable
 
 **Launch ordering.** Launches and engine navigation are two-step
 requests: the request blanks the player (unmounting the old iframe, whose
-unload handlers then call `LMSFinish` / `Terminate` on the *old* runtime
+unload handlers then call `LMSFinish` / `Terminate` on the _old_ runtime
 state), and an effect performs the launch or navigation after that commit.
 Injecting the next SCO's state first would route the old SCO's unload-time
 calls into it.
@@ -175,17 +175,17 @@ Every panel in `src/app/layout/panels.ts` (`ADVANCED_PANELS`) shows real
 data from the running session and earns its place by answering a question a
 tester actually has:
 
-| Panel | Owner | Answers |
-|---|---|---|
-| Outline | `app/course` | Where am I in the course, what may I open next, how did each item end? |
-| Manifest | `manifest` | What exactly did the manifest declare for this item (resource, href, parameters, launch data, sequencing)? |
-| Files | `package-loader` | Which files are in the zip, and which are launch files? |
-| CMI Inspector | `inspector` | What is in the data model now, and what just changed? (filter by path or value) |
-| Validation | `validation` | What is wrong with the package or the run — including a status the LMS rules changed on exit, and why? |
-| API Log | `logging` | What did the course call, with what, and why did a call fail? (per-method counts, failed-only filter) |
-| Network | `player` | Which files did the course request, and which are missing from the package? |
-| CMI History | `timeline` | What did the data model look like at any earlier point of this launch? |
-| Breakpoints | `session` | What is the state just before a specific SetValue / Commit is applied? |
+| Panel         | Owner            | Answers                                                                                                    |
+| ------------- | ---------------- | ---------------------------------------------------------------------------------------------------------- |
+| Outline       | `app/course`     | Where am I in the course, what may I open next, how did each item end?                                     |
+| Manifest      | `manifest`       | What exactly did the manifest declare for this item (resource, href, parameters, launch data, sequencing)? |
+| Files         | `package-loader` | Which files are in the zip, and which are launch files?                                                    |
+| CMI Inspector | `inspector`      | What is in the data model now, and what just changed? (filter by path or value)                            |
+| Validation    | `validation`     | What is wrong with the package or the run — including a status the LMS rules changed on exit, and why?     |
+| API Log       | `logging`        | What did the course call, with what, and why did a call fail? (per-method counts, failed-only filter)      |
+| Network       | `player`         | Which files did the course request, and which are missing from the package?                                |
+| CMI History   | `timeline`       | What did the data model look like at any earlier point of this launch?                                     |
+| Breakpoints   | `session`        | What is the state just before a specific SetValue / Commit is applied?                                     |
 
 **Network.** The service worker (`public/sw.js`) posts a `FETCH_EVENT`
 for every package-file fetch to **all window clients** — the SCO lives in a
@@ -193,7 +193,7 @@ sandboxed iframe, so `event.clientId` alone would never reach the app UI.
 `networkMonitor.ts` records them into `useNetworkStore`.
 
 **Breakpoints.** The SCORM API is synchronous: a SCO cannot be made to wait.
-A breakpoint therefore *holds* a matching `SetValue` or `Commit` — and every
+A breakpoint therefore _holds_ a matching `SetValue` or `Commit` — and every
 mutation after it, Terminate included — answering `"true"` at once and
 applying the held calls in order on Resume. Initialize, Terminate, and reads
 are never breakpoint targets, because holding them would mean lying to the
@@ -234,7 +234,7 @@ Conventions the audits enforce:
   users can tab into (every panel body plus the bottom-dock tabpanel)
   carries `tabIndex={0}` and a `focus-visible` ring; otherwise axe fires
   `scrollable-region-focusable` (which only appears when the container is
-  *actually* scrollable — empty-state audits miss it).
+  _actually_ scrollable — empty-state audits miss it).
 - **ARIA tabs** — `DockTabStrip` implements the tabs pattern: `role="tab"`
   buttons with roving tabindex, `role="tabpanel"` + `aria-labelledby`, and
   per-tab close controls as **siblings** of the tablist (a close button
@@ -262,18 +262,18 @@ the CLI could not reach `ui.shadcn.com`) match the CLI's output shape.
 
 ## Tooling
 
-| Concern | Tool | Config |
-|---|---|---|
-| Package manager | pnpm | `.npmrc`, `packageManager` field in `package.json` |
-| Build | Vite | `vite.config.ts` |
-| Types | TypeScript (strict) | `tsconfig.app.json` |
-| Lint + architecture boundaries | ESLint flat config | `eslint.config.js` |
-| Format | Prettier | defaults, via `pnpm run format` |
-| Unit tests + coverage | Vitest + @vitest/coverage-v8 | `vitest.config.ts` (`src/**` and `build/**` tests; thresholds 35/20/30/35, `pnpm run test:coverage`) |
-| SEO / metadata | Vite plugin `build/seoPlugin.ts`, build inputs `build/seoContext.ts` | Renders head tags, JSON-LD, no-JS fallback, robots.txt, sitemap.xml, llms.txt, llms-full.txt, manifest.webmanifest, and the published docs from `src/shared/config/seo.ts`. Per build: indexing (`SEO_INDEX`, or a preview build on Cloudflare, Vercel, or Netlify, gives `Disallow: /` and `noindex`), the sitemap's pages (the emitted HTML files) and lastmod (last commit to the page's sources), and the docs' text. See [Deployment](deployment.md#search-engines-and-ai-assistants) |
-| Brand | `scripts/brand/mark.mjs`, `scripts/make-brand-assets.mjs` | The logo is generated from parameters on a 2:1 pixel-isometric integer grid (pixel-exact at native sizes): `logo-mark.svg` (dark surfaces), `logo-mark-24.svg` (24 px header), `logo.svg` (tile: favicon, README), PNG icons, and the social image — all committed |
-| E2E | Playwright | `playwright.config.ts` (`e2e/`, auto-starts dev server, committed fixtures in `e2e/fixtures/`) |
-| CI | GitHub Actions | `.github/workflows/ci.yml` (unit + e2e jobs; e2e runs in the `mcr.microsoft.com/playwright` image matching `@playwright/test`, so it needs no system packages); `.github/dependabot.yml` (weekly grouped updates) |
+| Concern                        | Tool                                                                 | Config                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| ------------------------------ | -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Package manager                | pnpm                                                                 | `.npmrc`, `packageManager` field in `package.json`                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| Build                          | Vite                                                                 | `vite.config.ts`                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| Types                          | TypeScript (strict)                                                  | `tsconfig.app.json`                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| Lint + architecture boundaries | ESLint flat config                                                   | `eslint.config.js`                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| Format                         | Prettier                                                             | defaults, via `pnpm run format`                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| Unit tests + coverage          | Vitest + @vitest/coverage-v8                                         | `vitest.config.ts` (`src/**` and `build/**` tests; thresholds 35/20/30/35, `pnpm run test:coverage`)                                                                                                                                                                                                                                                                                                                                                                                       |
+| SEO / metadata                 | Vite plugin `build/seoPlugin.ts`, build inputs `build/seoContext.ts` | Renders head tags, JSON-LD, no-JS fallback, robots.txt, sitemap.xml, llms.txt, llms-full.txt, manifest.webmanifest, and the published docs from `src/shared/config/seo.ts`. Per build: indexing (`SEO_INDEX`, or a preview build on Cloudflare, Vercel, or Netlify, gives `Disallow: /` and `noindex`), the sitemap's pages (the emitted HTML files) and lastmod (last commit to the page's sources), and the docs' text. See [Deployment](deployment.md#search-engines-and-ai-assistants) |
+| Brand                          | `scripts/brand/mark.mjs`, `scripts/make-brand-assets.mjs`            | The logo is generated from parameters on a 2:1 pixel-isometric integer grid (pixel-exact at native sizes): `logo-mark.svg` (dark surfaces), `logo-mark-24.svg` (24 px header), `logo.svg` (tile: favicon, README), PNG icons, and the social image — all committed                                                                                                                                                                                                                         |
+| E2E                            | Playwright                                                           | `playwright.config.ts` (`e2e/`, auto-starts dev server, committed fixtures in `e2e/fixtures/`)                                                                                                                                                                                                                                                                                                                                                                                             |
+| CI                             | GitHub Actions                                                       | `.github/workflows/ci.yml` (unit + e2e jobs; e2e runs in the `mcr.microsoft.com/playwright` image matching `@playwright/test`, so it needs no system packages); `.github/dependabot.yml` (weekly grouped updates)                                                                                                                                                                                                                                                                          |
 
 ## Adding a new feature
 

@@ -26,14 +26,11 @@ export const useValidationStore = create<ValidationState>((set) => ({
   issues: [],
   lastRunAt: null,
 
-  addIssue: (issue) =>
-    set((state) => ({ issues: [...state.issues, issue], lastRunAt: Date.now() })),
+  addIssue: (issue) => set((state) => ({ issues: [...state.issues, issue], lastRunAt: Date.now() })),
 
-  addIssues: (issues) =>
-    set((state) => ({ issues: [...state.issues, ...issues], lastRunAt: Date.now() })),
+  addIssues: (issues) => set((state) => ({ issues: [...state.issues, ...issues], lastRunAt: Date.now() })),
 
-  removeIssue: (id) =>
-    set((state) => ({ issues: state.issues.filter((issue) => issue.id !== id) })),
+  removeIssue: (id) => set((state) => ({ issues: state.issues.filter((issue) => issue.id !== id) })),
 
   clearIssues: () => set({ issues: [] }),
 

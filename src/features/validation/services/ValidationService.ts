@@ -115,10 +115,7 @@ export const brokenItemReferenceValidator: StaticValidator = {
     const findings: StaticFinding[] = []
     for (const organization of manifest.organizations) {
       for (const item of walkItems(organization.items)) {
-        if (
-          item.identifierref !== undefined &&
-          !resourceIds.has(item.identifierref)
-        ) {
+        if (item.identifierref !== undefined && !resourceIds.has(item.identifierref)) {
           findings.push({
             location: `item ${item.identifier}`,
             message: `Item references resource "${item.identifierref}" which does not exist.`,
@@ -162,8 +159,7 @@ export const noScoResourceValidator: StaticValidator = {
     if (manifest.resources.some((r) => r.scormType === 'sco')) return []
     return [
       {
-        message:
-          'No SCO resources found — the course may not launch as an interactive SCO.',
+        message: 'No SCO resources found — the course may not launch as an interactive SCO.',
       },
     ]
   },
@@ -198,11 +194,7 @@ export const STATIC_VALIDATORS: readonly StaticValidator[] = [
 ]
 
 /** Pure entry point: run every static validator and collect the issues. */
-export function validateManifest(
-  manifest: Manifest,
-  filePaths: string[],
-  rootFolder?: string,
-): ValidationIssue[] {
+export function validateManifest(manifest: Manifest, filePaths: string[], rootFolder?: string): ValidationIssue[] {
   const ctx: ManifestValidationContext = {
     manifest,
     filePaths,
@@ -225,9 +217,7 @@ export function validateManifest(
 }
 
 /** Issue counts by severity, for panel summaries. */
-export function countBySeverity(
-  issues: readonly ValidationIssue[],
-): Record<ValidationSeverity, number> {
+export function countBySeverity(issues: readonly ValidationIssue[]): Record<ValidationSeverity, number> {
   const counts: Record<ValidationSeverity, number> = {
     error: 0,
     warning: 0,
