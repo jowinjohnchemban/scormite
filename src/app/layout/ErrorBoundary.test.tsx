@@ -1,7 +1,7 @@
 /**
  * The error boundary contains a rendering failure, offers a retry, clears
- * itself when its reset key changes, and explains a file replaced by a newer
- * deployment as an update.
+ * itself when its reset key changes, and explains a part of the app that could
+ * not be fetched.
  */
 
 import { render, screen } from '@testing-library/react'
@@ -40,13 +40,13 @@ describe('ErrorBoundary', () => {
     expect(screen.getByText('recovered')).toBeInTheDocument()
   })
 
-  it('explains a replaced file as an update and offers a reload instead of a retry', () => {
+  it('explains a part of the app that could not be fetched and offers a reload, not a retry', () => {
     render(
       <ErrorBoundary>
         <StaleChunk />
       </ErrorBoundary>,
     )
-    expect(screen.getByRole('alert')).toHaveTextContent('SCORMite was updated while this page was open')
+    expect(screen.getByRole('alert')).toHaveTextContent('Part of SCORMite could not be loaded')
     expect(screen.getByRole('button', { name: 'Reload page' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Try again' })).toBeNull()
   })

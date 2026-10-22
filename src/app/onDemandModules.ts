@@ -9,9 +9,13 @@
  * deployment made after the page was opened has replaced.
  */
 
-export const loadAdvancedMode = () => import('@/app/modes/AdvancedModeShell')
+import { importWithRetry } from '@/app/moduleLoad'
 
-export const loadOpenPackage = () => import('@/app/course/openPackage')
+// Retried once on failure, so a failed fetch (including a failed preload,
+// which a browser may remember) does not stick.
+export const loadAdvancedMode = () => importWithRetry(() => import('@/app/modes/AdvancedModeShell'))
+
+export const loadOpenPackage = () => importWithRetry(() => import('@/app/course/openPackage'))
 
 /**
  * Fetch the on-demand parts after the page has loaded, when the browser is
@@ -22,7 +26,7 @@ export function preloadOnDemandModules({ advancedMode }: { advancedMode: boolean
   let cancelled = false
   const preload = () => {
     if (cancelled) return
-    // A failed preload is retried by the real import when the part is used.
+    // A failed preload is retried when the part is used (importWithRetry).
     void loadOpenPackage().catch(() => undefined)
     if (advancedMode) void loadAdvancedMode().catch(() => undefined)
   }

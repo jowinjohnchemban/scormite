@@ -30,7 +30,7 @@ import { summarizeCmi, type CmiSummary } from '@/app/course/summarizeCmi'
 import { useCourseStore } from '@/app/state/courseStore'
 import type { ApiCallRecord, LaunchableItem, Package } from '@/shared/types'
 import { logDevDiagnostic } from '@/shared/lib/devDiagnostics'
-import { isStaleBuildError, STALE_BUILD_MESSAGE } from '@/app/staleBuild'
+import { isModuleLoadError, MODULE_LOAD_MESSAGE } from '@/app/moduleLoad'
 import { loadOpenPackage } from '@/app/onDemandModules'
 
 // The player serves package files through a service worker; registering is
@@ -263,8 +263,8 @@ export function usePackageSession(owner: 'basic' | 'advanced'): PackageSession {
         setError(
           e instanceof Error && e.name === 'OpenPackageError'
             ? e.message
-            : isStaleBuildError(e)
-              ? `${STALE_BUILD_MESSAGE} The package was not opened.`
+            : isModuleLoadError(e)
+              ? `${MODULE_LOAD_MESSAGE} The package was not opened.`
               : 'An unexpected error occurred while loading the package.',
         )
       } finally {

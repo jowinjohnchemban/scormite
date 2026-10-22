@@ -33,6 +33,30 @@ test('switches to Advanced mode after a deployment replaced its file', async ({ 
   await expect(player.locator('body')).toContainText('init=')
 })
 
+test('switches to Advanced mode after its background download failed', async ({ page }) => {
+  // The first fetch of Advanced mode (the background download) fails, as on a
+  // dropped connection. The later switch must not be stuck with that failure.
+  // (Chromium refetches a failed module; browsers that remember the failure
+  // are covered by importWithRetry's retry through a fresh URL.)
+  let failed = false
+  await page.route(/AdvancedModeShell/, (route) => {
+    if (failed) return route.continue()
+    failed = true
+    return route.abort('internetdisconnected')
+  })
+  await page.goto('/')
+  await expect.poll(() => failed).toBe(true)
+
+  await page.setInputFiles('input[type="file"]', packageZip)
+  const player = page.frameLocator('iframe[title="SCORM Package"]')
+  await expect(player.locator('body')).toContainText('init=', { timeout: 15_000 })
+
+  await page.getByRole('button', { name: 'Advanced', exact: true }).click()
+  await expect(page.locator('[data-testid="dock-region-left"]')).toBeVisible()
+  await expect(page.getByRole('alert')).toHaveCount(0)
+  await expect(player.locator('body')).toContainText('init=')
+})
+
 test('switches Basic ↔ Advanced without killing the running SCO', async ({ page }) => {
   await page.goto('/')
   await page.setInputFiles('input[type="file"]', packageZip)

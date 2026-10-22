@@ -78,11 +78,14 @@ render a second iframe.
 - **Errors.** `ErrorBoundary` (a class component) wraps the mode shells: a
   rendering failure shows a retry instead of a blank page, the header
   stays usable, and opening another package or switching modes clears it.
-  A file a deployment replaced (`isStaleBuildError`, `src/app/staleBuild.ts`)
-  is explained as an update with a reload, since a retry cannot succeed;
-  Basic mode, part of the start page's JavaScript, keeps working. Package
-  load failures surface as `OpenPackageError` messages, or the same
-  update notice.
+  An on-demand part that cannot be fetched is retried once through a fresh
+  URL (`importWithRetry`, `src/app/moduleLoad.ts`) — a browser may
+  remember a failed module fetch — so a dropped connection recovers on its
+  own. If the retry fails too (a deployment replaced the file, or the
+  connection is still down), it is explained without guessing the cause,
+  with a reload; Basic mode, part of the start page's JavaScript, keeps
+  working. Package load failures surface as `OpenPackageError` messages, or
+  the same notice.
 
 ## State
 

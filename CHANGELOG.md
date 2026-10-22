@@ -15,8 +15,9 @@ All notable changes to SCORMite are recorded here. The format follows
   "Failed to fetch dynamically imported module" when the tab had been open
   across a deployment. Advanced mode and the package runtime are now fetched
   in the background once the page has loaded, so switching modes and opening
-  a package keep working. If a file is still missing, SCORMite explains that
-  it was updated and offers a reload, and Basic mode keeps running.
+  a package keep working. A failed fetch is retried once; if it still fails,
+  SCORMite says that part of the app could not be loaded and offers a reload,
+  and Basic mode keeps running.
 
 ## [1.0.0] — 2026-10-22
 
