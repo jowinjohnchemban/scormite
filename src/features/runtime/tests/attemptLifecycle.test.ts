@@ -132,6 +132,25 @@ describe('Scorm2004Adapter — launch data, resume, navigation', () => {
     expect(second.getValue('cmi.total_time')).toBe('PT2M')
   })
 
+  it('starts a new attempt with fresh data after a non-suspend exit', () => {
+    const first = new Scorm2004Adapter('s1')
+    first.initialize()
+    first.setValue('cmi.location', 'p3')
+    first.setValue('cmi.suspend_data', 'sd')
+    first.setValue('cmi.completion_status', 'completed')
+    first.setValue('cmi.exit', 'normal')
+    first.terminate()
+
+    // As every launch does: launch data first, then any stored attempt.
+    const second = new Scorm2004Adapter('s1')
+    second.seedLaunchData({})
+    expect(second.restoreAttempt(first.exportAttempt())).toBe(false)
+    second.initialize()
+    expect(second.getValue('cmi.entry')).toBe('ab-initio')
+    expect(second.getValue('cmi.location')).toBe('')
+    expect(second.getValue('cmi.suspend_data')).toBe('')
+  })
+
   it('forwards adl.nav.request as a navigation-request event', () => {
     const events: NavigationRequestEvent[] = []
     unsubscribers.push(runtimeEvents.on('navigation-request', (e) => events.push(e)))

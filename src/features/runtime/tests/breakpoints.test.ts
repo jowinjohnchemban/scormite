@@ -70,6 +70,14 @@ describe('holding execution in the adapter', () => {
     expect(adapter.getValue('cmi.core.score.raw')).toBe('90')
   })
 
+  it('discards held calls without applying them when their SCO is unloaded', () => {
+    const { adapter } = setup([breakpoint({ element: 'cmi.core.score.raw' })])
+    adapter.setValue('cmi.core.score.raw', '90')
+    expect(adapter.discardHeldCalls()).toBe(1)
+    expect(adapter.isPaused).toBe(false)
+    expect(adapter.getValue('cmi.core.score.raw')).toBe('')
+  })
+
   it('holds every later mutation too and applies them in order, Terminate included', () => {
     const { adapter } = setup([breakpoint({ element: 'cmi.core.lesson_location' })])
     adapter.setValue('cmi.core.lesson_location', 'p1')
