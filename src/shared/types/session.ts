@@ -41,12 +41,3 @@ export interface CmiSnapshot {
   /** Paths that changed vs the previous snapshot. */
   changedPaths: string[]
 }
-
-export interface Session {
-  id: string
-  packageId?: string
-  startedAt: Date
-  endedAt?: Date
-  apiCalls: ApiCallRecord[]
-  snapshots: CmiSnapshot[]
-}
