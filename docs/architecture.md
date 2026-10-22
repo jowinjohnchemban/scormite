@@ -273,7 +273,7 @@ the CLI could not reach `ui.shadcn.com`) match the CLI's output shape.
 | SEO / metadata | Vite plugin `build/seoPlugin.ts`, build inputs `build/seoContext.ts` | Renders head tags, JSON-LD, no-JS fallback, robots.txt, sitemap.xml, llms.txt, llms-full.txt, manifest.webmanifest, and the published docs from `src/shared/config/seo.ts`. Per build: indexing (`SEO_INDEX`, or a preview build on Cloudflare, Vercel, or Netlify, gives `Disallow: /` and `noindex`), the sitemap's pages (the emitted HTML files) and lastmod (last commit to the page's sources), and the docs' text. See [Deployment](deployment.md#search-engines-and-ai-assistants) |
 | Brand | `scripts/brand/mark.mjs`, `scripts/make-brand-assets.mjs` | The logo is generated from parameters on a 2:1 pixel-isometric integer grid (pixel-exact at native sizes): `logo-mark.svg` (dark surfaces), `logo-mark-24.svg` (24 px header), `logo.svg` (tile: favicon, README), PNG icons, and the social image — all committed |
 | E2E | Playwright | `playwright.config.ts` (`e2e/`, auto-starts dev server, committed fixtures in `e2e/fixtures/`) |
-| CI | GitHub Actions | `.github/workflows/ci.yml` (unit + e2e jobs) |
+| CI | GitHub Actions | `.github/workflows/ci.yml` (unit + e2e jobs; e2e runs in the `mcr.microsoft.com/playwright` image matching `@playwright/test`, so it needs no system packages); `.github/dependabot.yml` (weekly grouped updates) |
 
 ## Adding a new feature
 
