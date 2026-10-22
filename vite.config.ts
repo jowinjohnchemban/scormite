@@ -5,6 +5,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { siteSeoConfig } from './src/shared/config/seo.js'
 import { createSeoPlugin } from './build/seoPlugin.js'
+import { createAboutPlugin, resolveBuildInfo } from './build/aboutPage.js'
 import { lastChangeDate, readPublishedDocs, resolveIndexing } from './build/seoContext.js'
 
 const dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -18,14 +19,24 @@ export default defineConfig(({ mode }) => {
   const seoContext = {
     indexable: resolveIndexing(env),
     // When the page's content last changed; the build date without git history.
-    lastmod: lastChangeDate(dirname, ['index.html', 'src', 'public']) ?? new Date().toISOString().slice(0, 10),
+    lastmod: lastChangeDate(dirname, ['index.html', 'about', 'src', 'public']) ?? new Date().toISOString().slice(0, 10),
     docs: readPublishedDocs(dirname, siteSeoConfig.docs),
   }
 
   return {
-    plugins: [react(), tailwindcss(), createSeoPlugin({ ...siteSeoConfig, siteUrl }, seoContext)],
+    plugins: [
+      react(),
+      tailwindcss(),
+      createSeoPlugin({ ...siteSeoConfig, siteUrl }, seoContext),
+      createAboutPlugin(siteSeoConfig, dirname, resolveBuildInfo(env, dirname)),
+    ],
     build: {
       rolldownOptions: {
+        // Every page the site serves; the sitemap lists what is built from here.
+        input: {
+          main: path.resolve(dirname, 'index.html'),
+          about: path.resolve(dirname, 'about/index.html'),
+        },
         output: {
           codeSplitting: {
             groups: [

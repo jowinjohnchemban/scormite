@@ -49,6 +49,14 @@ Requires Node.js 24 (the CI version) and pnpm (pinned in `package.json`). See
 [Development](docs/development.md) for every command and the definition of
 done, and [Deployment](docs/deployment.md) for hosting the static build.
 
+## Architecture
+
+![SCORMite architecture](docs/architecture.svg)
+
+Generated from the code's imports (`pnpm run diagram`); see
+[Architecture](docs/architecture.md). The live version, with file and line
+counts, is on the site's About page.
+
 ## Documentation
 
 All documentation lives in [`docs/`](docs/README.md) — the knowledge hub for

@@ -43,6 +43,13 @@ test('the start page meets WCAG 2.1 AA', async ({ page }) => {
   expect(await violations(page)).toEqual([])
 })
 
+test('the about page meets WCAG 2.1 AA', async ({ page }) => {
+  await page.goto('/about/')
+  await expect(page.getByRole('heading', { name: 'About SCORMite', level: 1 })).toBeVisible()
+  await expect(page.getByRole('img', { name: 'SCORMite architecture' })).toBeVisible()
+  expect(await violations(page)).toEqual([])
+})
+
 test('a running sequenced course meets WCAG 2.1 AA in both modes and on a phone', async ({ page }) => {
   test.setTimeout(60_000)
   await page.goto('/')

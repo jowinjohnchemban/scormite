@@ -25,17 +25,18 @@ pnpm install            # pnpm only — the version is pinned in package.json
 pnpm run dev            # Vite dev server on http://localhost:5173
 ```
 
-| Command                              | Purpose                                                                                                                                   |
-| ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| `pnpm run lint`                      | ESLint, including the architecture boundary rules                                                                                         |
-| `pnpm run format` / `format:check`   | Prettier (`.prettierrc.json`: no semicolons, single quotes, 120 columns); CI runs the check                                               |
-| `pnpm run typecheck`                 | `tsc -b --noEmit` across app, Node, and e2e configs                                                                                       |
-| `pnpm run build`                     | Production build into `dist/` (also emits robots.txt, sitemap.xml, llms.txt, llms-full.txt, manifest.webmanifest, and the published docs) |
-| `pnpm run test`                      | Vitest unit tests, including axe-core accessibility audits                                                                                |
-| `pnpm run test:coverage`             | Unit tests with enforced coverage thresholds                                                                                              |
-| `pnpm run test:e2e`                  | Playwright end-to-end suite in Chromium against committed fixture packages                                                                |
-| `node scripts/make-fixtures.mjs`     | Regenerate the e2e fixture packages (byte-stable)                                                                                         |
-| `node scripts/make-brand-assets.mjs` | Regenerate the logo SVGs, app icons, and social preview image from the mark's geometry                                                    |
+| Command                              | Purpose                                                                                                                                                                 |
+| ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm run lint`                      | ESLint, including the architecture boundary rules                                                                                                                       |
+| `pnpm run format` / `format:check`   | Prettier (`.prettierrc.json`: no semicolons, single quotes, 120 columns); CI runs the check                                                                             |
+| `pnpm run typecheck`                 | `tsc -b --noEmit` across app, Node, and e2e configs                                                                                                                     |
+| `pnpm run build`                     | Production build into `dist/` (also emits robots.txt, sitemap.xml, llms.txt, llms-full.txt, manifest.webmanifest, the published docs, the About page, and licenses.txt) |
+| `pnpm run test`                      | Vitest unit tests, including axe-core accessibility audits                                                                                                              |
+| `pnpm run test:coverage`             | Unit tests with enforced coverage thresholds                                                                                                                            |
+| `pnpm run test:e2e`                  | Playwright end-to-end suite in Chromium against committed fixture packages                                                                                              |
+| `node scripts/make-fixtures.mjs`     | Regenerate the e2e fixture packages (byte-stable)                                                                                                                       |
+| `pnpm run diagram`                   | Regenerate `docs/architecture.svg` from the code (a unit test fails while it is stale)                                                                                  |
+| `node scripts/make-brand-assets.mjs` | Regenerate the logo SVGs, app icons, and social preview image from the mark's geometry                                                                                  |
 
 Use `pnpm add` / `pnpm add -D` for dependencies; never commit a
 `package-lock.json` or `yarn.lock`.
