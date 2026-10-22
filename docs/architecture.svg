@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 460" width="960" height="460" role="img" aria-labelledby="arch-title arch-desc" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif">
+<title id="arch-title">SCORMite architecture</title>
+<desc id="arch-desc">11 features: inspector, learner, logging, manifest, package-loader, player, reports, runtime, session, timeline, validation. app joins features; features use only shared and components; scorm-again is used only by runtime. No boundary violations.</desc>
+<rect width="960" height="460" rx="8" fill="#0b0d10" />
+<text x="24" y="38" font-size="15" font-weight="600" fill="#e2e8f0">SCORMite architecture</text>
+<text x="936" y="38" font-size="11" fill="#7f93ab" text-anchor="end">generated from src/ imports</text>
+<rect x="24" y="58" width="912" height="52" rx="6" fill="#101317" stroke="#4da3ff" />
+<text x="38" y="80" font-size="14" font-weight="600" fill="#e2e8f0">app</text>
+<text x="38" y="98" font-size="11" fill="#7f93ab">Shell, modes, layout, course player — the only layer that joins features</text>
+<path d="M480 114 V136" stroke="#7f93ab" stroke-width="1.5" />
+<path d="M475 130 L480 137 L485 130" fill="none" stroke="#7f93ab" stroke-width="1.5" />
+<text x="492" y="130" font-size="11" fill="#7f93ab">app imports 11 of 11 features</text>
+<rect x="24" y="142" width="219" height="56" rx="6" fill="#101317" stroke="#262b33" />
+<text x="36" y="162" font-size="13" font-weight="600" fill="#e2e8f0">inspector</text>
+<rect x="36" y="172" width="49.2" height="16" rx="8" fill="none" stroke="#4da3ff" stroke-opacity="0.6" />
+<text x="60.6" y="184" font-size="10" fill="#4da3ff" text-anchor="middle">shared</text>
+<rect x="255" y="142" width="219" height="56" rx="6" fill="#101317" stroke="#262b33" />
+<text x="267" y="162" font-size="13" font-weight="600" fill="#e2e8f0">learner</text>
+<rect x="267" y="172" width="74" height="16" rx="8" fill="none" stroke="#4da3ff" stroke-opacity="0.6" />
+<text x="304" y="184" font-size="10" fill="#4da3ff" text-anchor="middle">components</text>
+<rect x="347" y="172" width="49.2" height="16" rx="8" fill="none" stroke="#4da3ff" stroke-opacity="0.6" />
+<text x="371.6" y="184" font-size="10" fill="#4da3ff" text-anchor="middle">shared</text>
+<rect x="486" y="142" width="219" height="56" rx="6" fill="#101317" stroke="#262b33" />
+<text x="498" y="162" font-size="13" font-weight="600" fill="#e2e8f0">logging</text>
+<rect x="498" y="172" width="74" height="16" rx="8" fill="none" stroke="#4da3ff" stroke-opacity="0.6" />
+<text x="535" y="184" font-size="10" fill="#4da3ff" text-anchor="middle">components</text>
+<rect x="578" y="172" width="49.2" height="16" rx="8" fill="none" stroke="#4da3ff" stroke-opacity="0.6" />
+<text x="602.6" y="184" font-size="10" fill="#4da3ff" text-anchor="middle">shared</text>
+<rect x="717" y="142" width="219" height="56" rx="6" fill="#101317" stroke="#262b33" />
+<text x="729" y="162" font-size="13" font-weight="600" fill="#e2e8f0">manifest</text>
+<rect x="729" y="172" width="49.2" height="16" rx="8" fill="none" stroke="#4da3ff" stroke-opacity="0.6" />
+<text x="753.6" y="184" font-size="10" fill="#4da3ff" text-anchor="middle">shared</text>
+<rect x="24" y="210" width="219" height="56" rx="6" fill="#101317" stroke="#262b33" />
+<text x="36" y="230" font-size="13" font-weight="600" fill="#e2e8f0">package-loader</text>
+<rect x="36" y="240" width="49.2" height="16" rx="8" fill="none" stroke="#4da3ff" stroke-opacity="0.6" />
+<text x="60.6" y="252" font-size="10" fill="#4da3ff" text-anchor="middle">shared</text>
+<rect x="255" y="210" width="219" height="56" rx="6" fill="#101317" stroke="#262b33" />
+<text x="267" y="230" font-size="13" font-weight="600" fill="#e2e8f0">player</text>
+<rect x="267" y="240" width="74" height="16" rx="8" fill="none" stroke="#4da3ff" stroke-opacity="0.6" />
+<text x="304" y="252" font-size="10" fill="#4da3ff" text-anchor="middle">components</text>
+<rect x="347" y="240" width="49.2" height="16" rx="8" fill="none" stroke="#4da3ff" stroke-opacity="0.6" />
+<text x="371.6" y="252" font-size="10" fill="#4da3ff" text-anchor="middle">shared</text>
+<rect x="486" y="210" width="219" height="56" rx="6" fill="#101317" stroke="#262b33" />
+<text x="498" y="230" font-size="13" font-weight="600" fill="#e2e8f0">reports</text>
+<rect x="498" y="240" width="49.2" height="16" rx="8" fill="none" stroke="#4da3ff" stroke-opacity="0.6" />
+<text x="522.6" y="252" font-size="10" fill="#4da3ff" text-anchor="middle">shared</text>
+<rect x="717" y="210" width="219" height="56" rx="6" fill="#101317" stroke="#262b33" />
+<text x="729" y="230" font-size="13" font-weight="600" fill="#e2e8f0">runtime</text>
+<rect x="729" y="240" width="80.2" height="16" rx="8" fill="none" stroke="#3fb950" stroke-opacity="0.6" />
+<text x="769.1" y="252" font-size="10" fill="#3fb950" text-anchor="middle">scorm-again</text>
+<rect x="815.2" y="240" width="49.2" height="16" rx="8" fill="none" stroke="#4da3ff" stroke-opacity="0.6" />
+<text x="839.8000000000001" y="252" font-size="10" fill="#4da3ff" text-anchor="middle">shared</text>
+<rect x="24" y="278" width="219" height="56" rx="6" fill="#101317" stroke="#262b33" />
+<text x="36" y="298" font-size="13" font-weight="600" fill="#e2e8f0">session</text>
+<rect x="36" y="308" width="74" height="16" rx="8" fill="none" stroke="#4da3ff" stroke-opacity="0.6" />
+<text x="73" y="320" font-size="10" fill="#4da3ff" text-anchor="middle">components</text>
+<rect x="116" y="308" width="49.2" height="16" rx="8" fill="none" stroke="#4da3ff" stroke-opacity="0.6" />
+<text x="140.6" y="320" font-size="10" fill="#4da3ff" text-anchor="middle">shared</text>
+<rect x="255" y="278" width="219" height="56" rx="6" fill="#101317" stroke="#262b33" />
+<text x="267" y="298" font-size="13" font-weight="600" fill="#e2e8f0">timeline</text>
+<rect x="267" y="308" width="74" height="16" rx="8" fill="none" stroke="#4da3ff" stroke-opacity="0.6" />
+<text x="304" y="320" font-size="10" fill="#4da3ff" text-anchor="middle">components</text>
+<rect x="347" y="308" width="49.2" height="16" rx="8" fill="none" stroke="#4da3ff" stroke-opacity="0.6" />
+<text x="371.6" y="320" font-size="10" fill="#4da3ff" text-anchor="middle">shared</text>
+<rect x="486" y="278" width="219" height="56" rx="6" fill="#101317" stroke="#262b33" />
+<text x="498" y="298" font-size="13" font-weight="600" fill="#e2e8f0">validation</text>
+<rect x="498" y="308" width="74" height="16" rx="8" fill="none" stroke="#4da3ff" stroke-opacity="0.6" />
+<text x="535" y="320" font-size="10" fill="#4da3ff" text-anchor="middle">components</text>
+<rect x="578" y="308" width="49.2" height="16" rx="8" fill="none" stroke="#4da3ff" stroke-opacity="0.6" />
+<text x="602.6" y="320" font-size="10" fill="#4da3ff" text-anchor="middle">shared</text>
+<path d="M480 338 V360" stroke="#7f93ab" stroke-width="1.5" />
+<path d="M475 354 L480 361 L485 354" fill="none" stroke="#7f93ab" stroke-width="1.5" />
+<text x="492" y="354" font-size="11" fill="#7f93ab">features import only shared, components, and their own files</text>
+<rect x="24" y="366" width="296" height="70" rx="6" fill="#101317" stroke="#262b33" />
+<text x="36" y="386" font-size="13" font-weight="600" fill="#e2e8f0">shared</text>
+<text x="36" y="404" font-size="10" fill="#7f93ab">Types, config, and utilities shared by every layer</text>
+<text x="36" y="422" font-size="10" fill="#7f93ab">used by app + 11 features</text>
+<rect x="332" y="366" width="296" height="70" rx="6" fill="#101317" stroke="#262b33" />
+<text x="344" y="386" font-size="13" font-weight="600" fill="#e2e8f0">components</text>
+<text x="344" y="404" font-size="10" fill="#7f93ab">UI primitives (shadcn/ui shape)</text>
+<text x="344" y="422" font-size="10" fill="#7f93ab">used by app + 6 features</text>
+<rect x="640" y="366" width="296" height="70" rx="6" fill="#101317" stroke="#3fb950" />
+<text x="652" y="386" font-size="13" font-weight="600" fill="#e2e8f0">scorm-again</text>
+<text x="652" y="404" font-size="10" fill="#7f93ab">npm runtime, never modified</text>
+<text x="652" y="422" font-size="10" fill="#7f93ab">used only by runtime</text>
+</svg>

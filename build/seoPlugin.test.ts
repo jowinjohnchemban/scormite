@@ -53,6 +53,12 @@ describe('renderStructuredData', () => {
     const faq = data['@graph'][2] as { mainEntity: { name: string }[] }
     expect(faq.mainEntity.map((q) => q.name)).toEqual(siteSeoConfig.faqs.map((f) => f.question))
   })
+
+  it('credits the author on the web application', () => {
+    const app = data['@graph'][1] as { author: { name: string; sameAs: readonly string[] } }
+    expect(app.author.name).toBe(siteSeoConfig.author.name)
+    expect(app.author.sameAs).toEqual(siteSeoConfig.author.profiles)
+  })
 })
 
 describe('generated files', () => {
@@ -112,5 +118,6 @@ describe('generated files', () => {
   it('the static fallback escapes text and carries the headline', () => {
     const html = renderStaticContent({ ...siteSeoConfig, headline: 'A <b> & "c"' })
     expect(html).toContain('<h1>A &lt;b&gt; &amp; &quot;c&quot;</h1>')
+    expect(html).toContain('<a href="/about/">')
   })
 })

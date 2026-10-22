@@ -49,6 +49,16 @@ export function LandingContent({ dropZone }: { dropZone: ReactNode }) {
             ))}
           </div>
         </section>
+
+        <footer className="border-t border-border-subtle pt-4 text-center text-xs text-slate-400">
+          <a
+            href="/about/"
+            className="text-accent underline underline-offset-2 hover:decoration-2 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+          >
+            About {siteSeoConfig.name}
+          </a>{' '}
+          — who made it, how it is built, and its open-source licences
+        </footer>
       </div>
     </div>
   )

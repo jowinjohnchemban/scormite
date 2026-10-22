@@ -19,8 +19,18 @@ export interface SeoFaq {
   answer: string
 }
 
+export interface SeoAuthor {
+  name: string
+  /** Personal site. */
+  url: string
+  /** Profiles that identify the same person (schema.org sameAs). */
+  profiles: readonly string[]
+}
+
 export interface SiteSeoConfig {
   name: string
+  /** Who designed and built SCORMite: the About page credit and the JSON-LD author. */
+  author: SeoAuthor
   /** `<title>` — keyword-first, under ~65 characters. */
   title: string
   /** Meta / OG description — under ~160 characters. */
@@ -52,6 +62,11 @@ export interface SiteSeoConfig {
 
 export const siteSeoConfig: SiteSeoConfig = {
   name: 'SCORMite',
+  author: {
+    name: 'Jowin John Chemban',
+    url: 'https://jowinjc.in',
+    profiles: ['https://github.com/jowinjohnchemban'],
+  },
   title: 'SCORMite – SCORM Tester & Debugger for SCORM 1.2 and 2004',
   description:
     'Test SCORM 1.2 and 2004 packages in your browser before uploading to your LMS. Play the course, see what it tracks, catch packaging errors, export QA reports.',

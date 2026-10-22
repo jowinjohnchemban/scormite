@@ -15,6 +15,14 @@ UI (React)
         → SCORM Package (iframe-sandboxed)
 ```
 
+![SCORMite architecture: the app layer imports the features; features import only shared and components; only the runtime feature imports scorm-again](architecture.svg)
+
+The diagram is drawn from the code's imports by `build/architecture.ts` —
+`pnpm run diagram` regenerates it, and a unit test fails when the committed
+copy no longer matches the code (or when one feature imports another). The
+[About page](#about-page) draws the same diagram at build time, with live
+file and line counts.
+
 **Enforced, not just documented:** `eslint.config.js` uses `no-restricted-imports`
 to block `scorm-again` imports outside `src/features/runtime/`, and
 `eslint-plugin-boundaries` to block one feature from importing another
@@ -272,8 +280,23 @@ the CLI could not reach `ui.shadcn.com`) match the CLI's output shape.
 | Unit tests + coverage          | Vitest + @vitest/coverage-v8                                         | `vitest.config.ts` (`src/**` and `build/**` tests; thresholds 35/20/30/35, `pnpm run test:coverage`)                                                                                                                                                                                                                                                                                                                                                                                       |
 | SEO / metadata                 | Vite plugin `build/seoPlugin.ts`, build inputs `build/seoContext.ts` | Renders head tags, JSON-LD, no-JS fallback, robots.txt, sitemap.xml, llms.txt, llms-full.txt, manifest.webmanifest, and the published docs from `src/shared/config/seo.ts`. Per build: indexing (`SEO_INDEX`, or a preview build on Cloudflare, Vercel, or Netlify, gives `Disallow: /` and `noindex`), the sitemap's pages (the emitted HTML files) and lastmod (last commit to the page's sources), and the docs' text. See [Deployment](deployment.md#search-engines-and-ai-assistants) |
 | Brand                          | `scripts/brand/mark.mjs`, `scripts/make-brand-assets.mjs`            | The logo is generated from parameters on a 2:1 pixel-isometric integer grid (pixel-exact at native sizes): `logo-mark.svg` (dark surfaces), `logo-mark-24.svg` (24 px header), `logo.svg` (tile: favicon, README), PNG icons, and the social image — all committed                                                                                                                                                                                                                         |
+| Architecture diagram           | `build/architecture.ts` (`pnpm run diagram`)                         | Draws `docs/architecture.svg` from the imports under `src/`; a unit test keeps it current                                                                                                                                                                                                                                                                                                                                                                                                  |
+| About page                     | `build/aboutPage.ts`, `about/index.html`                             | Credit, build details, live diagram, open-source packages and `licenses.txt` from the bundle — see [About page](#about-page)                                                                                                                                                                                                                                                                                                                                                               |
 | E2E                            | Playwright                                                           | `playwright.config.ts` (`e2e/`, auto-starts dev server, committed fixtures in `e2e/fixtures/`)                                                                                                                                                                                                                                                                                                                                                                                             |
 | CI                             | GitHub Actions                                                       | `.github/workflows/ci.yml` (unit + e2e jobs; e2e runs in the `mcr.microsoft.com/playwright` image matching `@playwright/test`, so it needs no system packages); `.github/dependabot.yml` (weekly grouped updates)                                                                                                                                                                                                                                                                          |
+
+## About page
+
+`about/index.html` (served at `/about/`) is a second page of the build,
+rendered at build time by `build/aboutPage.ts`: the developer credit (from
+`author` in `src/shared/config/seo.ts`), the build (commit from the host or
+git, build time, scorm-again version), the architecture diagram with live
+counts, and the open-source packages the build ships. That list comes from the
+npm packages whose modules are in the production bundle (plus Tailwind, whose
+CSS ships without a JavaScript module), and their full licence texts are
+emitted as `/licenses.txt`. The dev server shows the direct dependencies
+instead. The page uses the app's stylesheet and no JavaScript, and is linked
+from the start page and the no-JS fallback.
 
 ## Adding a new feature
 

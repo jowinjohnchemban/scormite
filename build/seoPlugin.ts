@@ -67,6 +67,12 @@ export function renderStructuredData(config: SiteSeoConfig, origin: string): unk
         featureList: config.features.map((f) => f.title),
         keywords: config.keywords.join(', '),
         inLanguage: 'en',
+        author: {
+          '@type': 'Person',
+          name: config.author.name,
+          url: config.author.url,
+          sameAs: config.author.profiles,
+        },
         isPartOf: { '@id': `${url}#website` },
       },
       {
@@ -96,6 +102,7 @@ export function renderStaticContent(config: SiteSeoConfig): string {
       <ul>${features}</ul>
       <h2>Frequently asked questions</h2>
       <dl>${faqs}</dl>
+      <p><a href="/about/">About ${escapeHtml(config.name)}</a>: credits, architecture, and open-source licences.</p>
     </div>`
 }
 
@@ -206,7 +213,6 @@ const MARKDOWN = 'text/markdown; charset=utf-8'
 
 export function createSeoPlugin(config: SiteSeoConfig, context: SeoBuildContext): Plugin {
   const origin = config.siteUrl.replace(/\/$/, '')
-  const canonical = `${origin}/`
   const ogImage = absoluteUrl(origin, config.ogImage)
 
   const files: Record<string, { contentType: string; source: string }> = {
@@ -226,34 +232,44 @@ export function createSeoPlugin(config: SiteSeoConfig, context: SeoBuildContext)
 
   return {
     name: 'scormite-seo',
-    transformIndexHtml(html) {
-      const updated = html
-        .replace(/<title>.*<\/title>/, `<title>${escapeHtml(config.title)}</title>`)
-        .replace(
-          /<meta name="description" content=".*"\s*\/?>/,
-          `<meta name="description" content="${escapeHtml(config.description)}" />`,
-        )
-        .replace('<div id="root"></div>', `<div id="root">${renderStaticContent(config)}</div>`)
+    transformIndexHtml(html, ctx) {
+      // The home page takes its title and description from the config; other
+      // pages (about/) keep the ones in their HTML and get the shared tags.
+      const home = ctx.path === '/index.html'
+      const title = home ? config.title : (html.match(/<title>([^<]*)<\/title>/)?.[1] ?? config.title)
+      const description = home
+        ? config.description
+        : (html.match(/<meta\s+name="description"\s+content="([^"]*)"/)?.[1] ?? config.description)
+      const pageUrl = absoluteUrl(origin, ctx.path.replace(/index\.html$/, ''))
+      const updated = home
+        ? html
+            .replace(/<title>.*<\/title>/, `<title>${escapeHtml(config.title)}</title>`)
+            .replace(
+              /<meta name="description" content=".*"\s*\/?>/,
+              `<meta name="description" content="${escapeHtml(config.description)}" />`,
+            )
+            .replace('<div id="root"></div>', `<div id="root">${renderStaticContent(config)}</div>`)
+        : html
 
       return {
         html: updated,
         tags: [
-          meta({ name: 'keywords', content: config.keywords.join(', ') }),
+          ...(home ? [meta({ name: 'keywords', content: config.keywords.join(', ') })] : []),
           meta({
             name: 'robots',
             content: context.indexable ? 'index, follow, max-image-preview:large' : 'noindex, nofollow',
           }),
-          { tag: 'link', attrs: { rel: 'canonical', href: canonical }, injectTo: 'head' },
+          { tag: 'link', attrs: { rel: 'canonical', href: pageUrl }, injectTo: 'head' },
           { tag: 'link', attrs: { rel: 'manifest', href: '/manifest.webmanifest' }, injectTo: 'head' },
           meta({ name: 'theme-color', content: config.themeColor }),
           meta({ name: 'color-scheme', content: 'dark' }),
           meta({ name: 'application-name', content: config.name }),
           meta({ name: 'apple-mobile-web-app-title', content: config.name }),
           meta({ property: 'og:site_name', content: config.name }),
-          meta({ property: 'og:title', content: config.title }),
-          meta({ property: 'og:description', content: config.description }),
+          meta({ property: 'og:title', content: title }),
+          meta({ property: 'og:description', content: description }),
           meta({ property: 'og:type', content: 'website' }),
-          meta({ property: 'og:url', content: canonical }),
+          meta({ property: 'og:url', content: pageUrl }),
           meta({ property: 'og:locale', content: config.locale }),
           meta({ property: 'og:image', content: ogImage }),
           meta({ property: 'og:image:type', content: 'image/png' }),
@@ -263,16 +279,20 @@ export function createSeoPlugin(config: SiteSeoConfig, context: SeoBuildContext)
           meta({ name: 'twitter:card', content: 'summary_large_image' }),
           meta({ name: 'twitter:site', content: config.twitterSite }),
           meta({ name: 'twitter:creator', content: config.twitterCreator }),
-          meta({ name: 'twitter:title', content: config.title }),
-          meta({ name: 'twitter:description', content: config.description }),
+          meta({ name: 'twitter:title', content: title }),
+          meta({ name: 'twitter:description', content: description }),
           meta({ name: 'twitter:image', content: ogImage }),
           meta({ name: 'twitter:image:alt', content: config.ogImageAlt }),
-          {
-            tag: 'script',
-            attrs: { type: 'application/ld+json' },
-            children: inlineJson(renderStructuredData(config, origin)),
-            injectTo: 'head',
-          },
+          ...(home
+            ? [
+                {
+                  tag: 'script',
+                  attrs: { type: 'application/ld+json' },
+                  children: inlineJson(renderStructuredData(config, origin)),
+                  injectTo: 'head' as const,
+                },
+              ]
+            : []),
         ],
       }
     },
