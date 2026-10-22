@@ -9,7 +9,7 @@ interface AppModeState {
 
 /**
  * Single source of truth for Basic vs Advanced mode. Components read this
- * instead of branching on route/location — see docs/ARCHITECTURE.md §Modes.
+ * instead of branching on route/location — see docs/architecture.md §Modes.
  */
 export const useAppModeStore = create<AppModeState>((set) => ({
   mode: 'basic',

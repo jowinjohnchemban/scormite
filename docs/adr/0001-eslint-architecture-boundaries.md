@@ -47,7 +47,7 @@ apparent once a deliberately-broken test import (`manifest` reaching into
 - Anyone extending the architecture (adding a new "element" type, changing
   which folders can depend on which) has to update `eslint.config.js`, not
   just a README. That's the point, but it does mean the config is the
-  actual source of truth for the rules, and this ADR + `docs/ARCHITECTURE.md`
+  actual source of truth for the rules, and this ADR + [Architecture](../architecture.md)
   are the explanation, not a duplicate ruleset.
 - `eslint-plugin-boundaries` v7's API is still settling (the `element-types`
   → `dependencies` rename, `rules` → `policies`, `${...}` → `{{...}}`

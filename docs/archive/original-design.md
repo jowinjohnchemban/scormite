@@ -1,5 +1,12 @@
 # SCORMite — Milestone 1: Architecture & Design
 
+> **Archived.** The original design document, written before any code.
+> It is kept for its rationale only and is not maintained: runtime
+> profiles, the plugin system, and several panels it describes were built
+> and later removed. The current design is in
+> [Architecture](../architecture.md) and [Domain model](../domain-model.md);
+> delivery history is in the [Roadmap](../roadmap.md).
+
 **Status:** Foundational design milestone (no application code yet — this is the blueprint the code will be built against). Nothing below "compiles" because nothing is code; the exit criterion for this milestone is that the design is internally consistent and unambiguous enough that Milestone 2 (project scaffold) can be built from it without re-litigating decisions.
 
 ---

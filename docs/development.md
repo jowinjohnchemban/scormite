@@ -61,16 +61,17 @@ rule that only looks right in config gives false confidence.
 
 ## Workflow
 
-1. Read [Architecture](ARCHITECTURE.md) for the current layering and folder
-   structure, and the [Roadmap](ROADMAP.md) for what is next and what
+1. Read [Architecture](architecture.md) for the current layering and folder
+   structure, and the [Roadmap](roadmap.md) for what is next and what
    "done" means for it. Finish one milestone — building, linting, and
    testing clean — before starting the next.
 2. New feature folders follow an existing `src/features/*/README.md`
    (ownership description) and expose only an `index.ts` barrel.
 3. Architecturally debatable choices (a new dependency direction, a new
-   boundary element type, a library swap) get an ADR in `docs/adr/` from
-   the [template](adr/TEMPLATE.md) — not just a commit message.
-4. Tests and documentation land in the same change as the feature.
+   boundary element type, a library swap) get a
+   [decision record](adr/README.md) — not just a commit message.
+4. Tests and documentation land in the same change as the feature;
+   documents follow [Writing these documents](README.md#writing-these-documents).
 5. Agents keep their own working notes (progress logs, research scratch) in
    `.agent-docs/`, which is git-ignored. Anything others need belongs here
    in `docs/`.
@@ -83,7 +84,7 @@ rule that only looks right in config gives false confidence.
 | Runtime middleware (recording, breakpoints, validation, …) | `src/features/runtime/adapter/middleware/`, implementing `RuntimeMiddleware` |
 | Manifest parsing (including sequencing) | `src/features/manifest/services/` |
 | A dock panel for Advanced mode | The owning feature's `components/`, registered in `src/app/layout/panels.ts` |
-| A Zustand store | The feature that owns the data (see [Domain model](DOMAIN_MODEL.md)) |
+| A Zustand store | The feature that owns the data (see [Domain model](domain-model.md)) |
 | A shared UI primitive | `src/components/ui/`, in the shadcn/ui shape (cva variants + `cn()`) |
 | A cross-feature utility without UI | `src/shared/lib/` |
 | A type used by more than one feature | `src/shared/types/` |
@@ -174,8 +175,8 @@ pnpm run test:e2e
 ```
 
 all pass, the change has tests, and the affected documents in `docs/` are
-updated in the same change. Debatable architectural choices get an ADR in
-`docs/adr/` (see the [template](adr/TEMPLATE.md)).
+updated in the same change. Debatable architectural choices get a
+[decision record](adr/README.md).
 
 ## Brand
 

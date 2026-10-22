@@ -1,9 +1,10 @@
-# Domain Model
+# Domain model
 
-Canonical reference for the core entities. Implementations live under each
-owning feature's `types/` folder — this file is the cross-feature index so
-you don't have to hunt through 12 folders to remember the shape of
-`ApiCallRecord`.
+The core entities and which part of the code owns each. Entities used by
+more than one feature are typed in `src/shared/types/` (one file per
+entity group, re-exported from its `index.ts`); the rest are typed inside
+their owner. This table answers "who owns this?" — the `.ts` file is the
+source of truth for fields.
 
 | Entity | Owning feature | Notes |
 |---|---|---|
@@ -12,7 +13,7 @@ you don't have to hunt through 12 folders to remember the shape of
 | `ApiCallRecord` | `runtime` | One scorm-again API call, recorded by middleware |
 | `CmiSnapshot` | `timeline` | Full CMI tree at a point in time, for the CMI History panel and the report |
 | `ValidationIssue` | `validation` | Static or runtime validation finding |
-| `Breakpoint` | `session` | Hold condition on a SetValue / Commit (element, value, score threshold, objective change) |
+| `Breakpoint` | `session` | Hold condition on a SetValue / Commit (API method, element, value, score threshold, objective update) |
 | `FileTreeNode` | `package-loader` | Package file-tree node (path, name, children, isLaunchFile) |
 | `NetworkEntry` | `player` | One SW `FETCH_EVENT` (path, cache hit/miss, status, duration ms) |
 | `LaunchableItem` | `manifest` (type in `shared/types/manifest.ts`) | Organization item with a launchable resource: identifier, title, depth, launch path (parameters applied), launch data |
@@ -24,14 +25,10 @@ you don't have to hunt through 12 folders to remember the shape of
 | `CmiSummary` | `app/course` | Completion, success, score, location, time — normalized across SCORM 1.2 and 2004 |
 | `LaunchRequest` / course state | `app/state/courseStore` | Items, current item, per-item progress, pending launch |
 
-See `milestones/01-architecture-and-design.md` §4 for the full field-level shape of each
-entity. As these get implemented in `types/` files, prefer linking to the
-actual `.ts` file over duplicating the shape here — this table is for
-"which feature owns this" lookups, not a second source of truth for fields.
-
 ## Ownership rule
 
-Only the owning feature may construct or mutate an entity's canonical
-instance. Other features read it through the owning feature's public
-`index.ts` (types are fine to import broadly; the *services* that create/
-mutate are not).
+Only the owner constructs or mutates an entity. Features never import each
+other (see [Development](development.md#rules-the-build-enforces)): other
+features share the entity's *type* from `src/shared/types/`, and the app
+layer (`src/app/`) passes instances between features and populates each
+feature's store.
