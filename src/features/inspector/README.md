@@ -1,6 +1,7 @@
 # features/inspector
 
-CMI Inspector: live tree view, diffing, and editing of the CMI data model.
+CMI Inspector: the live CMI data model, filterable, with the fields changed
+since launch marked. Read-only — the SCO is the only writer.
 
 `CmiInspectorPanel` reads the inspector-owned snapshot store. The app-level
 package-session hook supplies CMI snapshots after runtime events, so this

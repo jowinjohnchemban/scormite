@@ -1,7 +1,7 @@
 /**
  * Public surface of the "session" feature.
  *
- * Owns the Session entity, CMI snapshots, and breakpoint management.
+ * Owns breakpoints: the conditions that hold a SetValue / Commit for inspection.
  * Only export what other features are allowed to depend on. Everything else
  * in this folder is an implementation detail.
  */

@@ -7,12 +7,10 @@ you don't have to hunt through 12 folders to remember the shape of
 
 | Entity | Owning feature | Notes |
 |---|---|---|
-| `Package` | `package-loader` | Loaded ZIP/folder, detected SCORM version, resources |
+| `Package` | `package-loader` | Loaded ZIP, detected SCORM version and edition, manifest |
 | `Manifest` | `manifest` | Parsed `imsmanifest.xml` tree |
-| `Session` | `session` | One play-through: snapshots, calls, events, breakpoints |
 | `ApiCallRecord` | `runtime` | One scorm-again API call, recorded by middleware |
-| `CmiSnapshot` | `session` | Full CMI tree at a point in time, for diff/replay |
-| `TimelineEvent` | `timeline` | Lifecycle/CMI-change/navigation/sequencing/error event |
+| `CmiSnapshot` | `timeline` | Full CMI tree at a point in time, for the CMI History panel and the report |
 | `ValidationIssue` | `validation` | Static or runtime validation finding |
 | `Breakpoint` | `session` | Hold condition on a SetValue / Commit (element, value, score threshold, objective change) |
 | `FileTreeNode` | `package-loader` | Package file-tree node (path, name, children, isLaunchFile) |
