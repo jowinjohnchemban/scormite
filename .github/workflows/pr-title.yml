@@ -1,0 +1,27 @@
+name: PR title
+
+# Pull requests are squash-merged, so the title becomes the commit message on
+# main: it must follow Conventional Commits, like the rest of the history.
+on:
+  pull_request:
+    types: [opened, edited, reopened, synchronize]
+
+permissions: {}
+
+jobs:
+  conventional:
+    name: Conventional PR title
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Check the title
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          pattern='^(feat|fix|perf|refactor|docs|test|build|ci|chore|style|revert)(\([a-z0-9./-]+\))?!?: [^[:space:]].{2,}$'
+          if [[ "$TITLE" =~ $pattern ]]; then
+            echo "Title OK: $TITLE"
+          else
+            echo "::error title=PR title::\"$TITLE\" does not follow Conventional Commits, e.g. \"fix(player): load each SCO once\" or \"docs: explain resume testing\"."
+            exit 1
+          fi

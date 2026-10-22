@@ -1,0 +1,69 @@
+name: Release
+
+# Pushing a version tag (v1.2.3) publishes a GitHub release: notes from that
+# version's CHANGELOG.md section, and the built static site as a zip for
+# self-hosting. Deployment of the live site is separate (the hosting
+# platform builds main); see docs/deployment.md.
+on:
+  push:
+    tags: ['v*.*.*']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+
+jobs:
+  release:
+    name: Publish the GitHub release
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 11.20.0
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Check the tag matches package.json
+        run: |
+          expected="v$(node -p "require('./package.json').version")"
+          if [ "$GITHUB_REF_NAME" != "$expected" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match package.json version ($expected)."
+            exit 1
+          fi
+
+      - name: Release notes from CHANGELOG.md
+        run: node build/releaseNotes.ts "$GITHUB_REF_NAME" > release-notes.md
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Test
+        run: pnpm run test
+
+      - name: Build the static site
+        run: pnpm run build
+
+      - name: Package the build
+        run: |
+          cd dist
+          zip -qr "../scormite-$GITHUB_REF_NAME-dist.zip" .
+
+      - name: Create the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            --title "SCORMite $GITHUB_REF_NAME" \
+            --notes-file release-notes.md \
+            --verify-tag \
+            "scormite-$GITHUB_REF_NAME-dist.zip"

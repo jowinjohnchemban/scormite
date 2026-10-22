@@ -192,6 +192,59 @@ all pass, the change has tests, and the affected documents in `docs/` are
 updated in the same change. Debatable architectural choices get a
 [decision record](adr/README.md).
 
+## Maintaining the repository
+
+### Automation
+
+| Workflow                | Runs on                                      | Does                                                                                                                                      |
+| ----------------------- | -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `ci.yml`                | Pushes to `main`, pull requests, merge queue | Audits shipped dependencies, then lint, format, typecheck, unit tests with coverage, build; and the e2e suite in the Playwright container |
+| `pr-title.yml`          | Pull requests                                | Requires a Conventional Commits title — the squash-merged commit message on `main`                                                        |
+| `codeql.yml`            | `main`, pull requests, weekly                | CodeQL security and quality analysis (public repository only)                                                                             |
+| `dependency-review.yml` | Pull requests                                | Fails on a newly added dependency with a high-severity advisory (public repository only)                                                  |
+| `release.yml`           | Tags `v*.*.*`                                | Checks the tag matches `package.json`, tests, builds, and publishes a GitHub release with the CHANGELOG notes and the built site as a zip |
+| Dependabot              | Mondays                                      | Grouped dependency and Actions updates (see [Setup](#setup))                                                                              |
+
+Workflows get a read-only token unless a job needs more (CodeQL uploads
+results; the release job creates the release).
+
+### Rulesets
+
+`.github/rulesets/` holds the repository rulesets as JSON:
+
+- **`main.json`** — no deletion or force-push, linear history, changes only
+  through squash-merged pull requests with resolved conversations, and the
+  unit, e2e, and PR-title checks plus CodeQL (no high-severity alerts) must
+  pass. No approval is required, so a sole maintainer can merge; admins may
+  bypass only when merging a pull request, never by pushing.
+- **`release-tags.json`** — `v*` tags cannot be moved or deleted.
+
+Rulesets need a public repository (or GitHub Pro). Apply or update them with
+the GitHub CLI:
+
+```bash
+gh api -X POST repos/jowinjohnchemban/scormite/rulesets --input .github/rulesets/main.json
+gh api -X POST repos/jowinjohnchemban/scormite/rulesets --input .github/rulesets/release-tags.json
+```
+
+(To change one later, `PUT repos/…/rulesets/<id>` with the edited file; list
+ids with `gh api repos/jowinjohnchemban/scormite/rulesets`.)
+
+### Releasing
+
+1. In a pull request: bump `version` in `package.json` and add its
+   `## [x.y.z] — date` section (and link) to `CHANGELOG.md`.
+2. After it is merged: `git tag vX.Y.Z && git push origin vX.Y.Z`. The
+   release workflow publishes the GitHub release; a tag that does not match
+   `package.json` or has no changelog section fails.
+
+### Deployment
+
+The live site is built and deployed by the hosting platform from `main`
+(Cloudflare Workers Builds today; preview URLs for other branches, which are
+kept out of search engines). See [Deployment](deployment.md); nothing in
+GitHub Actions holds deployment credentials.
+
 ## Brand
 
 The SCORMite mark is an open SCORM package with its lid lifted and the
