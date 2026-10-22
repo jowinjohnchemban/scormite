@@ -29,7 +29,7 @@ pnpm run dev            # Vite dev server on http://localhost:5173
 |---|---|
 | `pnpm run lint` | ESLint, including the architecture boundary rules |
 | `pnpm run typecheck` | `tsc -b --noEmit` across app, Node, and e2e configs |
-| `pnpm run build` | Production build into `dist/` (also emits robots.txt, sitemap.xml, llms.txt, manifest.webmanifest) |
+| `pnpm run build` | Production build into `dist/` (also emits robots.txt, sitemap.xml, llms.txt, llms-full.txt, manifest.webmanifest, and the published docs) |
 | `pnpm run test` | Vitest unit tests, including axe-core accessibility audits |
 | `pnpm run test:coverage` | Unit tests with enforced coverage thresholds |
 | `pnpm run test:e2e` | Playwright end-to-end suite in Chromium against committed fixture packages |

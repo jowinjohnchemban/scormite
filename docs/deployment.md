@@ -5,11 +5,24 @@ accounts, or telemetry. Deploy the generated `dist/` directory at the root of an
 HTTPS origin: the service worker requires a secure context (localhost is also
 accepted by browsers).
 
-The one build-time setting is optional: `VITE_SITE_URL` (or `SITE_URL`) is the
-public origin used for the canonical link, Open Graph / Twitter image URLs,
-JSON-LD, `sitemap.xml`, `robots.txt`, and `llms.txt`. It defaults to the
-production origin in `src/shared/config/seo.ts`; set it for preview or staging
-deployments so their metadata does not point at production.
+Two build-time settings are optional:
+
+| Variable | Effect |
+|---|---|
+| `VITE_SITE_URL` (or `SITE_URL`) | The public origin used for the canonical link, Open Graph / Twitter image URLs, JSON-LD, `sitemap.xml`, `robots.txt`, and `llms.txt`. Defaults to the production origin in `src/shared/config/seo.ts`; set it for preview or staging deployments so their metadata does not point at production. |
+| `SEO_INDEX` (or `VITE_SEO_INDEX`) | `false` keeps search engines out of the deployment; `true` lets them in. Unset, Vercel preview and development builds are kept out and every other build is indexed. |
+
+## Search engines and AI assistants
+
+The build generates these files; nothing in `public/` needs editing:
+
+| File | Contents |
+|---|---|
+| `robots.txt` | Allows the app, keeps crawlers out of `/scorm-files/`, and points to the sitemap. On a deployment that must not be indexed: `Disallow: /`, and the page carries `noindex, nofollow`. |
+| `sitemap.xml` | Every HTML page the build emits. `lastmod` is the date of the last commit that changed the page (`index.html`, `src/`, `public/`); without git history — a container build, which leaves out `.git` — the build date. |
+| `llms.txt` | What SCORMite is, its features and FAQ (from the SEO config), and a link to each published document with its opening paragraph. |
+| `llms-full.txt` | The same summary followed by the full text of every published document. |
+| `docs/user-guide.md`, `docs/scorm-support.md` | The published documents (the `docs` list in the SEO config), served as Markdown. Their relative links may only point at each other; the build fails otherwise. |
 
 ## Vercel
 

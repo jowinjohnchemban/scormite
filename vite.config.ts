@@ -5,6 +5,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { siteSeoConfig } from './src/shared/config/seo.js'
 import { createSeoPlugin } from './build/seoPlugin.js'
+import { lastChangeDate, readPublishedDocs, resolveIndexing } from './build/seoContext.js'
 
 const dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -14,9 +15,15 @@ export default defineConfig(({ mode }) => {
   // The canonical origin for canonical/OG URLs, sitemap, and llms.txt; set
   // VITE_SITE_URL per deployment (preview, staging) to keep them correct.
   const siteUrl = env.VITE_SITE_URL || env.SITE_URL || siteSeoConfig.siteUrl
+  const seoContext = {
+    indexable: resolveIndexing(env),
+    // When the page's content last changed; the build date without git history.
+    lastmod: lastChangeDate(dirname, ['index.html', 'src', 'public']) ?? new Date().toISOString().slice(0, 10),
+    docs: readPublishedDocs(dirname, siteSeoConfig.docs),
+  }
 
   return {
-    plugins: [react(), tailwindcss(), createSeoPlugin({ ...siteSeoConfig, siteUrl })],
+    plugins: [react(), tailwindcss(), createSeoPlugin({ ...siteSeoConfig, siteUrl }, seoContext)],
     build: {
       rolldownOptions: {
         output: {

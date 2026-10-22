@@ -1,8 +1,8 @@
 /**
  * Single source of truth for everything search engines, social cards, and
  * AI assistants read about SCORMite: the document head, JSON-LD, the static
- * crawlable fallback in index.html, robots.txt, sitemap.xml, llms.txt, and
- * the web app manifest (see `build/seoPlugin.ts`) — and the landing content
+ * crawlable fallback in index.html, robots.txt, sitemap.xml, llms.txt,
+ * llms-full.txt, and the web app manifest (see `build/seoPlugin.ts`) — and the landing content
  * the app itself renders, so what crawlers index is exactly what people see.
  *
  * Plain data, no `@/` imports: vite.config.ts loads this file directly.
@@ -40,7 +40,12 @@ export interface SiteSeoConfig {
   twitterCreator: string
   locale: string
   siteUrl: string
-  routes: readonly string[]
+  /**
+   * User documents published as Markdown at the same path and listed in
+   * llms.txt (full text in llms-full.txt). Their relative links may only
+   * point at each other — the build fails otherwise.
+   */
+  docs: readonly string[]
   features: readonly SeoFeature[]
   faqs: readonly SeoFaq[]
 }
@@ -88,7 +93,7 @@ export const siteSeoConfig: SiteSeoConfig = {
   twitterCreator: '@scormite',
   locale: 'en_US',
   siteUrl: 'https://scormite.jowinjc.in',
-  routes: ['/'],
+  docs: ['docs/user-guide.md', 'docs/scorm-support.md'],
   features: [
     {
       title: 'Run any SCORM package',

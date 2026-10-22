@@ -42,6 +42,10 @@ a document disagree, the document is the bug.
 - **Same change.** A change that alters behaviour, a rule, or a workflow
   updates the affected documents in the same commit. A new document is
   added to the tables above.
+- **Published.** The [User guide](user-guide.md) and
+  [SCORM support](scorm-support.md) are also published on the site and in
+  `llms.txt`: write them for users, and link only to each other (the build
+  fails otherwise). Their opening paragraph is their summary in `llms.txt`.
 - **Where else.** Each feature's `src/features/<name>/README.md` says what
   that feature owns. Agent working notes go in `.agent-docs/`, which is
   git-ignored; superseded documents move to `archive/` with a note at the

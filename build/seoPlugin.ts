@@ -8,12 +8,19 @@
  *  - index.html body: a crawlable, no-JS fallback inside #root (the same
  *    headline, features, and FAQ the app renders on its landing screen);
  *    React replaces it on mount
- *  - robots.txt, sitemap.xml, llms.txt, manifest.webmanifest — served by the
- *    dev server and emitted into the build
+ *  - robots.txt, sitemap.xml, llms.txt, llms-full.txt, manifest.webmanifest,
+ *    and the published docs — served by the dev server and emitted into the
+ *    build
+ *
+ * What differs per build comes from `SeoBuildContext` (build/seoContext.ts):
+ * whether the deployment may be indexed, the content's last-change date, and
+ * the docs' text. The sitemap lists the HTML pages the build actually emits.
  */
 
+import path from 'node:path'
 import type { Plugin } from 'vite'
 import type { SiteSeoConfig } from '../src/shared/config/seo.js'
+import type { PublishedDoc, SeoBuildContext } from './seoContext.js'
 
 function escapeHtml(value: string): string {
   return value
@@ -94,14 +101,28 @@ export function renderStaticContent(config: SiteSeoConfig): string {
     </div>`
 }
 
-export function renderRobotsTxt(origin: string): string {
+export function renderRobotsTxt(origin: string, indexable: boolean): string {
+  // A preview or staging deployment must not compete with production.
+  if (!indexable) return 'User-agent: *\nDisallow: /\n'
   // /scorm-files/ is the service worker's virtual path for unzipped packages:
   // per-session, never real pages.
   return `User-agent: *\nAllow: /\nDisallow: /scorm-files/\n\nSitemap: ${origin}/sitemap.xml\n`
 }
 
-export function renderSitemapXml(config: SiteSeoConfig, origin: string, lastmod: string): string {
-  const urls = config.routes
+/** Site paths of emitted HTML pages: `index.html` → `/`, `a/index.html` → `/a/`, `b.html` → `/b`. */
+export function pagesFromHtmlFiles(fileNames: readonly string[]): string[] {
+  return fileNames
+    .filter((name) => name.endsWith('.html') && !/(^|\/)404\.html$/.test(name))
+    .map((name) =>
+      name === 'index.html' || name.endsWith('/index.html')
+        ? `/${name.slice(0, -'index.html'.length)}`
+        : `/${name.slice(0, -'.html'.length)}`,
+    )
+    .sort()
+}
+
+export function renderSitemapXml(pages: readonly string[], origin: string, lastmod: string): string {
+  const urls = pages
     .map((route) => {
       const loc = absoluteUrl(origin, route)
       return `  <url>\n    <loc>${escapeHtml(loc)}</loc>\n    <lastmod>${lastmod}</lastmod>\n  </url>`
@@ -110,10 +131,22 @@ export function renderSitemapXml(config: SiteSeoConfig, origin: string, lastmod:
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`
 }
 
+/** A published doc's Markdown with its relative links made absolute, for use outside its folder. */
+export function absolutizeLinks(doc: PublishedDoc, origin: string): string {
+  return doc.markdown.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (link, text: string, target: string) => {
+    if (/^[a-z]+:/i.test(target)) return link
+    const resolved = target.startsWith('#')
+      ? `${doc.path}${target}`
+      : path.posix.join(path.posix.dirname(doc.path), target)
+    return `[${text}](${absoluteUrl(origin, resolved)})`
+  })
+}
+
 /** llms.txt per https://llmstxt.org — what the site is, for AI assistants. */
-export function renderLlmsTxt(config: SiteSeoConfig, origin: string): string {
+export function renderLlmsTxt(config: SiteSeoConfig, origin: string, docs: readonly PublishedDoc[]): string {
   const features = config.features.map((f) => `- **${f.title}**: ${f.description}`).join('\n')
   const faqs = config.faqs.map((f) => `### ${f.question}\n\n${f.answer}`).join('\n\n')
+  const docLinks = docs.map((doc) => `- [${doc.title}](${absoluteUrl(origin, doc.path)}): ${doc.summary}`).join('\n')
   return `# ${config.name}
 
 > ${config.description}
@@ -124,6 +157,11 @@ ${config.summary}
 
 - [${config.name}](${origin}/): open the app and drop a SCORM .zip to start
 
+## Docs
+
+${docLinks}
+- [Everything in one file](${origin}/llms-full.txt): this summary and the full text of every document above
+
 ## Features
 
 ${features}
@@ -132,6 +170,13 @@ ${features}
 
 ${faqs}
 `
+}
+
+/** llms-full.txt — the site summary followed by the full text of every published doc. */
+export function renderLlmsFullTxt(config: SiteSeoConfig, origin: string, docs: readonly PublishedDoc[]): string {
+  const summary = `# ${config.name}\n\n> ${config.description}\n\n${config.summary}\n`
+  const bodies = docs.map((doc) => `Source: ${absoluteUrl(origin, doc.path)}\n\n${absolutizeLinks(doc, origin).trim()}\n`)
+  return [summary, ...bodies].join('\n---\n\n')
 }
 
 export function renderWebManifest(config: SiteSeoConfig): string {
@@ -156,23 +201,25 @@ export function renderWebManifest(config: SiteSeoConfig): string {
   )}\n`
 }
 
-export function createSeoPlugin(config: SiteSeoConfig): Plugin {
+const XML = 'application/xml; charset=utf-8'
+const MARKDOWN = 'text/markdown; charset=utf-8'
+
+export function createSeoPlugin(config: SiteSeoConfig, context: SeoBuildContext): Plugin {
   const origin = config.siteUrl.replace(/\/$/, '')
   const canonical = `${origin}/`
   const ogImage = absoluteUrl(origin, config.ogImage)
-  const lastmod = new Date().toISOString().slice(0, 10)
 
   const files: Record<string, { contentType: string; source: string }> = {
-    'robots.txt': { contentType: 'text/plain; charset=utf-8', source: renderRobotsTxt(origin) },
-    'sitemap.xml': {
-      contentType: 'application/xml; charset=utf-8',
-      source: renderSitemapXml(config, origin, lastmod),
-    },
-    'llms.txt': { contentType: 'text/markdown; charset=utf-8', source: renderLlmsTxt(config, origin) },
+    'robots.txt': { contentType: 'text/plain; charset=utf-8', source: renderRobotsTxt(origin, context.indexable) },
+    // The dev server has one page; the build lists the pages it emits instead.
+    'sitemap.xml': { contentType: XML, source: renderSitemapXml(['/'], origin, context.lastmod) },
+    'llms.txt': { contentType: MARKDOWN, source: renderLlmsTxt(config, origin, context.docs) },
+    'llms-full.txt': { contentType: MARKDOWN, source: renderLlmsFullTxt(config, origin, context.docs) },
     'manifest.webmanifest': {
       contentType: 'application/manifest+json; charset=utf-8',
       source: renderWebManifest(config),
     },
+    ...Object.fromEntries(context.docs.map((doc) => [doc.path, { contentType: MARKDOWN, source: doc.markdown }])),
   }
 
   const meta = (attrs: Record<string, string>) => ({ tag: 'meta', attrs, injectTo: 'head' as const })
@@ -192,7 +239,10 @@ export function createSeoPlugin(config: SiteSeoConfig): Plugin {
         html: updated,
         tags: [
           meta({ name: 'keywords', content: config.keywords.join(', ') }),
-          meta({ name: 'robots', content: 'index, follow, max-image-preview:large' }),
+          meta({
+            name: 'robots',
+            content: context.indexable ? 'index, follow, max-image-preview:large' : 'noindex, nofollow',
+          }),
           { tag: 'link', attrs: { rel: 'canonical', href: canonical }, injectTo: 'head' },
           { tag: 'link', attrs: { rel: 'manifest', href: '/manifest.webmanifest' }, injectTo: 'head' },
           meta({ name: 'theme-color', content: config.themeColor }),
@@ -235,10 +285,16 @@ export function createSeoPlugin(config: SiteSeoConfig): Plugin {
         res.end(file.source)
       })
     },
-    generateBundle() {
-      for (const [fileName, file] of Object.entries(files)) {
-        this.emitFile({ type: 'asset', fileName, source: file.source })
-      }
+    generateBundle: {
+      // After Vite has emitted the HTML pages, so the sitemap can list them.
+      order: 'post',
+      handler(_options, bundle) {
+        const pages = pagesFromHtmlFiles(Object.keys(bundle))
+        const emitted = { ...files, 'sitemap.xml': { contentType: XML, source: renderSitemapXml(pages, origin, context.lastmod) } }
+        for (const [fileName, file] of Object.entries(emitted)) {
+          this.emitFile({ type: 'asset', fileName, source: file.source })
+        }
+      },
     },
   }
 }
