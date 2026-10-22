@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url'
 import { siteSeoConfig } from './src/shared/config/seo.js'
 import { createSeoPlugin } from './build/seoPlugin.js'
 import { createAboutPlugin, resolveBuildInfo } from './build/aboutPage.js'
+import { createOriginTrialPlugin, parseOriginTrialTokens } from './build/originTrial.js'
 import { lastChangeDate, readPublishedDocs, resolveIndexing } from './build/seoContext.js'
 
 const dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -29,6 +30,8 @@ export default defineConfig(({ mode }) => {
       tailwindcss(),
       createSeoPlugin({ ...siteSeoConfig, siteUrl }, seoContext),
       createAboutPlugin(siteSeoConfig, dirname, resolveBuildInfo(env, dirname)),
+      // WebMCP origin-trial tokens for this deployment's origin (optional).
+      createOriginTrialPlugin(parseOriginTrialTokens(env.WEBMCP_ORIGIN_TRIAL_TOKENS)),
     ],
     build: {
       rolldownOptions: {

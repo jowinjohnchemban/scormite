@@ -6,6 +6,16 @@ All notable changes to SCORMite are recorded here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- **AI agents in the browser (WebMCP).** SCORMite registers tools on
+  `document.modelContext` so an agent can read the open session — items,
+  CMI data, API log, validation issues, the QA report — and launch, navigate,
+  relaunch, restart, or switch modes. Package content is marked untrusted to
+  the agent; discarding saved data is marked consequential. Works where the
+  browser supports WebMCP; deployments can enable the Chrome and Edge origin
+  trials with `WEBMCP_ORIGIN_TRIAL_TOKENS`.
+
 ### Fixed
 
 - **SCORM 2004 rollup rules** that negate a condition (`not`), combine

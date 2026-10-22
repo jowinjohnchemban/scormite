@@ -22,7 +22,7 @@ const ORIGIN = 'https://example.test'
 const DOCS = [
   parseDoc(
     'docs/guide.md',
-    '# Guide\n\nHow to [test](other.md#x) a package.\n\n## One\n\nSee [this](#one) and [scorm-again](https://example.org/a).\n',
+    '# Guide\n\nHow to [test](other.md#x) a package.\n\n## One\n\nSee [this](#one), [scorm-again](https://example.org/a), and [cdn](//cdn.example.org/b).\n',
   ),
   parseDoc('docs/other.md', '# Other\n\nMore detail.\n\n## X\n'),
 ]
@@ -107,6 +107,7 @@ describe('generated files', () => {
   it('absolute links stay as they are; in-page anchors point at their document', () => {
     const markdown = absolutizeLinks(DOCS[0]!, ORIGIN)
     expect(markdown).toContain('[scorm-again](https://example.org/a)')
+    expect(markdown).toContain('[cdn](//cdn.example.org/b)')
     expect(markdown).toContain(`[this](${ORIGIN}/docs/guide.md#one)`)
   })
 

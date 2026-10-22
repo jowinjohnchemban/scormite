@@ -141,7 +141,7 @@ export function renderSitemapXml(pages: readonly string[], origin: string, lastm
 /** A published doc's Markdown with its relative links made absolute, for use outside its folder. */
 export function absolutizeLinks(doc: PublishedDoc, origin: string): string {
   return doc.markdown.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (link, text: string, target: string) => {
-    if (/^[a-z]+:/i.test(target)) return link
+    if (/^([a-z][a-z0-9+.-]*:|\/\/)/i.test(target)) return link
     const resolved = target.startsWith('#')
       ? `${doc.path}${target}`
       : path.posix.join(path.posix.dirname(doc.path), target)
