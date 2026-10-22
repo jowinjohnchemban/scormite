@@ -1,10 +1,7 @@
 /**
- * The Advanced Mode panel set.
- *
- * Declared as data so the dock has its full complement of panels from
- * Milestone 6 onward; each entry's `component` is swapped from a placeholder
- * to the real feature component as that feature's milestone lands. Order here
- * is the first-run docking order — after that the user's layout wins.
+ * The Advanced Mode panel set, declared as data. Each panel has a fixed home
+ * dock; order here is the order within a dock and in the Panels menu. Ids are
+ * persisted (show / hide choices), so they stay stable when a title changes.
  */
 
 import {
@@ -51,7 +48,7 @@ export const ADVANCED_PANELS: readonly PanelDef[] = [
   {
     id: 'package-explorer',
     group: 'course',
-    title: 'Package',
+    title: 'Files',
     region: 'left',
     defaultOpen: false,
     icon: Package,
@@ -88,7 +85,7 @@ export const ADVANCED_PANELS: readonly PanelDef[] = [
   {
     id: 'api-monitor',
     group: 'runtime',
-    title: 'API Monitor',
+    title: 'API Log',
     region: 'bottom',
     defaultOpen: true,
     icon: Activity,
@@ -98,7 +95,7 @@ export const ADVANCED_PANELS: readonly PanelDef[] = [
   {
     id: 'timeline',
     group: 'runtime',
-    title: 'Timeline',
+    title: 'CMI History',
     region: 'bottom',
     defaultOpen: false,
     icon: Clock,

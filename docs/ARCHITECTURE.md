@@ -175,12 +175,12 @@ tester actually has:
 |---|---|---|
 | Outline | `app/course` | Where am I in the course, what may I open next, how did each item end? |
 | Manifest | `manifest` | What exactly did the manifest declare for this item (resource, href, parameters, launch data, sequencing)? |
-| Package | `package-loader` | Which files are in the zip, and which are launch files? |
+| Files | `package-loader` | Which files are in the zip, and which are launch files? |
 | CMI Inspector | `inspector` | What is in the data model now, and what just changed? (filter by path or value) |
 | Validation | `validation` | What is wrong with the package or the run — including a status the LMS rules changed on exit, and why? |
-| API Monitor | `logging` | What did the course call, with what, and why did a call fail? (per-method counts, failed-only filter) |
+| API Log | `logging` | What did the course call, with what, and why did a call fail? (per-method counts, failed-only filter) |
 | Network | `player` | Which files did the course request, and which are missing from the package? |
-| Timeline | `timeline` | What did the data model look like at any earlier point of this attempt? |
+| CMI History | `timeline` | What did the data model look like at any earlier point of this launch? |
 | Breakpoints | `session` | What is the state just before a specific SetValue / Commit is applied? |
 
 **Network.** The service worker (`public/sw.js`) posts a `FETCH_EVENT`
@@ -197,7 +197,7 @@ course about whether it started or what a value is.
 
 **Removed for not earning their place:** Performance (in-memory API call
 timings say nothing about LMS performance; per-method counts moved to the
-API Monitor) and Reports (duplicated the header's Report export).
+API Log) and Reports (duplicated the header's Report export).
 
 ## Accessibility (M15)
 
@@ -235,7 +235,7 @@ Conventions enforced by this milestone:
   buttons with roving tabindex, `role="tabpanel"` + `aria-labelledby`, and
   per-tab close controls as **siblings** of the tablist (a close button
   nested inside the tab is `nested-interactive`).
-- **Tree semantics** — Package Explorer rows are `role="treeitem"` with
+- **Tree semantics** — Files panel rows are `role="treeitem"` with
   `aria-level={depth + 1}` on every row; `aria-expanded` only on
   directories.
 

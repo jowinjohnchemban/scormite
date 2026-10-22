@@ -249,7 +249,7 @@ export function usePackageSession(owner: 'basic' | 'advanced'): PackageSession {
         useManifestStore.getState().setManifest(parsed.manifest)
         usePackageStore.getState().setPackage(assembled)
         // The archive bytes are discarded after caching; the file list stays
-        // for the Package Explorer.
+        // for the Files panel.
         usePackageStore.getState().setFilePaths(parsed.filePaths)
         ValidationService.validateManifest(parsed.manifest, parsed.filePaths, parsed.rootFolder)
 

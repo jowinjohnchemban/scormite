@@ -181,7 +181,7 @@ function BasicApiLog() {
           </table>
           {records.length > LOG_PREVIEW && (
             <p className="px-2 py-1 text-[10px] text-slate-600">
-              Showing latest {LOG_PREVIEW} of {records.length} — the full log is in the report and Advanced › API Monitor
+              Showing latest {LOG_PREVIEW} of {records.length} — the full log is in the report and Advanced › API Log
             </p>
           )}
         </div>

@@ -6,7 +6,7 @@ interface PackageState {
   package: Package | null
   /**
    * Flat list of files inside the loaded package, in archive order.
-   * Kept for the Package Explorer panel — the raw bytes are discarded
+   * Kept for the Files panel — the raw bytes are discarded
    * after caching, but the file list stays queryable for the lifetime
    * of the session.
    */

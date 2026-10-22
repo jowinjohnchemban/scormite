@@ -136,7 +136,7 @@ export function PackageExplorerPanel() {
   const filePaths = usePackageStore((state) => state.filePaths)
 
   return (
-    <section className="flex h-full min-h-0 flex-col" aria-label="Package Explorer">
+    <section className="flex h-full min-h-0 flex-col" aria-label="Files">
       <header className="flex h-8 shrink-0 items-center justify-between gap-2 border-b border-border-subtle px-2">
         <span className="text-[11px] text-slate-500">
           {filePaths.length} {filePaths.length === 1 ? 'file' : 'files'}

@@ -1,6 +1,7 @@
 # features/timeline
 
-Event timeline visualization and session replay/scrubbing UI.
+The CMI History panel: every change to the data model during the current
+launch, scrubbable — the CMI Inspector shows the state at the chosen point.
 
 ## Public surface
 
@@ -14,7 +15,7 @@ Import from other features only via this folder's `index.ts` barrel — never re
   replay cursor position. `captureSnapshot` diffs each snapshot against the previous
   one and ignores no-op state (`changedPaths` empty), so every snapshot marks a real
   CMI change.
-- `TimelinePanel` — slider + per-snapshot scrub list; scrubbing never touches the
+- `TimelinePanel` (titled CMI History) — slider + per-snapshot scrub list; scrubbing never touches the
   running SCO.
 
 ## Boundaries

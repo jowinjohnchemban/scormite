@@ -75,10 +75,10 @@ from **Panels** in the toolbar:
 |---|---|
 | Outline | Navigate the course (as in Basic mode) |
 | Manifest | Browse the organizations, items, and resources of `imsmanifest.xml`; expand an item to see its resource, href, parameters, launch data, and sequencing |
-| Package | Browse the files in the zip; launch files are marked |
+| Files | Browse the files in the zip; launch files are marked |
 | CMI Inspector | See the live data model; changed values are highlighted; filter by path or value |
-| API Monitor | See every API call, how often each method was called, and why failed calls failed ("Failed only" filter) |
-| Timeline | Scrub through the run and see the data model at any point |
+| API Log | See every API call, how often each method was called, and why failed calls failed ("Failed only" filter) |
+| CMI History | Scrub through the current launch and see the data model at any point |
 | Breakpoints | Hold a specific `SetValue` or `Commit` before it is applied, inspect the data, then resume. The course keeps running and is told the call succeeded; held calls are applied in order on Resume |
 | Validation | See every packaging and runtime issue — including when the LMS rules recorded a different status than the course reported, and which rule did it |
 | Network | See each file the course requested and which are missing from the package ("Missing only" filter) |

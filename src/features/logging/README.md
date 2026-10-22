@@ -1,9 +1,9 @@
 # features/logging
 
-API Monitor and Console panels, plus log export (JSON/CSV/Markdown/HTML).
+The API Log panel: every SCORM API call the course made, with per-method
+counts, a failed-only filter, and scorm-again's explanation of each error.
 
-`ApiMonitorPanel` and `ConsolePanel` render the runtime call stream owned by
-`logStore`. The app-level package-session hook subscribes to runtime events and
+`ApiMonitorPanel` renders the runtime call stream owned by `logStore`. The app-level package-session hook subscribes to runtime events and
 writes records into that store, keeping this feature independent of runtime
 implementation details.
 
