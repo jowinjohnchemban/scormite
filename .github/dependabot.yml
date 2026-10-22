@@ -2,7 +2,9 @@
 # CI (lint, typecheck, unit, e2e) decides whether an update can be merged.
 version: 2
 updates:
-  - package-ecosystem: npm # pnpm-lock.yaml is updated too
+  # Dependabot has no separate pnpm ecosystem: "npm" covers pnpm. It detects
+  # pnpm-lock.yaml (and the packageManager pin) and updates with pnpm.
+  - package-ecosystem: npm
     directory: /
     schedule:
       interval: weekly
@@ -19,11 +21,11 @@ updates:
       # One PR for all security fixes found at the same time.
       security:
         applies-to: security-updates
-        patterns: ['*']
+        patterns: ["*"]
     ignore:
       # Tracks the Node version CI and the container run (24); bump it with them.
-      - dependency-name: '@types/node'
-        update-types: ['version-update:semver-major']
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: github-actions
     directory: /
@@ -35,4 +37,4 @@ updates:
       include: scope
     groups:
       actions:
-        patterns: ['*']
+        patterns: ["*"]
