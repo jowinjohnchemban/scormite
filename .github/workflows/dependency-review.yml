@@ -1,0 +1,23 @@
+name: Dependency review
+
+# Blocks a pull request that adds a dependency with a known high-severity
+# vulnerability. Needs the dependency graph, which is free for public
+# repositories; skipped while the repository is private.
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  review:
+    name: Dependency review
+    if: ${{ !github.event.repository.private }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/dependency-review-action@v5
+        with:
+          fail-on-severity: high

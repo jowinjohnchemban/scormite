@@ -58,8 +58,9 @@ Security problems are not reported in issues — see the
    [Conventional Commits](https://www.conventionalcommits.org) style used in
    the history (`feat(player): …`, `fix(validation): …`, `docs: …`), one
    change per commit.
-6. Open a pull request describing what changed and why. CI must pass before
-   it is merged.
+6. Open a pull request describing what changed and why. Pull requests are
+   squash-merged, so the **title** becomes the commit message on `main` and
+   must follow Conventional Commits too. CI must pass before it is merged.
 
 For a large change — a new panel, a new dependency, a change to the
 architecture — open an issue first so the approach can be agreed before you

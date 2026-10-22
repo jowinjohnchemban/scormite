@@ -4,6 +4,16 @@ on:
   push:
     branches: [main]
   pull_request:
+  merge_group:
+
+# Read-only token: CI checks code, it never writes to the repository.
+permissions:
+  contents: read
+
+# A new push to a pull request cancels its previous run; runs on main finish.
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   unit:
@@ -24,6 +34,11 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Audit shipped dependencies
+        # Only the packages that reach the browser; dev tooling advisories are
+        # handled through Dependabot.
+        run: pnpm audit --prod --audit-level=high
 
       - name: Lint (includes architecture boundaries)
         run: pnpm run lint
