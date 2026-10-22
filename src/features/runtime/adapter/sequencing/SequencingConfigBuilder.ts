@@ -19,7 +19,8 @@ import type {
 
 export type SequencingSettings = NonNullable<Settings['sequencing']>
 type ActivitySettings = NonNullable<SequencingSettings['activityTree']>
-type CollectionSettings = NonNullable<SequencingSettings['collections']>[string]
+// scorm-again accepts collections as a record keyed by ID (built here) or an array.
+type CollectionSettings = Exclude<NonNullable<SequencingSettings['collections']>, readonly unknown[]>[string]
 type RulesSettings = NonNullable<ActivitySettings['sequencingRules']>
 type RuleSettings = NonNullable<RulesSettings['preConditionRules']>[number]
 type RuleConditionSettings = RuleSettings['conditions'][number]

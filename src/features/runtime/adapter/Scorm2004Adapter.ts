@@ -80,6 +80,10 @@ export class Scorm2004Adapter extends ScormRuntimeAdapter {
   private lastDelivered: DeliveredActivity = null
   /** Id delivered in the current request; scorm-again reports each delivery twice. */
   private deliveredThisRound: string | null = null
+  /** The navigation request the engine is processing, for error messages. */
+  private lastRequest: string | null = null
+  /** True while the LMS (this adapter's caller) is issuing a request. */
+  private lmsRequest = false
 
   /**
    * Without `sequencing`, navigation requests surface as `navigation-request`
@@ -101,13 +105,15 @@ export class Scorm2004Adapter extends ScormRuntimeAdapter {
         ...built.settings,
         eventListeners: {
           onActivityDelivery: (activity) => this.handleDelivery(activity),
+          onNavigationRequest: (request, target) => {
+            this.lastRequest = target ? `${request} ${target}` : request
+          },
           onSequencingSessionEnd: (data) =>
             runtimeEvents.emit('sequencing-session-end', {
               sessionId: this.sessionId,
               reason: data.navigationRequest ?? data.reason,
             }),
-          onSequencingError: (error) =>
-            runtimeEvents.emit('sequencing-error', { sessionId: this.sessionId, message: error }),
+          onSequencingError: (error, context) => this.handleSequencingError(error, context),
         },
       }
     }
@@ -150,6 +156,20 @@ export class Scorm2004Adapter extends ScormRuntimeAdapter {
     }
   }
 
+  /**
+   * A request the engine refused or could not process. Refusals of the
+   * LMS's own requests are the caller's to explain; a course's refused
+   * request is reported with what it asked for and the IMS exception code.
+   */
+  private handleSequencingError(error: string, context?: string): void {
+    if (this.lmsRequest) return
+    const message =
+      context === 'navigation' && this.lastRequest
+        ? `The course requested "${this.lastRequest}", but its sequencing rules do not allow it (${error}).`
+        : `Sequencing error: ${error}`
+    runtimeEvents.emit('sequencing-error', { sessionId: this.sessionId, message })
+  }
+
   private handleDelivery(activity: { id: string }): void {
     if (activity.id === this.deliveredThisRound) return
     this.deliveredThisRound = activity.id
@@ -169,6 +189,7 @@ export class Scorm2004Adapter extends ScormRuntimeAdapter {
   navigate(request: SequencingRequest, targetId?: string): boolean {
     if (!this.sequenced) return false
     this.deliveredThisRound = null
+    this.lmsRequest = true
     try {
       return this.api.processNavigationRequest(request, targetId)
     } catch (error) {
@@ -177,6 +198,8 @@ export class Scorm2004Adapter extends ScormRuntimeAdapter {
         message: `Navigation "${request}" failed: ${error instanceof Error ? error.message : String(error)}`,
       })
       return false
+    } finally {
+      this.lmsRequest = false
     }
   }
 
