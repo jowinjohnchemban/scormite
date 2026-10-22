@@ -1,6 +1,6 @@
 import { Scorm12API } from 'scorm-again'
 import type { Settings } from 'scorm-again'
-import type { ManifestItemLaunchData } from '@/shared/types'
+import type { LearnerInfo, ManifestItemLaunchData } from '@/shared/types'
 import { LMS_BASE_SETTINGS, ScormRuntimeAdapter } from './ScormRuntimeAdapter'
 import { normalizeFlattenedCmi } from './normalizeFlattenedCmi'
 import { runtimeEvents } from '../events/RuntimeEventEmitter'
@@ -35,6 +35,10 @@ export class Scorm12Adapter extends ScormRuntimeAdapter {
       'cmi.student_data.max_time_allowed': data.maxTimeAllowed,
       'cmi.student_data.time_limit_action': data.timeLimitAction,
     }
+  }
+
+  protected learnerElements(learner: LearnerInfo): Record<string, string> {
+    return { 'cmi.core.student_id': learner.id, 'cmi.core.student_name': learner.name }
   }
 
   /**

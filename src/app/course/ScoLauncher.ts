@@ -21,6 +21,7 @@ import {
   type SequencingOptions,
 } from '@/features/runtime'
 import { useBreakpointStore } from '@/features/session'
+import { useLearnerStore } from '@/features/learner'
 import { useValidationStore } from '@/features/validation'
 import type { LaunchableItem, Package } from '@/shared/types'
 
@@ -61,6 +62,8 @@ export class ScoLauncher {
   deliver(adapter: ScormRuntimeAdapter, item: LaunchableItem, attempt: AttemptRecord | undefined): void {
     adapter.seedLaunchData(item.launchData)
     if (attempt) adapter.restoreAttempt(attempt)
+    const { id, name } = useLearnerStore.getState()
+    adapter.seedLearner({ id, name })
     injectApiProxy(adapter, this.pkg.scormVersion)
   }
 

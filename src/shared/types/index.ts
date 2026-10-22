@@ -29,3 +29,4 @@ export type {
   SequencingRuleDefinition,
   SequencingRulesDefinition,
 } from './sequencing'
+export type { LearnerInfo } from './learner'

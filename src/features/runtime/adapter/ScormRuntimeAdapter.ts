@@ -1,5 +1,5 @@
 import type { Settings } from 'scorm-again'
-import type { ManifestItemLaunchData, ScormVersion } from '@/shared/types'
+import type { LearnerInfo, ManifestItemLaunchData, ScormVersion } from '@/shared/types'
 import type { AttemptRecord, ApiCallContext, ApiCallResult, RuntimeMiddleware } from '../types'
 
 /** The slice of scorm-again's API surface the LMS-side helpers below rely on. */
@@ -281,6 +281,29 @@ export abstract class ScormRuntimeAdapter {
    */
   protected abstract launchDataElements(data: ManifestItemLaunchData): Record<string, string | undefined>
 
+  /** Version-specific learner elements (ID and name). */
+  protected abstract learnerElements(learner: LearnerInfo): Record<string, string>
+
+  /**
+   * Report the learner, as an LMS does for its signed-in user. Called after
+   * any restored attempt, so the current learner wins over a stored one.
+   */
+  seedLearner(learner: LearnerInfo): void {
+    this.loadElements(this.learnerElements(learner))
+  }
+
+  private loadElements(elements: Record<string, string | undefined>): void {
+    for (const [element, value] of Object.entries(elements)) {
+      if (value === undefined || value === '') continue
+      try {
+        this.lmsApi.loadFromFlattenedJSON({ [element]: value })
+      } catch {
+        // scorm-again rejects values that violate the data model; the SCO
+        // then simply sees the element's default, as it would on an LMS.
+      }
+    }
+  }
+
   /**
    * Version-specific: the data a relaunch starts from, given the stored
    * attempt — or `null` when the version's rules start a new attempt with
@@ -295,15 +318,7 @@ export abstract class ScormRuntimeAdapter {
    * cannot keep the others out.
    */
   seedLaunchData(data: ManifestItemLaunchData): void {
-    for (const [element, value] of Object.entries(this.launchDataElements(data))) {
-      if (value === undefined || value === '') continue
-      try {
-        this.lmsApi.loadFromFlattenedJSON({ [element]: value })
-      } catch {
-        // scorm-again rejects values that violate the data model; the SCO
-        // then simply sees the element's default, as it would on an LMS.
-      }
-    }
+    this.loadElements(this.launchDataElements(data))
   }
 
   /**
