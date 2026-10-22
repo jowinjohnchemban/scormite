@@ -60,7 +60,10 @@ describe('parseDoc', () => {
 describe('brokenDocLinks', () => {
   it('reports relative links to documents that are not published', () => {
     const docs = [
-      parseDoc('docs/a.md', '# A\n\nSee [B](b.md#x), [C](c.md), [web](https://x.test), [here](#top).\n'),
+      parseDoc(
+        'docs/a.md',
+        '# A\n\nSee [B](b.md#x), [C](c.md), [web](https://x.test), [cdn](//cdn.x.test/a), [here](#top).\n',
+      ),
       parseDoc('docs/b.md', '# B\n\nBack to [A](a.md).\n'),
     ]
     expect(brokenDocLinks(docs)).toEqual(['docs/a.md → c.md'])

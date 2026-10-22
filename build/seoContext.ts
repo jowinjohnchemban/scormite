@@ -95,7 +95,7 @@ export function brokenDocLinks(docs: readonly PublishedDoc[]): string[] {
   const broken: string[] = []
   for (const doc of docs) {
     for (const [, , target] of doc.markdown.matchAll(MARKDOWN_LINK)) {
-      if (!target || /^[a-z]+:/i.test(target) || target.startsWith('#')) continue
+      if (!target || /^([a-z][a-z0-9+.-]*:|\/\/)/i.test(target) || target.startsWith('#')) continue
       const file = path.posix.join(path.posix.dirname(doc.path), target.split('#')[0]!)
       if (!published.has(file)) broken.push(`${doc.path} → ${target}`)
     }
