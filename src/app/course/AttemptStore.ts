@@ -30,4 +30,15 @@ export class AttemptStore {
   clear(): void {
     this.records.clear()
   }
+
+  /** Every stored attempt, by item identifier (for persistence). */
+  toRecord(): Record<string, AttemptRecord> {
+    return Object.fromEntries(this.records)
+  }
+
+  /** Replace the stored attempts (restoring saved progress). */
+  load(records: Record<string, AttemptRecord>): void {
+    this.records.clear()
+    for (const [itemId, record] of Object.entries(records)) this.records.set(itemId, record)
+  }
 }

@@ -161,7 +161,7 @@ build (`pnpm run build`), lint clean (`pnpm run lint`), and typecheck
 
 ## Next candidates
 
-- **Persistent learner records.** Keep attempts across page reloads
-  (IndexedDB) so long courses can be resumed in a later session.
+- [x] **Saved progress** (delivered after M17): attempts, position, and
+  sequencing state kept in IndexedDB; reopening a package resumes it.
 - [x] **Learner identity** (delivered after M17): set from the header,
   seeded into each launch.

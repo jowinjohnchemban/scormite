@@ -57,6 +57,10 @@ course**.
 
 Leaving an item and coming back to it also resumes it, as on an LMS.
 
+Progress is also saved in this browser: reopen the same package later — even
+after reloading the page — and SCORMite resumes at the item you were on, with
+each item's saved data. **Restart whole course** forgets the saved progress.
+
 ## 4. Read what the course reports
 
 **Basic mode** shows the running item's status, success, score, location,

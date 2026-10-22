@@ -21,6 +21,7 @@ you don't have to hunt through 12 folders to remember the shape of
 | `ManifestItemLaunchData` | `manifest` (type in `shared/types/manifest.ts`) | Per-item data an LMS seeds into the runtime (launch data, mastery score, time limit, completion threshold, passing score) |
 | `AttemptRecord` | `runtime` | scorm-again's terminate-commit payload for one SCO attempt; restored on relaunch |
 | `NavigationRequestEvent` | `runtime` | A SCORM 2004 `adl.nav.request` raised at Terminate (request + optional target) |
+| `SessionSnapshot` | `app/course` | Saved progress of one package: attempts, progress, current item, sequencing state |
 | `LearnerInfo` | `learner` (type in `shared/types/learner.ts`) | Learner ID and name reported to courses |
 | `CmiSummary` | `app/course` | Completion, success, score, location, time — normalized across SCORM 1.2 and 2004 |
 | `LaunchRequest` / course state | `app/state/courseStore` | Items, current item, per-item progress, pending launch |

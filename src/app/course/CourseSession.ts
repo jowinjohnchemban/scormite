@@ -33,6 +33,7 @@ import {
 import { AttemptStore } from './AttemptStore'
 import { CourseNavigator } from './CourseNavigator'
 import { ScoLauncher } from './ScoLauncher'
+import type { SessionPersistence, SessionSnapshot } from './SessionPersistence'
 import { summarizeCmi, type CmiSummary } from './summarizeCmi'
 
 const ENGINE_STATUS_UNKNOWN = new Set(['unknown', ''])
@@ -56,13 +57,24 @@ export class CourseSession {
   /** True while this session itself is asking the engine to navigate. */
   private navigating = false
   private readonly unsubscribers: (() => void)[] = []
+  private readonly persistence: SessionPersistence | null
+  /** Progress saved by an earlier visit, used by the first start only. */
+  private saved: SessionSnapshot | null
 
-  constructor(pkg: Package, items: readonly LaunchableItem[], sequencing: SequencingOptions | null) {
+  constructor(
+    pkg: Package,
+    items: readonly LaunchableItem[],
+    sequencing: SequencingOptions | null,
+    persistence: SessionPersistence | null = null,
+    saved: SessionSnapshot | null = null,
+  ) {
     this.pkg = pkg
     this.items = items
     this.navigator = new CourseNavigator(items)
     this.launcher = new ScoLauncher(pkg)
     this.sequencing = sequencing
+    this.persistence = persistence
+    this.saved = saved
     this.subscribe()
   }
 
@@ -74,13 +86,66 @@ export class CourseSession {
   start(): void {
     const course = useCourseStore.getState()
     course.setCourse([...this.items], false)
-    if (this.sequencing && this.startEngine(this.sequencing)) return
-    const first = this.navigator.first
-    if (first) course.requestLaunch(first.identifier, 'new')
+
+    // Saved progress from an earlier visit: restore the attempts and resume
+    // where the learner was, as an LMS does when a course is reopened.
+    const saved = this.saved
+    this.saved = null
+    if (saved) {
+      this.attempts.load(saved.attempts)
+      course.mergeProgress(saved.progress)
+    }
+    const savedItem = this.navigator.find(saved?.currentItemId)
+
+    if (this.sequencing && this.startEngine(this.sequencing, saved && savedItem ? { item: savedItem.identifier, state: saved.sequencingState } : null)) {
+      if (saved) this.announceResume(saved)
+      return
+    }
+    const first = savedItem ?? this.navigator.first
+    if (!first) return
+    course.requestLaunch(first.identifier, saved ? 'resume' : 'new')
+    if (saved) this.announceResume(saved)
+  }
+
+  private announceResume(saved: SessionSnapshot): void {
+    const when = new Date(saved.savedAt).toLocaleString()
+    useCourseStore
+      .getState()
+      .setNotice(`Resumed the progress saved in this browser on ${when}. Restart › Restart whole course starts fresh.`, 'info')
+  }
+
+  /**
+   * Save progress so a reload resumes here: every stored attempt plus the
+   * running SCO's live data, per-item progress, the current item, and the
+   * sequencing engine's state.
+   */
+  persist({ immediate = false }: { immediate?: boolean } = {}): void {
+    if (!this.persistence) return
+    const course = useCourseStore.getState()
+    const attempts = this.attempts.toRecord()
+    const live = useRuntimeStore.getState().adapter
+    if (live && course.currentItemId) {
+      try {
+        attempts[course.currentItemId] = live.exportAttempt()
+      } catch {
+        // Keep the last stored attempt for this item.
+      }
+    }
+    const sequencingState = this.engine?.serializeSequencingState() ?? null
+    this.persistence.saveSoon({
+      version: 1,
+      savedAt: Date.now(),
+      currentItemId: course.currentItemId,
+      attempts,
+      progress: course.progress,
+      ...(sequencingState !== null ? { sequencingState } : {}),
+    })
+    if (immediate) void this.persistence.flush()
   }
 
   /** Discard every attempt and start over (a fresh engine for 2004). */
   restart(): void {
+    void this.persistence?.clear()
     this.attempts.clear()
     this.engine = null
     useCourseStore.getState().clearProgress()
@@ -131,6 +196,7 @@ export class CourseSession {
     course.completeLaunch(item.identifier)
     course.setEnded(null)
     this.refresh()
+    this.persist({ immediate: true })
   }
 
   /**
@@ -203,8 +269,14 @@ export class CourseSession {
     if (Object.keys(progress).length > 0) course.mergeProgress(progress)
   }
 
+  /** Write any pending save now (the page is being hidden). */
+  flushSaves(): Promise<void> {
+    return this.persistence?.flush() ?? Promise.resolve()
+  }
+
   /** Stop listening to the runtime. The session is unusable afterwards. */
   dispose(): void {
+    void this.persistence?.flush()
     for (const off of this.unsubscribers.splice(0)) off()
     this.engine = null
   }
@@ -218,19 +290,12 @@ export class CourseSession {
     }
   }
 
-  private startEngine(sequencing: SequencingOptions): boolean {
+  private startEngine(sequencing: SequencingOptions, resume: { item: string; state: string | undefined } | null): boolean {
     const course = useCourseStore.getState()
     const validation = useValidationStore.getState()
+    if (resume?.state && this.resumeEngine(sequencing, resume.item, resume.state)) return true
     const engine = this.launcher.createSequencedRuntime(sequencing)
-    // A restart builds a new engine; its warnings replace the previous ones.
-    useValidationStore.setState((state) => ({
-      issues: state.issues.filter((i) => !(i.source === 'manifest' && i.ruleId.startsWith('sequencing.'))),
-    }))
-    validation.addIssues(
-      engine.sequencingWarnings.map((message) =>
-        issue({ severity: 'warning', source: 'manifest', ruleId: 'sequencing.unsupported', message }),
-      ),
-    )
+    this.reportSequencingWarnings(engine)
     this.engine = engine
     course.setSequenced(true)
     useRuntimeStore.getState().setAdapter(engine, '2004')
@@ -249,6 +314,36 @@ export class CourseSession {
           'The sequencing engine could not start this course with the declared rules; it is played in manifest order instead.',
       }),
     )
+    return false
+  }
+
+  /** Report what the engine will not evaluate; a new engine's warnings replace earlier ones. */
+  private reportSequencingWarnings(engine: Scorm2004Adapter): void {
+    useValidationStore.setState((state) => ({
+      issues: state.issues.filter((i) => !(i.source === 'manifest' && i.ruleId.startsWith('sequencing.'))),
+    }))
+    useValidationStore.getState().addIssues(
+      engine.sequencingWarnings.map((message) =>
+        issue({ severity: 'warning', source: 'manifest', ruleId: 'sequencing.unsupported', message }),
+      ),
+    )
+  }
+
+  /**
+   * Rebuild the engine from saved state and return to the saved item. When
+   * the saved state no longer applies, the caller starts a fresh engine.
+   */
+  private resumeEngine(sequencing: SequencingOptions, itemId: string, state: string): boolean {
+    const engine = this.launcher.createSequencedRuntime(sequencing)
+    if (!engine.restoreSequencingState(state)) return false
+    this.reportSequencingWarnings(engine)
+    this.engine = engine
+    useCourseStore.getState().setSequenced(true)
+    useRuntimeStore.getState().setAdapter(engine, '2004')
+    this.nextDeliveryMode = 'resume'
+    this.engineNavigate(engine, 'choice', itemId)
+    if (useCourseStore.getState().pendingLaunch) return true
+    this.engine = null
     return false
   }
 
