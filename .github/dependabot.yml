@@ -1,0 +1,38 @@
+# Weekly dependency updates, grouped so each week brings at most a few PRs.
+# CI (lint, typecheck, unit, e2e) decides whether an update can be merged.
+version: 2
+updates:
+  - package-ecosystem: npm # pnpm-lock.yaml is updated too
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: chore
+      include: scope
+    groups:
+      # One PR for every minor and patch release.
+      minor-and-patch:
+        applies-to: version-updates
+        update-types: [minor, patch]
+      # One PR for all security fixes found at the same time.
+      security:
+        applies-to: security-updates
+        patterns: ['*']
+    ignore:
+      # Tracks the Node version CI and the container run (24); bump it with them.
+      - dependency-name: '@types/node'
+        update-types: ['version-update:semver-major']
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    commit-message:
+      prefix: chore
+      include: scope
+    groups:
+      actions:
+        patterns: ['*']

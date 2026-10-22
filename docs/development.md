@@ -39,6 +39,11 @@ pnpm run dev            # Vite dev server on http://localhost:5173
 Use `pnpm add` / `pnpm add -D` for dependencies; never commit a
 `package-lock.json` or `yarn.lock`.
 
+Dependabot (`.github/dependabot.yml`) opens grouped PRs every Monday: one
+for all minor and patch releases, one per major, one for security fixes, and
+one for GitHub Actions. Merge them only when CI is green; `@types/node`
+majors are skipped because it follows the Node version CI runs (24).
+
 ## Rules the build enforces
 
 1. **scorm-again is the runtime.** All SCORM behaviour comes from the
