@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="SCORMite">
+  <rect width="32" height="32" rx="7" fill="#101317"/>
+  <g shape-rendering="crispEdges">
+  <polygon points="6,19 16,14 26,19 26,25 16,20 6,25" fill="#1f242c"/>
+  <polygon points="6,25 16,20 26,25 16,30" fill="#0b0d10"/>
+  <polygon points="12,19 16,21 16,23 12,21" fill="#2ea043"/>
+  <polygon points="20,19 16,21 16,23 20,21" fill="#1f7a34"/>
+  <polygon points="16,17 20,19 16,21 12,19" fill="#3fb950"/>
+  <polygon points="6,19 16,24 16,30 6,25" fill="#2f6fb0"/>
+  <polygon points="26,19 16,24 16,30 26,25" fill="#1d4a78"/>
+  <polygon points="6,10 16,15 16,17 6,12" fill="#2f6fb0"/>
+  <polygon points="26,10 16,15 16,17 26,12" fill="#1d4a78"/>
+  <polygon points="6,10 16,5 26,10 16,15" fill="#4da3ff"/>
+  </g>
+</svg>

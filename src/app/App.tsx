@@ -12,7 +12,6 @@ import { ErrorBoundary } from '@/app/layout/ErrorBoundary'
 import { ScoEndedBar } from '@/app/course/ScoEndedBar'
 import { PlayerFrame } from '@/features/player'
 import { Button } from '@/components/ui/button'
-import logo from '@/assets/hero.png'
 import { logDevDiagnostic } from '@/shared/lib/devDiagnostics'
 
 // The dock and its panels are only downloaded when Advanced mode is opened.
@@ -79,7 +78,8 @@ export function App() {
     <div className="flex h-screen flex-col">
       <header className="flex h-10 shrink-0 items-center justify-between gap-2 border-b border-border-subtle bg-surface-900 px-3 text-sm">
         <div className="flex shrink-0 items-center gap-2">
-          <img src={logo} alt="" className="h-6 w-6 object-contain" />
+          {/* Drawn on a 24-unit grid, so it renders pixel-exact at this size. */}
+          <img src="/logo-mark-24.svg" alt="" width={24} height={24} className="h-6 w-6" />
           <span className="font-medium tracking-tight">SCORMite</span>
           {/* The landing screen carries the visible h1; in a session the page is about the package. */}
           {session.pkg && <h1 className="sr-only">{session.pkg.name} — SCORMite</h1>}
