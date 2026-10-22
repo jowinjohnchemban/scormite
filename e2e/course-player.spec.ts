@@ -68,7 +68,7 @@ test('opens a folder-wrapped zip and reports it as a packaging error', async ({ 
   await page.setInputFiles('input[type="file"]', fixture('scorm12-folder-wrapped.zip'))
 
   await expect(playerBody(page)).toContainText('init=true', { timeout: 15_000 })
-  await expect(page.getByText(/1 package error/)).toBeVisible()
+  await expect(page.getByText(/^1 error — see the report/)).toBeVisible()
 })
 
 test('opens another package from the header without a page reload', async ({ page }) => {

@@ -17,7 +17,6 @@ import { cn } from '@/shared/lib/utils'
 import type { PackageSession } from '@/app/hooks/usePackageSession'
 import { CourseOutline } from '@/app/course/CourseOutline'
 import { LandingContent } from '@/app/landing/LandingContent'
-import { useCourseStore } from '@/app/state/courseStore'
 import { useLogStore } from '@/features/logging'
 import { useManifestStore } from '@/features/manifest'
 import { usePackageStore } from '@/features/package-loader'
@@ -37,10 +36,16 @@ function plural(count: number, noun: string): string {
 function PackageHeader() {
   const pkg = usePackageStore((s) => s.package)
   const manifest = useManifestStore((s) => s.manifest)
-  const itemCount = useCourseStore((s) => s.items.length)
+  const fileCount = usePackageStore((s) => s.filePaths.length)
   const errorCount = useValidationStore((s) => s.issues.filter((i) => i.severity === 'error').length)
+  const warningCount = useValidationStore((s) => s.issues.filter((i) => i.severity === 'warning').length)
 
   if (!pkg || !manifest) return null
+
+  const problems = [
+    ...(errorCount > 0 ? [plural(errorCount, 'error')] : []),
+    ...(warningCount > 0 ? [plural(warningCount, 'warning')] : []),
+  ]
 
   const scoCount = manifest.resources.filter((r) => r.scormType === 'sco').length
   const edition = pkg.scormEdition ? ` ${pkg.scormEdition} Edition` : ''
@@ -61,12 +66,11 @@ function PackageHeader() {
         {edition}
       </p>
       <p className="mt-1 text-[11px] text-slate-500">
-        {plural(itemCount, 'item')} · {plural(scoCount, 'SCO')} ·{' '}
-        {plural(manifest.resources.length - scoCount, 'asset')}
+        {plural(scoCount, 'SCO')} · {plural(fileCount, 'file')}
       </p>
-      {errorCount > 0 && (
-        <p className="mt-1 text-[11px] text-red-400">
-          {plural(errorCount, 'package error')} — see the report or Advanced › Validation
+      {problems.length > 0 && (
+        <p className={cn('mt-1 text-[11px]', errorCount > 0 ? 'text-red-400' : 'text-warning')}>
+          {problems.join(' · ')} — see the report or Advanced › Validation
         </p>
       )}
     </div>
@@ -111,7 +115,17 @@ function describeCall(record: ApiCallRecord): string {
   const result = record.errorCode
     ? `Error ${record.errorCode}${record.errorString ? ` — ${record.errorString}` : ''}${record.diagnostic ? `\n${record.diagnostic}` : ''}`
     : `→ ${record.returnValue}`
-  return `${call}\n${result}`
+  return `${formatTime(record.timestamp, false)}\n${call}\n${result}`
+}
+
+/**
+ * The one value worth reading at a glance: what a SetValue wrote, what any
+ * other call returned, or the error code.
+ */
+function callValue(record: ApiCallRecord): string {
+  if (record.errorCode) return `Err ${record.errorCode}`
+  const value = record.method === 'SetValue' ? record.value : record.returnValue
+  return value || '""'
 }
 
 function BasicApiLog() {
@@ -149,15 +163,13 @@ function BasicApiLog() {
         >
           <table className="w-full table-fixed border-collapse text-left">
             <colgroup>
-              <col className="w-[4.5rem]" />
               <col />
-              <col className="w-[4.5rem]" />
+              <col className="w-24" />
             </colgroup>
             <thead className="sticky top-0 bg-surface-900 text-[10px] uppercase tracking-wide text-slate-500">
               <tr>
-                <th className="px-2 py-1 font-medium">Time</th>
                 <th className="px-2 py-1 font-medium">Call</th>
-                <th className="px-2 py-1 font-medium">Result</th>
+                <th className="px-2 py-1 font-medium">Value</th>
               </tr>
             </thead>
             <tbody>
@@ -167,13 +179,12 @@ function BasicApiLog() {
                   title={describeCall(record)}
                   className="border-t border-border-subtle/60 hover:bg-surface-800/80"
                 >
-                  <td className="whitespace-nowrap px-2 py-1 text-slate-600">{formatTime(record.timestamp, false)}</td>
-                  <td className="truncate px-2 py-1 text-slate-300">
+                  <td className="px-2 py-1 align-top text-slate-300 [overflow-wrap:anywhere]">
                     <span className="text-accent">{record.method}</span>
                     {record.element ? <span className="text-slate-500"> {record.element}</span> : null}
                   </td>
-                  <td className={record.errorCode ? 'truncate px-2 py-1 text-red-400' : 'truncate px-2 py-1 text-emerald-400'}>
-                    {record.errorCode ? `Err ${record.errorCode}` : record.returnValue || '""'}
+                  <td className={cn('truncate px-2 py-1 align-top', record.errorCode ? 'text-red-400' : 'text-emerald-400')}>
+                    {callValue(record)}
                   </td>
                 </tr>
               ))}
