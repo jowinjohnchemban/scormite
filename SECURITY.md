@@ -33,6 +33,14 @@ Knowing this helps tell a vulnerability from the design:
   scripts can therefore reach what SCORMite stores in that browser — saved
   progress and layout preferences — just as content reaches the LMS page it
   runs in. **Only open packages you trust,** as you would on an LMS.
+- **AI agents (WebMCP).** In browsers with WebMCP, SCORMite offers tools that
+  read the open session and navigate or restart it. They act only on the
+  session already open in that tab; opening a package is not a tool. Package
+  content they return is marked untrusted to the agent, and discarding saved
+  data is marked consequential so the browser can ask the user first. A
+  package runs with SCORMite's origin, so a malicious one could also register
+  tools of its own on the page — one more reason to open only packages you
+  trust.
 - **Third-party code** is limited to the open-source packages listed on the
   [About page](https://scormite.jowinjc.in/about/) and in `/licenses.txt`;
   dependencies are kept current by Dependabot.

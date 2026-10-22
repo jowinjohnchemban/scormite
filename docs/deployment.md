@@ -21,11 +21,12 @@ Recipes for some hosts follow; the requirements are the same everywhere.
 
 All optional; set them as build-time environment variables.
 
-| Variable                          | Effect                                                                                                                                                                                                                                  |
-| --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `VITE_SITE_URL` (or `SITE_URL`)   | The public origin used for the canonical link, Open Graph / Twitter image URLs, JSON-LD, `sitemap.xml`, `robots.txt`, and `llms.txt`. Defaults to the origin in `src/shared/config/seo.ts`; set it when deploying under another domain. |
-| `SEO_INDEX` (or `VITE_SEO_INDEX`) | `false` keeps search engines out of the deployment; `true` lets them in. Set `false` for preview and staging builds on hosts not listed below.                                                                                          |
-| `SEO_PRODUCTION_BRANCH`           | On Cloudflare, the branch whose builds are production (default `main`).                                                                                                                                                                 |
+| Variable                          | Effect                                                                                                                                                                                                                                           |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `VITE_SITE_URL` (or `SITE_URL`)   | The public origin used for the canonical link, Open Graph / Twitter image URLs, JSON-LD, `sitemap.xml`, `robots.txt`, and `llms.txt`. Defaults to the origin in `src/shared/config/seo.ts`; set it when deploying under another domain.          |
+| `SEO_INDEX` (or `VITE_SEO_INDEX`) | `false` keeps search engines out of the deployment; `true` lets them in. Set `false` for preview and staging builds on hosts not listed below.                                                                                                   |
+| `WEBMCP_ORIGIN_TRIAL_TOKENS`      | Origin-trial tokens that enable WebMCP for AI agents in Chrome and Edge while it is on trial; comma-separated, each registered for this deployment's origin. Without them, WebMCP works only where the browser enables it by default or by flag. |
+| `SEO_PRODUCTION_BRANCH`           | On Cloudflare, the branch whose builds are production (default `main`).                                                                                                                                                                          |
 
 Unset, `SEO_INDEX` is decided from the platforms that announce a preview
 build: Cloudflare Workers Builds and Pages (a branch other than the production

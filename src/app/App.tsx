@@ -15,6 +15,7 @@ import { PlayerFrame } from '@/features/player'
 import { Button } from '@/components/ui/button'
 import { logDevDiagnostic } from '@/shared/lib/devDiagnostics'
 import { loadAdvancedMode, preloadOnDemandModules } from '@/app/onDemandModules'
+import { useWebMcpTools } from '@/app/webmcp/useWebMcpTools'
 
 // The dock and its panels are not in the start page's JavaScript; they are
 // fetched once the page has loaded (see onDemandModules).
@@ -46,6 +47,9 @@ export function App() {
   // needed, so switching modes or opening a package is seamless even after a
   // deployment replaced the files this page refers to.
   useEffect(() => preloadOnDemandModules({ advancedMode: isDesktop }), [isDesktop])
+
+  // Agents in the browser (WebMCP) can read and drive the open session.
+  useWebMcpTools(session, isDesktop)
   const notice = useCourseStore((s) => s.notice)
   const noticeTone = useCourseStore((s) => s.noticeTone)
   const setNotice = useCourseStore((s) => s.setNotice)

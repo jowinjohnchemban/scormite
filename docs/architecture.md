@@ -312,6 +312,38 @@ emitted as `/licenses.txt`. The dev server shows the direct dependencies
 instead. The page uses the app's stylesheet and no JavaScript, and is linked
 from the start page and the no-JS fallback.
 
+## WebMCP
+
+`src/app/webmcp/` registers SCORMite's tools on `document.modelContext`
+([WebMCP](https://webmachinelearning.github.io/webmcp/)) so agents in the
+user's browser can read and drive the open session — the tool list is in the
+[User guide](user-guide.md#7-work-with-an-ai-agent).
+
+- `modelContext.ts` types the slice of the API SCORMite uses (TypeScript's DOM
+  library does not describe it yet) and feature-detects it; without WebMCP
+  nothing is registered.
+- `tools.ts` defines the tools over the app's stores and a small `ToolHost`
+  (the session's actions and the mode switch). Results are JSON-serializable
+  objects; preconditions are checked when a tool runs and reported as
+  `{ error }` with what to do instead.
+- `useWebMcpTools` (called from `App`) registers them once, reads the latest
+  session through a ref, and unregisters them on unmount through the
+  registration's `AbortSignal`.
+
+Two rules keep agents safe. Tools that return package content — titles, CMI
+values, API arguments, manifest text — carry `untrustedContentHint`, since a
+package could embed instructions aimed at an agent. Tools that discard
+tracking data carry `consequentialHint`, so the browser can confirm with the
+user. Opening a package is not a tool: the user chooses what runs. A package
+runs with SCORMite's origin (the SCORM API requires it), so its scripts can
+reach the page's `document.modelContext` too — the same trust boundary as the
+rest of the page, stated in [SECURITY.md](../SECURITY.md).
+
+Chrome and Edge ship WebMCP as an origin trial; a deployment enables it with
+its trial tokens (`WEBMCP_ORIGIN_TRIAL_TOKENS`, see
+[Deployment](deployment.md#build-settings)), which `build/originTrial.ts`
+adds as `<meta http-equiv="origin-trial">` tags.
+
 ## Adding a new feature
 
 1. `mkdir src/features/<name>` with `README.md` + `index.ts` (barrel) at minimum.
