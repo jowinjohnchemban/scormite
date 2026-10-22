@@ -1,2 +1,7 @@
 allowBuilds:
   unrs-resolver: true
+
+# eslint-plugin-boundaries 7.2.0 pins handlebars 4.7.9 (critical advisories,
+# fixed in 4.7.10). Lint-time only; remove once the plugin moves past it.
+overrides:
+  handlebars: ^4.7.10
