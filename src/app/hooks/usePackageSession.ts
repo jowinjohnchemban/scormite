@@ -155,6 +155,9 @@ export function usePackageSession(owner: 'basic' | 'advanced'): PackageSession {
           }
         }
         if (changesTracking(record)) sessionRef.current?.refresh()
+        // Keep progress across reloads at the moments an LMS would store it.
+        if (record.method === 'Terminate') sessionRef.current?.persist({ immediate: true })
+        else if (record.method === 'Commit') sessionRef.current?.persist()
       } catch {
         // The player may have navigated away while the event was being handled.
       }
@@ -182,6 +185,16 @@ export function usePackageSession(owner: 'basic' | 'advanced'): PackageSession {
   useEffect(() => {
     if (pendingNavigation) sessionRef.current?.navigate(pendingNavigation)
   }, [pendingNavigation])
+
+  // The tab is being hidden or closed: save what the running SCO has so far.
+  useEffect(() => {
+    const save = () => {
+      sessionRef.current?.persist()
+      void sessionRef.current?.flushSaves()
+    }
+    window.addEventListener('pagehide', save)
+    return () => window.removeEventListener('pagehide', save)
+  }, [])
 
   // Stop listening to the runtime if the app itself unmounts.
   useEffect(
@@ -240,7 +253,7 @@ export function usePackageSession(owner: 'basic' | 'advanced'): PackageSession {
         usePackageStore.getState().setFilePaths(parsed.filePaths)
         ValidationService.validateManifest(parsed.manifest, parsed.filePaths, parsed.rootFolder)
 
-        const session = createCourseSession(assembled, parsed.items)
+        const session = await createCourseSession(assembled, parsed.items, parsed.persistenceKey)
         sessionRef.current = session
         session.start()
       } catch (e) {

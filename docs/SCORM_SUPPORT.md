@@ -67,8 +67,15 @@ starts from follows each version's rules:
 | anything else | Same attempt (1.2 has no attempt boundary), data restored, `entry` blank | New attempt, fresh data, `entry` = `ab-initio` |
 
 *New attempt* discards one SCO's data; *Restart whole course* discards all
-of it. Data lives in memory for the session and is cleared when the
-package is closed or the page reloads.
+of it.
+
+**Saved progress.** Like an LMS keeping a learner record, SCORMite saves
+each SCO's attempt, per-item progress, the current item, and — for SCORM
+2004 — the sequencing engine's state in this browser (IndexedDB) on every
+Commit, Terminate, and SCO change. Reopening the same package (same
+manifest and zip size) resumes where you were, with a notice; *Restart
+whole course* forgets it. Nothing is uploaded, and private browsing modes
+that block IndexedDB simply start fresh each time.
 
 **Breakpoints** hold `SetValue` / `Commit` calls (the SCO is answered
 `true` immediately; the SCORM API cannot wait). Held calls are applied in
@@ -145,5 +152,3 @@ code and scorm-again's explanation (`GetErrorString` / `GetDiagnostic`).
 - **External launch URLs.** Resources whose `href` is an absolute URL on
   another site cannot reach the SCORM API from SCORMite's player and are not
   supported.
-- **Persistence.** Attempt data is kept for the session only; there is no
-  saved learner record across page reloads.

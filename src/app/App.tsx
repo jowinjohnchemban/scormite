@@ -42,6 +42,7 @@ export function App() {
   // the running SCO) outlives any one mode shell.
   const session = usePackageSession(mode)
   const notice = useCourseStore((s) => s.notice)
+  const noticeTone = useCourseStore((s) => s.noticeTone)
   const setNotice = useCourseStore((s) => s.setNotice)
   const dismissNotice = useCallback(() => setNotice(null), [setNotice])
   const draggingFile = useWindowFileDrop(true, (file) => void session.loadFile(file))
@@ -120,7 +121,7 @@ export function App() {
         </div>
       </header>
       <SessionAlert message={session.pkg ? session.error : null} onDismiss={session.dismissError} />
-      <SessionAlert message={notice} onDismiss={dismissNotice} tone="warning" />
+      <SessionAlert message={notice} onDismiss={dismissNotice} tone={noticeTone} />
       <main ref={mainRef} className="relative min-h-0 flex-1 overflow-hidden">
         {/*
           Persistent player layer. The SCO iframe must never leave the DOM on

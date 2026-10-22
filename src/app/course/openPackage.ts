@@ -11,6 +11,10 @@ import { cachePackageFiles } from '@/features/player'
 import type { SequencingOptions } from '@/features/runtime'
 import type { LaunchableItem, Manifest, Package, ScormEdition, ScormVersion } from '@/shared/types'
 import { CourseSession } from './CourseSession'
+import { IndexedDbStore, packageKey, SessionPersistence } from './SessionPersistence'
+
+/** Saved progress lives in this browser's IndexedDB. */
+const progressStore = new IndexedDbStore()
 
 export interface ParsedPackage {
   name: string
@@ -21,6 +25,8 @@ export interface ParsedPackage {
   filePaths: string[]
   /** Set when the manifest sat inside a folder of the zip. */
   rootFolder?: string
+  /** Identity of this package across reloads, for saved progress. */
+  persistenceKey: string
   /** Copy the package's files into the player's cache under `packageId`. */
   cacheFiles: (packageId: string) => Promise<void>
 }
@@ -44,6 +50,7 @@ export async function parsePackage(file: File): Promise<ParsedPackage> {
       items,
       filePaths: raw.filePaths,
       ...(raw.rootFolder !== undefined ? { rootFolder: raw.rootFolder } : {}),
+      persistenceKey: await packageKey(raw.manifestXml, file.size),
       cacheFiles: async (packageId) => {
         try {
           await cachePackageFiles(packageId, raw.filePaths, raw.getFile)
@@ -81,6 +88,16 @@ function sequencingFor(pkg: Package): SequencingOptions | null {
   }
 }
 
-export function createCourseSession(pkg: Package, items: LaunchableItem[]): CourseSession {
-  return new CourseSession(pkg, items, sequencingFor(pkg))
+/**
+ * The course session for an opened package, resuming progress saved in this
+ * browser by an earlier visit, if any.
+ */
+export async function createCourseSession(
+  pkg: Package,
+  items: LaunchableItem[],
+  persistenceKey: string,
+): Promise<CourseSession> {
+  const persistence = new SessionPersistence(progressStore, persistenceKey)
+  const saved = await persistence.load()
+  return new CourseSession(pkg, items, sequencingFor(pkg), persistence, saved)
 }

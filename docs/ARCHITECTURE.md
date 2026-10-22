@@ -84,6 +84,7 @@ manifest, runtime, player, session, and validation):
 | `ScoLauncher` | class | Builds runtimes (a fresh one per SCO, or one sequenced runtime per course) with the middleware pipeline, and delivers an item into a runtime: manifest launch data + stored attempt + `window.API` proxy |
 | `CourseNavigator` | class | Flow-mode previous / next and resolution of SCO navigation requests |
 | `AttemptStore` | class | The LMS's persistence for the session: last stored attempt per item |
+| `SessionPersistence` | class | Saved progress across reloads (IndexedDB behind a `KeyValueStore`): attempts, progress, current item, serialized sequencing state; keyed by manifest hash + zip size; saved on Commit (coalesced), Terminate and every delivery |
 | `useCourseStore` (`app/state`) | Zustand | Items, current item, progress, navigation availability, pending launch / navigation; `go()` is the one entry point for navigation |
 | `usePackageSession` (`app/hooks`) | hook | React glue: load / close packages, run pending launches and navigation through the `CourseSession` |
 

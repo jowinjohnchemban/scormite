@@ -214,6 +214,26 @@ export class Scorm2004Adapter extends ScormRuntimeAdapter {
     this.process?.updateNavigationValidity()
   }
 
+  /** scorm-again's sequencing state as a string, for saving across reloads. */
+  serializeSequencingState(): string | null {
+    if (!this.sequenced) return null
+    try {
+      return this.api.serializeSequencingState()
+    } catch {
+      return null
+    }
+  }
+
+  /** Restore state saved by `serializeSequencingState`; false when it does not apply. */
+  restoreSequencingState(state: string): boolean {
+    if (!this.sequenced) return false
+    try {
+      return this.api.deserializeSequencingState(state)
+    } catch {
+      return false
+    }
+  }
+
   navigationState(): NavigationState | null {
     const process = this.process
     if (!process) return null

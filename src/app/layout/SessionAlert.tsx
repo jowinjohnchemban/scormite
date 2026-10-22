@@ -5,6 +5,7 @@ import { cn } from '@/shared/lib/utils'
 const TONES = {
   error: { role: 'alert', className: 'border-red-500/40 bg-red-500/10 text-red-400' },
   warning: { role: 'status', className: 'border-warning/40 bg-warning/10 text-warning' },
+  info: { role: 'status', className: 'border-accent/40 bg-accent/10 text-accent' },
 } as const
 
 /**

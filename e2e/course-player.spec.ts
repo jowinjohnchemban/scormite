@@ -103,3 +103,21 @@ test('enforces SCORM 2004 sequencing rules from the manifest', async ({ page }) 
   await expect(quiz).toHaveAttribute('aria-current', 'step')
   await expect(outline.getByRole('button', { name: /Gated Intro/ })).toBeEnabled()
 })
+
+test('resumes saved progress after a page reload', async ({ page }) => {
+  await page.goto('/')
+  await page.setInputFiles('input[type="file"]', fixture('scorm12-multi-sco.zip'))
+  const outline = page.getByRole('region', { name: 'Course outline' })
+  await expect(playerBody(page)).toContainText('lesson-one |', { timeout: 15_000 })
+  await outline.getByRole('button', { name: 'Next item' }).click()
+  // lesson-two suspends and commits on load — the moment progress is saved.
+  await expect(playerBody(page)).toContainText('lesson-two | entry=ab-initio |')
+  // Commits are saved after a short coalescing window; no person reloads faster.
+  await page.waitForTimeout(400)
+
+  await page.reload()
+  await page.setInputFiles('input[type="file"]', fixture('scorm12-multi-sco.zip'))
+  await expect(page.getByText(/Resumed the progress saved in this browser/)).toBeVisible({ timeout: 15_000 })
+  await expect(playerBody(page)).toContainText('lesson-two | entry=resume | suspend=lesson-two-state')
+  await expect(outline.getByRole('button', { name: /Lesson Two/ })).toHaveAttribute('aria-current', 'step')
+})

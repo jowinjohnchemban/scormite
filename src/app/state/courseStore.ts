@@ -63,8 +63,9 @@ interface CourseState {
   pendingNavigation: NavigationIntent | null
   /** Why the course ended (exitAll, suspendAll, end of course), if it did. */
   endedReason: string | null
-  /** A short, dismissible explanation (e.g. a refused navigation). */
+  /** A short, dismissible message (e.g. a refused navigation, a resumed session). */
   notice: string | null
+  noticeTone: 'info' | 'warning'
 
   setCourse: (items: LaunchableItem[], sequenced: boolean) => void
   setSequenced: (sequenced: boolean) => void
@@ -78,7 +79,7 @@ interface CourseState {
   clearProgress: () => void
   setNavigation: (navigation: NavigationAvailability) => void
   setEnded: (reason: string | null) => void
-  setNotice: (notice: string | null) => void
+  setNotice: (notice: string | null, tone?: 'info' | 'warning') => void
   reset: () => void
 }
 
@@ -93,6 +94,7 @@ const INITIAL = {
   pendingNavigation: null,
   endedReason: null,
   notice: null,
+  noticeTone: 'warning',
 } satisfies Partial<CourseState>
 
 /** What flow mode allows from `currentItemId`: anything, in manifest order. */
@@ -172,7 +174,7 @@ export const useCourseStore = create<CourseState>((set, get) => ({
 
   setEnded: (endedReason) => set({ endedReason }),
 
-  setNotice: (notice) => set({ notice }),
+  setNotice: (notice, tone = 'warning') => set({ notice, noticeTone: tone }),
 
   reset: () => set(INITIAL),
 }))
