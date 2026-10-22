@@ -14,8 +14,10 @@ package cannot be opened (not a zip, no `imsmanifest.xml`, nothing
 launchable), the reason is shown and any open package keeps running.
 
 **Learner** in the header sets the learner ID and name courses receive —
-useful for courses that greet the learner or branch on the ID. It applies
-from the next launch and is remembered in this browser.
+useful for courses that greet the learner or branch on the ID. Until you set
+one, courses get a sample learner (`test-learner`, "Learner, Test"), as an
+LMS always supplies one. It applies from the next launch and is remembered in
+this browser.
 
 ## 2. Play the course
 
