@@ -2,7 +2,7 @@
 
 Breakpoints: pause the course on chosen SetValue / Commit calls.
 
-Breakpoints landed in Milestone 9: CRUD lives in `state/breakpointStore.ts` +
+Breakpoint CRUD lives in `state/breakpointStore.ts` +
 `services/BreakpointService.ts`, the UI in `components/BreakpointsPanel.tsx`.
 The pause/resume gate itself lives in the runtime adapter
 (`ScormRuntimeAdapter`); the session feature never imports runtime — resume is

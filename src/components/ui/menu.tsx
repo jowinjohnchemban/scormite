@@ -3,7 +3,8 @@
  *
  * Deliberately named `menu` rather than `dropdown-menu`: shadcn's
  * `dropdown-menu` is a Radix wrapper, and this project can't run
- * `pnpm dlx shadcn add` in every environment (see CLAUDE.md). Keeping a
+ * `pnpm dlx shadcn add` everywhere (it needs network access to
+ * ui.shadcn.com; see docs/development.md). Keeping a
  * distinct filename means adding the real Radix component later is additive
  * rather than a conflicting overwrite.
  */

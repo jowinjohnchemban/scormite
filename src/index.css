@@ -1,8 +1,7 @@
 @import 'tailwindcss';
 
 @theme {
-  /* Dark-first, VS Code / DevTools-adjacent palette. Refined in the
-     frontend-design pass that comes with the Advanced Mode UI milestone. */
+  /* Dark-first, VS Code / DevTools-adjacent palette. */
   --color-surface-950: #0b0d10;
   --color-surface-900: #101317;
   --color-surface-800: #171b21;
@@ -14,7 +13,7 @@
   --color-success: #3fb950;
   --color-warning: #d29922;
   --color-danger: #f85149;
-  /* M15 a11y: Tailwind's default slate-500/600 are below 4.5:1 on the
+  /* Accessibility: Tailwind's default slate-500/600 are below 4.5:1 on the
      dark surfaces. These lighter tones keep the muted-text hierarchy
      (600 < 500 < 400) and pass AA on the darkest background (#0b0d10):
      slate-600 = 4.9:1, slate-500 = 6.2:1, slate-400 = 7.6:1. */

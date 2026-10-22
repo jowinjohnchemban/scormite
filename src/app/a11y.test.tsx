@@ -1,14 +1,15 @@
 /**
- * Milestone 15 — Accessibility AA audit.
+ * Accessibility (WCAG 2.1 AA) audit in jsdom.
  *
- * Exit criteria: axe-core reports no violations in both Basic and Advanced
+ * axe-core must report no violations in both Basic and Advanced
  * modes. This test renders the real `<App />` (empty state — no package
  * loaded) and audits the rendered DOM with axe-core in each mode.
  *
  * Notes:
  * - jsdom cannot compute real colors, so `color-contrast` results are
  *   incomplete/skipped here; contrast is verified separately in the browser
- *   audit and by the theme tokens in `src/index.css` (see M15 docs).
+ *   audit (`e2e/accessibility.spec.ts`) and by the theme tokens in
+ *   `src/index.css`.
  * - The audit covers structure: landmarks, headings, ARIA roles/labels,
  *   button names, form labels, focus order, and keyboard-accessible names.
  */

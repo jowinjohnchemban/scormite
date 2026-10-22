@@ -120,7 +120,7 @@ export function DockTabStrip() {
         </button>
       </div>
 
-      {/* M15 a11y: the panel body scrolls, so it must be keyboard-focusable
+      {/* Accessibility: the panel body scrolls, so it must be keyboard-focusable
           (axe scrollable-region-focusable; also part of the ARIA tabs pattern). */}
       <div
         id="dock-bottom-tabpanel"

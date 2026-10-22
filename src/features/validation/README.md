@@ -2,7 +2,7 @@
 
 Static (manifest) and runtime validators, plus the Validation panel.
 
-Validation landed in Milestone 10. Static rules live in
+Static rules live in
 `services/ValidationService.ts` (pure `StaticValidator` objects over a
 `ManifestValidationContext`). Runtime rules live in the runtime feature's
 `validationMiddleware` (pure `RuntimeValidator` objects run on every API

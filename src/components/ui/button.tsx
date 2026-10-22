@@ -10,12 +10,12 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          // M15 a11y: white text on the bright accent hover (#4da3ff) is only
+          // Accessibility: white text on the bright accent hover (#4da3ff) is only
           // 2.5:1, so the hover state inverts to dark text on the accent.
           'bg-accent-muted text-slate-50 hover:bg-accent hover:text-surface-950',
         outline: 'border border-border-subtle bg-transparent text-slate-200 hover:bg-surface-700',
         ghost: 'bg-transparent text-slate-300 hover:bg-surface-700',
-        // M15 a11y: white on the danger red (#f85149) is 3.2:1; dark text
+        // Accessibility: white on the danger red (#f85149) is 3.2:1; dark text
         // gives 5.8:1 and keeps the token usable for accent text elsewhere.
         destructive: 'bg-danger text-surface-950 hover:opacity-90',
       },
