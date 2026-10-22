@@ -270,7 +270,7 @@ the CLI could not reach `ui.shadcn.com`) match the CLI's output shape.
 | Lint + architecture boundaries | ESLint flat config | `eslint.config.js` |
 | Format | Prettier | defaults, via `pnpm run format` |
 | Unit tests + coverage | Vitest + @vitest/coverage-v8 | `vitest.config.ts` (`src/**` and `build/**` tests; thresholds 35/20/30/35, `pnpm run test:coverage`) |
-| SEO / metadata | Vite plugin `build/seoPlugin.ts` | Renders head tags, JSON-LD, no-JS fallback, robots.txt, sitemap.xml, llms.txt, manifest.webmanifest from `src/shared/config/seo.ts`; set `VITE_SITE_URL` per deployment |
+| SEO / metadata | Vite plugin `build/seoPlugin.ts`, build inputs `build/seoContext.ts` | Renders head tags, JSON-LD, no-JS fallback, robots.txt, sitemap.xml, llms.txt, llms-full.txt, manifest.webmanifest, and the published docs from `src/shared/config/seo.ts`. Per build: indexing (previews get `Disallow: /` and `noindex`), the sitemap's pages (the emitted HTML files) and lastmod (last commit to the page's sources), and the docs' text. See [Deployment](deployment.md#search-engines-and-ai-assistants) |
 | Brand | `scripts/brand/mark.mjs`, `scripts/make-brand-assets.mjs` | The logo is generated from parameters on a 2:1 pixel-isometric integer grid (pixel-exact at native sizes): `logo-mark.svg` (dark surfaces), `logo-mark-24.svg` (24 px header), `logo.svg` (tile: favicon, README), PNG icons, and the social image — all committed |
 | E2E | Playwright | `playwright.config.ts` (`e2e/`, auto-starts dev server, committed fixtures in `e2e/fixtures/`) |
 | CI | GitHub Actions | `.github/workflows/ci.yml` (unit + e2e jobs) |

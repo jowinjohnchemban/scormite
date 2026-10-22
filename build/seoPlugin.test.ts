@@ -5,7 +5,11 @@
 
 import { describe, expect, it } from 'vitest'
 import { siteSeoConfig } from '../src/shared/config/seo.js'
+import { parseDoc } from './seoContext.js'
 import {
+  absolutizeLinks,
+  pagesFromHtmlFiles,
+  renderLlmsFullTxt,
   renderLlmsTxt,
   renderRobotsTxt,
   renderSitemapXml,
@@ -15,6 +19,10 @@ import {
 } from './seoPlugin.js'
 
 const ORIGIN = 'https://example.test'
+const DOCS = [
+  parseDoc('docs/guide.md', '# Guide\n\nHow to [test](other.md#x) a package.\n\n## One\n\nSee [this](#one) and [scorm-again](https://example.org/a).\n'),
+  parseDoc('docs/other.md', '# Other\n\nMore detail.\n\n## X\n'),
+]
 
 describe('siteSeoConfig', () => {
   it('keeps the title and description within search-result display limits', () => {
@@ -46,23 +54,53 @@ describe('renderStructuredData', () => {
 
 describe('generated files', () => {
   it('robots.txt allows the app, hides package paths, and points to the sitemap', () => {
-    const robots = renderRobotsTxt(ORIGIN)
+    const robots = renderRobotsTxt(ORIGIN, true)
     expect(robots).toContain('Allow: /')
     expect(robots).toContain('Disallow: /scorm-files/')
     expect(robots).toContain(`Sitemap: ${ORIGIN}/sitemap.xml`)
   })
 
-  it('sitemap.xml lists every route with lastmod', () => {
-    const xml = renderSitemapXml(siteSeoConfig, ORIGIN, '2026-01-02')
+  it('robots.txt shuts out crawlers on a deployment that must not be indexed', () => {
+    expect(renderRobotsTxt(ORIGIN, false)).toBe('User-agent: *\nDisallow: /\n')
+  })
+
+  it('sitemap.xml lists every page with lastmod', () => {
+    const xml = renderSitemapXml(['/', '/about/'], ORIGIN, '2026-01-02')
     expect(xml).toContain(`<loc>${ORIGIN}/</loc>`)
+    expect(xml).toContain(`<loc>${ORIGIN}/about/</loc>`)
     expect(xml).toContain('<lastmod>2026-01-02</lastmod>')
   })
 
-  it('llms.txt follows the llmstxt.org shape', () => {
-    const txt = renderLlmsTxt(siteSeoConfig, ORIGIN)
+  it('the sitemap pages are the emitted HTML files, without the 404 page or other assets', () => {
+    expect(pagesFromHtmlFiles(['index.html', 'assets/app.js', 'guide/index.html', 'pricing.html', '404.html'])).toEqual([
+      '/',
+      '/guide/',
+      '/pricing',
+    ])
+  })
+
+  it('llms.txt follows the llmstxt.org shape and links each published doc with its summary', () => {
+    const txt = renderLlmsTxt(siteSeoConfig, ORIGIN, DOCS)
     expect(txt.startsWith(`# ${siteSeoConfig.name}\n\n> `)).toBe(true)
+    expect(txt).toContain(`- [Guide](${ORIGIN}/docs/guide.md): How to test a package.`)
+    expect(txt).toContain(`- [Other](${ORIGIN}/docs/other.md): More detail.`)
+    expect(txt).toContain(`(${ORIGIN}/llms-full.txt)`)
     expect(txt).toContain('## Features')
     expect(txt).toContain('## FAQ')
+  })
+
+  it('llms-full.txt carries the full text of every doc, with links that work outside docs/', () => {
+    const txt = renderLlmsFullTxt(siteSeoConfig, ORIGIN, DOCS)
+    expect(txt).toContain(`Source: ${ORIGIN}/docs/guide.md`)
+    expect(txt).toContain('## One')
+    expect(txt).toContain(`Source: ${ORIGIN}/docs/other.md`)
+    expect(txt).toContain(`[test](${ORIGIN}/docs/other.md#x)`)
+  })
+
+  it('absolute links stay as they are; in-page anchors point at their document', () => {
+    const markdown = absolutizeLinks(DOCS[0]!, ORIGIN)
+    expect(markdown).toContain('[scorm-again](https://example.org/a)')
+    expect(markdown).toContain(`[this](${ORIGIN}/docs/guide.md#one)`)
   })
 
   it('the web app manifest references square icons', () => {
