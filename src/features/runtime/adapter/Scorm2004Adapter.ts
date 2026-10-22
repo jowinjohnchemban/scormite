@@ -219,6 +219,8 @@ export class Scorm2004Adapter extends ScormRuntimeAdapter {
 
   protected launchDataElements(data: ManifestItemLaunchData): Record<string, string | undefined> {
     return {
+      // A new attempt; a restored suspended attempt overrides it with "resume".
+      'cmi.entry': 'ab-initio',
       'cmi.launch_data': data.dataFromLms,
       'cmi.completion_threshold': data.completionThreshold,
       'cmi.scaled_passing_score': data.scaledPassingScore,
@@ -226,12 +228,15 @@ export class Scorm2004Adapter extends ScormRuntimeAdapter {
     }
   }
 
-  /** `cmi.entry` is `resume` only after a suspended exit; exit/session_time start blank. */
-  protected resumeData(cmi: Record<string, unknown>): Record<string, unknown> {
-    const next: Record<string, unknown> = {
-      ...cmi,
-      entry: cmi['exit'] === 'suspend' ? 'resume' : '',
-    }
+  /**
+   * SCORM 2004: only a `suspend` exit keeps the attempt open —
+   * the SCO resumes with its data and `cmi.entry` = `resume`. Any other
+   * exit ends the attempt, so the next launch is a new attempt with fresh
+   * data (`entry` = `ab-initio`).
+   */
+  protected resumeData(cmi: Record<string, unknown>): Record<string, unknown> | null {
+    if (cmi['exit'] !== 'suspend') return null
+    const next: Record<string, unknown> = { ...cmi, entry: 'resume' }
     delete next['exit']
     delete next['session_time']
     return next

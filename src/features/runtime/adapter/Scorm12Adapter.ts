@@ -27,6 +27,8 @@ export class Scorm12Adapter extends ScormRuntimeAdapter {
    */
   protected launchDataElements(data: ManifestItemLaunchData): Record<string, string | undefined> {
     return {
+      // A new attempt; a restored suspended attempt overrides it with "resume".
+      'cmi.core.entry': 'ab-initio',
       'cmi.core.credit': 'credit',
       'cmi.launch_data': data.dataFromLms,
       'cmi.student_data.mastery_score': data.masteryScore,
@@ -35,7 +37,12 @@ export class Scorm12Adapter extends ScormRuntimeAdapter {
     }
   }
 
-  /** `cmi.core.entry` is `resume` only after a suspended exit; exit/session_time start blank. */
+  /**
+   * SCORM 1.2 has no attempt boundary at a normal exit: the
+   * next session continues the same learner attempt with its data, and
+   * `cmi.core.entry` is `resume` after a suspend, blank otherwise.
+   * exit and session_time always start blank.
+   */
   protected resumeData(cmi: Record<string, unknown>): Record<string, unknown> {
     const rawCore = cmi['core']
     const core: Record<string, unknown> =

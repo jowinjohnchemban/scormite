@@ -99,6 +99,20 @@ export abstract class ScormRuntimeAdapter {
   }
 
   /**
+   * Drop every held call and leave the paused state without applying them —
+   * for when the SCO they belong to is unloaded. Applying them later would
+   * write one SCO's data into the next SCO's runtime.
+   */
+  discardHeldCalls(): number {
+    const dropped = this._pendingCalls.splice(0).length
+    if (this._paused) {
+      this._paused = false
+      for (const listener of this._pauseListeners) listener(false)
+    }
+    return dropped
+  }
+
+  /**
    * scorm-again API instances are single-session state machines: once the SCO
    * finishes (or is torn down without finishing), later Initialize calls fail
    * with error 101 ("LMS is already finished!").
@@ -267,8 +281,12 @@ export abstract class ScormRuntimeAdapter {
    */
   protected abstract launchDataElements(data: ManifestItemLaunchData): Record<string, string | undefined>
 
-  /** Version-specific: turn a stored attempt into the data a relaunch starts from. */
-  protected abstract resumeData(cmi: Record<string, unknown>): Record<string, unknown>
+  /**
+   * Version-specific: the data a relaunch starts from, given the stored
+   * attempt — or `null` when the version's rules start a new attempt with
+   * fresh data instead.
+   */
+  protected abstract resumeData(cmi: Record<string, unknown>): Record<string, unknown> | null
 
   /**
    * Seed the manifest's per-item launch data (launch_data, mastery score,
@@ -303,18 +321,23 @@ export abstract class ScormRuntimeAdapter {
   }
 
   /**
-   * Load a previously stored attempt before Initialize, so the SCO resumes
-   * with its suspend_data, location, score, objectives, and interactions.
-   * `entry` is derived from how the previous session exited.
+   * Load a previously stored attempt before Initialize, so the SCO continues
+   * with its suspend_data, location, score, objectives, and interactions —
+   * when the SCORM version says the attempt continues (see `resumeData`).
+   * Returns whether stored data was restored.
    */
-  restoreAttempt(record: AttemptRecord): void {
-    if (record.scormVersion !== this.scormVersion) return
+  restoreAttempt(record: AttemptRecord): boolean {
+    if (record.scormVersion !== this.scormVersion) return false
     const cmi = record.data['cmi']
-    if (!isRecord(cmi)) return
+    if (!isRecord(cmi)) return false
+    const data = this.resumeData(structuredClone(cmi))
+    if (!data) return false
     try {
-      this.lmsApi.loadFromJSON({ cmi: this.resumeData(structuredClone(cmi)) })
+      this.lmsApi.loadFromJSON({ cmi: data })
+      return true
     } catch {
       // A corrupt record degrades to a fresh attempt rather than a crash.
+      return false
     }
   }
 
