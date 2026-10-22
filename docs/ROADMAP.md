@@ -141,6 +141,24 @@ build (`pnpm run build`), lint clean (`pnpm run lint`), and typecheck
       error; service worker ignores launch query strings; SEO metadata,
       JSON-LD, llms.txt, sitemap, and a landing screen from one config.
 
+- [x] **Milestone 17 — Sequencing, honesty pass, production polish.**
+      *Exit criteria:* SCORM 2004 courses are driven by scorm-again's
+      sequencing engine from the manifest's `imsss` rules; every feature
+      shown is real and does what it says; the app works from 320 px up;
+      the start page does not download the runtime. Delivered:
+      `SequencingParser` + activity tree, `SequencingConfigBuilder` (with
+      warnings for anything not evaluable), engine-driven `CourseSession`
+      (e2e: a precondition gate on a global objective); removed runtime
+      profiles, the plugin system, and the Storage / Console / Performance /
+      Reports panels; breakpoints limited to calls that can be held honestly;
+      validation rules corrected (SCORM 1.2-only score range,
+      edition-specific suspend_data limits, commit tracking, percent-encoded
+      file hrefs); Manifest / Package / Network / CMI Inspector / API Monitor
+      made genuinely useful; reports with course results; tabbed mobile
+      sidebar and responsive header; error boundary; initial JavaScript cut
+      from 913 kB to 279 kB; a new pixel-exact brand mark; docs hub. 175
+      unit + 8 e2e tests green; lint, typecheck, build clean.
+
 ## Next candidates
 
 - **Persistent learner records.** Keep attempts across page reloads

@@ -49,6 +49,22 @@ detaching the iframe, which would destroy its browsing context and restart
 the running course. The shells receive the session as a prop and never
 render a second iframe.
 
+## Loading and failure
+
+- **On demand.** The start page loads only the shell. Opening a package
+  goes through `src/app/course/openPackage.ts`, loaded with `import()`;
+  scorm-again, jszip, and the XML parser live in their own
+  `package-runtime` chunk (see `build.rolldownOptions` in
+  `vite.config.ts`), and Advanced mode's dock is `React.lazy`. Project
+  modules are declared side-effect free (`"sideEffects": ["**/*.css"]` in
+  `package.json`) so feature barrels do not pull the runtime into the
+  start page — keep new modules free of import-time side effects, or list
+  them there.
+- **Errors.** `ErrorBoundary` (a class component) wraps the mode shells: a
+  rendering failure shows a retry instead of a blank page, the header
+  stays usable, and opening another package clears it. Package load
+  failures surface as `OpenPackageError` messages.
+
 ## State
 
 One Zustand store per feature — see `docs/DOMAIN_MODEL.md` for what each
