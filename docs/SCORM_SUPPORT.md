@@ -85,8 +85,9 @@ first, so one SCO's data never lands in the next one's runtime.
 **Learner.** Set a learner ID and name from **Learner** in the header; they
 are reported as `cmi.core.student_id` / `cmi.core.student_name` (1.2) or
 `cmi.learner_id` / `cmi.learner_name` (2004) from the next launch, and win
-over values in a restored attempt. Both are empty until set, and are
-remembered in this browser.
+over values in a restored attempt. Until set they are `test-learner` and
+"Learner, Test" (the "Last, First" form), and they are remembered in this
+browser.
 
 ## Navigation and sequencing
 

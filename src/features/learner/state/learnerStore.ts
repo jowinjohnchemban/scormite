@@ -8,16 +8,19 @@ interface LearnerState extends LearnerInfo {
   setLearner: (learner: LearnerInfo) => void
 }
 
+/** What a course sees until the tester sets a learner. */
+export const DEFAULT_LEARNER: LearnerInfo = { id: 'test-learner', name: 'Learner, Test' }
+
 /**
  * The learner identity SCORMite reports to courses, remembered in this
- * browser. Empty by default — like an LMS account without a name — until
- * the tester sets one.
+ * browser. Starts as a sample learner because every LMS supplies one: a
+ * course that shows the name or keys on the ID should be tested with real
+ * values. The name uses the "Last, First" form SCORM 1.2 specifies.
  */
 export const useLearnerStore = create<LearnerState>()(
   persist(
     (set) => ({
-      id: '',
-      name: '',
+      ...DEFAULT_LEARNER,
       setLearner: ({ id, name }) => set({ id: id.trim(), name: name.trim() }),
     }),
     {
