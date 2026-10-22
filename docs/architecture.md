@@ -223,8 +223,12 @@ Conventions the audits enforce:
 - **Contrast tokens** — `src/index.css` `@theme` overrides Tailwind's
   default slate-500 (`#7f93ab`, 6.2:1) and slate-600 (`#6d829c`, 4.9:1)
   on surface-950; the Tailwind defaults (4.08:1 / 2.56:1) fail AA. Keep
-  the 400 > 500 > 600 luminance hierarchy. Bright accent fills
-  (`bg-accent` #4da3ff) must not carry white text — `Button`'s default
+  the 400 > 500 > 600 luminance hierarchy. slate-600 passes only on
+  surface-950 / 900 (4.7:1 on 900); text on surface-800 or lighter —
+  including hover backgrounds and inputs, placeholders too — uses
+  slate-500 or lighter (4.95:1 on surface-700). The browser audit parks
+  the pointer, so it does not see hover states: check them by hand.
+  Bright accent fills (`bg-accent` #4da3ff) must not carry white text — `Button`'s default
   variant inverts to dark text on hover, and `destructive` uses dark text.
 - **Scrollable regions are focusable** — every scroll container that
   users can tab into (every panel body plus the bottom-dock tabpanel)

@@ -6,7 +6,7 @@ import { learnerIdProblem, useLearnerStore } from '../state/learnerStore'
 
 const inputClass =
   'h-7 w-full rounded-sm border border-border-subtle bg-surface-900 px-2 text-xs text-slate-200 ' +
-  'outline-none placeholder:text-slate-600 focus-visible:ring-1 focus-visible:ring-accent'
+  'outline-none placeholder:text-slate-500 focus-visible:ring-1 focus-visible:ring-accent'
 
 function LearnerForm() {
   const onDone = usePopoverClose()
