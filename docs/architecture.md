@@ -24,10 +24,11 @@ copy no longer matches the code (or when one feature imports another). The
 file and line counts.
 
 **Enforced, not just documented:** `eslint.config.js` uses `no-restricted-imports`
-to block `scorm-again` imports outside `src/features/runtime/`, and
+to block `scorm-again` imports outside `src/features/runtime/`,
 `eslint-plugin-boundaries` to block one feature from importing another
-feature's internals (only `app`, `shared`, `components`, and same-feature
-imports are allowed). Run `pnpm run lint` — both rules are exercised by the
+(a feature may import only `shared`, `components`, and itself), and
+`no-restricted-imports` again to keep the app layer on each feature's
+`index.ts`. Run `pnpm run lint` — every rule is exercised by the
 project's own code, so a regression here fails CI, not just code review.
 
 ## Folder structure

@@ -5,9 +5,8 @@ launch, scrubbable — the CMI Inspector shows the state at the chosen point.
 
 ## Public surface
 
-Import from other features only via this folder's `index.ts` barrel — never reach into
-`timeline/**/internal` paths directly. This boundary is enforced by ESLint
-(`eslint-plugin-boundaries`, see `eslint.config.js`).
+Only the app layer imports this feature, and only through `index.ts`;
+features never import each other. ESLint enforces both (`eslint.config.js`).
 
 ## What this feature owns
 

@@ -64,6 +64,9 @@ same version — Dependabot does not update it.
    features at once lives in `src/app/`. Enforced by
    `eslint-plugin-boundaries`; see
    [ADR 0001](adr/0001-eslint-architecture-boundaries.md).
+4. **The app layer uses a feature only through its `index.ts`**
+   (`@/features/<name>`), never its internal files — enforced by
+   `no-restricted-imports` for `src/app/`.
 
 When you add or change an architecture rule, prove it fires: write a
 deliberate violation, confirm `pnpm run lint` rejects it, then delete it. A

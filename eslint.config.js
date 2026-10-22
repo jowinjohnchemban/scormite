@@ -53,14 +53,9 @@ export default tseslint.config(
         },
       ],
 
-      // 2. Feature-to-feature imports are only allowed for the same
-      //    feature (its own internals) or via app/shared/components. This
-      //    stops one feature from reaching into another's internals; the
-      //    "only import a sibling feature's index.ts barrel" part of the
-      //    rule (see each feature's README.md) is a reviewed convention
-      //    rather than something this version of the plugin can express
-      //    as a single declarative policy -- revisit if the plugin adds a
-      //    barrel-only selector.
+      // 2. A feature imports only shared, components, and its own files —
+      //    never another feature. Only the app layer joins features (and
+      //    it may import them only through their index.ts; rule 3 below).
       'boundaries/dependencies': [
         'error',
         {
@@ -89,6 +84,32 @@ export default tseslint.config(
             {
               from: { element: { type: 'shared' } },
               allow: { to: { element: { type: 'shared' } } },
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    // 3. The app layer reaches a feature only through its public surface
+    //    (src/features/<name>/index.ts), never its internal files.
+    files: ['src/app/**/*.{ts,tsx}', 'src/main.tsx'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: 'scorm-again',
+              message:
+                'Only src/features/runtime may import scorm-again directly. ' +
+                'Import the adapter from "@/features/runtime" instead.',
+            },
+          ],
+          patterns: [
+            {
+              group: ['@/features/*/*'],
+              message: 'Import a feature through its index.ts: "@/features/<name>", not its internal files.',
             },
           ],
         },

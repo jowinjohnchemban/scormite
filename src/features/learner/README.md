@@ -9,5 +9,5 @@ imports the runtime.
 
 ## Public surface
 
-Import from other features only via this folder's `index.ts` barrel. This
-boundary is enforced by ESLint (`eslint-plugin-boundaries`).
+Only the app layer imports this feature, and only through `index.ts`;
+features never import each other. ESLint enforces both (`eslint.config.js`).

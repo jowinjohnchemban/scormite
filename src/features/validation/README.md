@@ -13,6 +13,5 @@ validation feature never imports runtime — issues arrive via an injected
 
 ## Public surface
 
-Import from other features only via this folder's `index.ts` barrel — never reach into
-`validation/**/internal` paths directly. This boundary is enforced by ESLint
-(`eslint-plugin-boundaries`, see `eslint.config.js`).
+Only the app layer imports this feature, and only through `index.ts`;
+features never import each other. ESLint enforces both (`eslint.config.js`).
