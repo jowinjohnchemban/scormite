@@ -142,6 +142,7 @@ and a `sequencing.start-failed` warning is reported.
 | `runtime.score-out-of-range` | error | SCORM 1.2 score outside 0–100 or not a number |
 | `runtime.suspend-data-oversized` | warning | `suspend_data` longer than 4096 (1.2), 4000 (2004 2nd / 3rd), or 64000 (2004 4th) characters |
 | `runtime.missing-commit` | warning | Terminate without a successful Commit in that session |
+| `runtime.status-overridden` | warning | The status recorded at Terminate differs from the one the SCO set, with the rule that decided it (1.2 mastery score; 2004 passing score or completion threshold) |
 | `sequencing.request-refused` | warning | The course requested navigation its rules do not allow |
 
 Every failed API call is also shown in the API log with its SCORM error
