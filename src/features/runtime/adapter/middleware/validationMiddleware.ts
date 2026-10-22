@@ -12,6 +12,10 @@ export interface RuntimeValidatorContext {
   suspendDataLimit: number
   /** True when a Commit returned 'true' earlier in this session. */
   sawCommit: boolean
+  /** The status values the SCO itself last set this session, by element. */
+  statusSetBySco: Readonly<Record<string, string>>
+  /** The current data model, read without going through the API log. */
+  readCmi: () => Record<string, string>
 }
 
 /**
@@ -38,6 +42,8 @@ export interface ValidationMiddlewareOptions {
   validators?: readonly RuntimeValidator[]
   /** Fired for every call that violates a validator. */
   onIssue: (issue: ValidationIssue) => void
+  /** Reads the runtime's current data model, for rules that compare against it. */
+  readCmi?: () => Record<string, string>
 }
 
 /**
@@ -107,33 +113,112 @@ export const missingCommitValidator: RuntimeValidator = {
   },
 }
 
+/** Status elements an LMS evaluates on exit, by SCORM version. */
+const LMS_EVALUATED_STATUS: Record<ScormVersion, readonly string[]> = {
+  '1.2': ['cmi.core.lesson_status'],
+  '2004': ['cmi.completion_status', 'cmi.success_status'],
+}
+
+/**
+ * The status the LMS records differs from the one the SCO last set. The
+ * runtime applies the LMS's rules on exit — the SCORM 1.2 mastery score, the
+ * SCORM 2004 completion threshold and passing score — so a course that
+ * "passes" in its authoring tool can still be recorded as failed. This names
+ * the rule that changed it.
+ */
+export const statusOverriddenValidator: RuntimeValidator = {
+  ruleId: 'runtime.status-overridden',
+  severity: 'warning',
+  check(result, ctx) {
+    if (result.method !== 'Terminate' || result.returnValue !== 'true') return null
+    const cmi = ctx.readCmi()
+    const changes = LMS_EVALUATED_STATUS[ctx.scormVersion].flatMap((element) => {
+      const reported = ctx.statusSetBySco[element]
+      const recorded = cmi[element] ?? ''
+      return reported === undefined || reported === recorded
+        ? []
+        : [{ element, text: `${element} is "${recorded}" — the SCO set "${reported}"` }]
+    })
+    if (changes.length === 0) return null
+    const reasons = changes.flatMap(({ element }) => {
+      const reason = statusRuleReason(element, cmi)
+      return reason ? [reason] : []
+    })
+    return [`The LMS changed the status on exit: ${changes.map((c) => c.text).join('; ')}.`, ...reasons].join(' ')
+  },
+}
+
+/** Why the LMS's rules produce the recorded value of a status element, when a rule applies. */
+function statusRuleReason(element: string, cmi: Record<string, string>): string | null {
+  const below = (value: string, limit: string) => Number(value) < Number(limit)
+  if (element === 'cmi.core.lesson_status') {
+    const score = cmi['cmi.core.score.raw'] ?? ''
+    const mastery = cmi['cmi.student_data.mastery_score'] ?? ''
+    if (score === '' || mastery === '') return null
+    return `Score ${score} is ${below(score, mastery) ? 'below' : 'at or above'} the manifest's mastery score of ${mastery} (adlcp:masteryscore).`
+  }
+  if (element === 'cmi.success_status') {
+    const passing = cmi['cmi.scaled_passing_score'] ?? ''
+    if (passing === '') return null
+    const scaled = cmi['cmi.score.scaled'] ?? ''
+    if (scaled === '') return `The manifest sets a passing score of ${passing} (imsss:minNormalizedMeasure), and the SCO reported no cmi.score.scaled.`
+    return `Scaled score ${scaled} is ${below(scaled, passing) ? 'below' : 'at or above'} the manifest's passing score of ${passing} (imsss:minNormalizedMeasure).`
+  }
+  if (element === 'cmi.completion_status') {
+    const threshold = cmi['cmi.completion_threshold'] ?? ''
+    if (threshold === '') return null
+    const progress = cmi['cmi.progress_measure'] ?? ''
+    if (progress === '') return `The manifest sets a completion threshold of ${threshold} (adlcp:completionThreshold), and the SCO reported no cmi.progress_measure.`
+    return `Progress ${progress} is ${below(progress, threshold) ? 'below' : 'at or above'} the manifest's completion threshold of ${threshold} (adlcp:completionThreshold).`
+  }
+  return null
+}
+
 /** Every runtime rule, in reporting order. */
 export const RUNTIME_VALIDATORS: readonly RuntimeValidator[] = [
   outOfRangeScoreValidator,
   oversizedSuspendDataValidator,
   missingCommitValidator,
+  statusOverriddenValidator,
 ]
 
 /**
  * Runs the runtime validators against every completed API call and pushes a
- * `ValidationIssue` for each violation. Tracks the session-scoped Commit
- * state needed by the missing-commit rule.
+ * `ValidationIssue` for each violation. Tracks the session-scoped state the
+ * rules need: whether a Commit succeeded, and the statuses the SCO set.
  */
 export function createValidationMiddleware(options: ValidationMiddlewareOptions): RuntimeMiddleware {
   const validators = options.validators ?? RUNTIME_VALIDATORS
   const limit = suspendDataLimit(options.scormVersion, options.scormEdition)
+  const statusElements = new Set(LMS_EVALUATED_STATUS[options.scormVersion])
+  const readCmi = options.readCmi ?? (() => ({}))
   let sawCommit = false
+  let statusSetBySco: Record<string, string> = {}
 
   return {
     post(result: ApiCallResult): void {
       if (result.method === 'Commit' && result.returnValue === 'true') sawCommit = true
-      // A fresh Initialize starts a new session for the commit rule.
-      if (result.method === 'Initialize') sawCommit = false
+      // A fresh Initialize starts a new session for the session-scoped rules.
+      if (result.method === 'Initialize') {
+        sawCommit = false
+        statusSetBySco = {}
+      }
+      if (
+        result.method === 'SetValue' &&
+        result.returnValue === 'true' &&
+        result.element !== undefined &&
+        result.value !== undefined &&
+        statusElements.has(result.element)
+      ) {
+        statusSetBySco = { ...statusSetBySco, [result.element]: result.value }
+      }
 
       const ctx: RuntimeValidatorContext = {
         scormVersion: options.scormVersion,
         suspendDataLimit: limit,
         sawCommit,
+        statusSetBySco,
+        readCmi,
       }
       for (const validator of validators) {
         const message = validator.check(result, ctx)

@@ -90,6 +90,7 @@ export class ScoLauncher {
         scormVersion: this.pkg.scormVersion,
         ...(this.pkg.scormEdition !== undefined ? { scormEdition: this.pkg.scormEdition } : {}),
         onIssue: (issue) => useValidationStore.getState().addIssue(issue),
+        readCmi: () => adapter.getFlattenedCmi(),
       }),
     )
   }

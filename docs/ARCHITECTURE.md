@@ -177,7 +177,7 @@ tester actually has:
 | Manifest | `manifest` | What exactly did the manifest declare for this item (resource, href, parameters, launch data, sequencing)? |
 | Package | `package-loader` | Which files are in the zip, and which are launch files? |
 | CMI Inspector | `inspector` | What is in the data model now, and what just changed? (filter by path or value) |
-| Validation | `validation` | What is wrong with the package or the run? |
+| Validation | `validation` | What is wrong with the package or the run — including a status the LMS rules changed on exit, and why? |
 | API Monitor | `logging` | What did the course call, with what, and why did a call fail? (per-method counts, failed-only filter) |
 | Network | `player` | Which files did the course request, and which are missing from the package? |
 | Timeline | `timeline` | What did the data model look like at any earlier point of this attempt? |
