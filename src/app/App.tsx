@@ -6,6 +6,7 @@ import { useMediaQuery } from '@/app/hooks/useMediaQuery'
 import { usePackageSession } from '@/app/hooks/usePackageSession'
 import { useWindowFileDrop } from '@/app/hooks/useWindowFileDrop'
 import { SessionControls } from '@/app/layout/SessionControls'
+import { LearnerMenu } from '@/features/learner'
 import { SessionAlert } from '@/app/layout/SessionAlert'
 import { FileDropOverlay } from '@/app/layout/FileDropOverlay'
 import { ErrorBoundary } from '@/app/layout/ErrorBoundary'
@@ -86,6 +87,7 @@ export function App() {
         </div>
         <div className="flex min-w-0 items-center gap-1">
           <SessionControls session={session} />
+          <LearnerMenu />
           {/* Advanced mode needs a wide screen, so the switch only appears where it works. */}
           {session.pkg && <div className="mx-1 hidden h-5 w-px shrink-0 bg-border-subtle lg:block" aria-hidden />}
           <div className="hidden shrink-0 items-center gap-1 lg:flex" role="group" aria-label="View mode">

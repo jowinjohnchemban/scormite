@@ -163,5 +163,5 @@ build (`pnpm run build`), lint clean (`pnpm run lint`), and typecheck
 
 - **Persistent learner records.** Keep attempts across page reloads
   (IndexedDB) so long courses can be resumed in a later session.
-- **Learner identity.** Let testers set `learner_id` / `learner_name` for
-  courses that display or branch on them.
+- [x] **Learner identity** (delivered after M17): set from the header,
+  seeded into each launch.

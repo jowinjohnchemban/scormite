@@ -171,3 +171,26 @@ describe('Scorm2004Adapter — launch data, resume, navigation', () => {
     ])
   })
 })
+
+describe('learner identity', () => {
+  it('reports the learner in each version and wins over a restored attempt', () => {
+    const first = new Scorm12Adapter('s1')
+    first.seedLearner({ id: 'old-id', name: 'Old, Name' })
+    first.initialize()
+    first.setValue('cmi.core.exit', 'suspend')
+    first.terminate()
+
+    const second = new Scorm12Adapter('s1')
+    second.restoreAttempt(first.exportAttempt())
+    second.seedLearner({ id: 'learner-042', name: 'Doe, Jane' })
+    second.initialize()
+    expect(second.getValue('cmi.core.student_id')).toBe('learner-042')
+    expect(second.getValue('cmi.core.student_name')).toBe('Doe, Jane')
+
+    const modern = new Scorm2004Adapter('s2')
+    modern.seedLearner({ id: 'learner-042', name: 'Doe, Jane' })
+    modern.initialize()
+    expect(modern.getValue('cmi.learner_id')).toBe('learner-042')
+    expect(modern.getValue('cmi.learner_name')).toBe('Doe, Jane')
+  })
+})

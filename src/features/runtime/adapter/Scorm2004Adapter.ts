@@ -2,6 +2,7 @@ import { Scorm2004API } from 'scorm-again'
 import type { Settings } from 'scorm-again'
 import type {
   ActivityDefinition,
+  LearnerInfo,
   HideLmsUiToken,
   ManifestItemLaunchData,
   SequencingDefinition,
@@ -226,6 +227,10 @@ export class Scorm2004Adapter extends ScormRuntimeAdapter {
       'cmi.scaled_passing_score': data.scaledPassingScore,
       'cmi.time_limit_action': data.timeLimitAction,
     }
+  }
+
+  protected learnerElements(learner: LearnerInfo): Record<string, string> {
+    return { 'cmi.learner_id': learner.id, 'cmi.learner_name': learner.name }
   }
 
   /**
