@@ -4,7 +4,10 @@
 
 <p align="center"><strong>Test, debug and validate SCORM packages in your browser.</strong></p>
 
+<p align="center"><a href="https://scormite.jowinjc.in"><strong>Open SCORMite</strong></a> · <a href="docs/user-guide.md">User guide</a> · <a href="CHANGELOG.md">Changelog</a></p>
+
 [![CI](https://github.com/jowinjohnchemban/scormite/actions/workflows/ci.yml/badge.svg)](https://github.com/jowinjohnchemban/scormite/actions/workflows/ci.yml)
+[![Licence: MIT](https://img.shields.io/badge/licence-MIT-7f93ab)](LICENSE)
 ![SCORM 1.2](https://img.shields.io/badge/SCORM-1.2-2f6fb0)
 ![SCORM 2004](https://img.shields.io/badge/SCORM%202004-2nd%20%7C%203rd%20%7C%204th%20Edition-2f6fb0)
 [![Runtime: scorm-again 3.4](https://img.shields.io/badge/runtime-scorm--again%203.4-3fb950)](https://github.com/jcputney/scorm-again)
@@ -21,10 +24,12 @@
 
 Drop a SCORM `.zip` and SCORMite plays it the way an LMS does — on the
 open-source [scorm-again](https://github.com/jcputney/scorm-again) runtime —
-showing every API call, the live CMI data, validation issues and a
-replayable timeline, so you catch tracking problems before uploading to
+showing every API call, the live CMI data, validation issues and the
+history of the data model, so you catch tracking problems before uploading to
 Moodle, Canvas, SuccessFactors, Cornerstone or any other LMS. Your package
 never leaves your browser: no upload, no account, no telemetry.
+
+![SCORMite in Advanced mode: a sequenced SCORM 2004 course with its outline, manifest, CMI inspector, and API log](docs/images/advanced-mode.png)
 
 ## Features
 
@@ -34,7 +39,7 @@ never leaves your browser: no upload, no account, no telemetry.
 - **Resume testing** — relaunch a SCO from its saved attempt (`entry=resume`, suspend data, location, score), start a new attempt, or restart the course
 - **LMS launch data** — mastery score, launch data, time limits, completion threshold and passing score from the manifest
 - **API log** — every call with arguments, result, timing and the runtime's own error explanation
-- **CMI inspector, timeline replay and breakpoints** (Advanced mode)
+- **CMI inspector, CMI history and breakpoints** (Advanced mode)
 - **Validation** — packaging problems (missing files, broken references, manifest not at the zip root, …) and runtime problems (out-of-range scores, oversized suspend data, missing commits, refused navigation)
 - **QA reports** — HTML, Markdown, JSON or CSV
 
@@ -59,9 +64,22 @@ counts, is on the site's About page.
 
 ## Documentation
 
-All documentation lives in [`docs/`](docs/README.md) — the knowledge hub for
-people and agents:
+All documentation lives in [`docs/`](docs/README.md):
 
 - [User guide](docs/user-guide.md) · [SCORM support](docs/scorm-support.md)
 - [Architecture](docs/architecture.md) · [Development](docs/development.md) · [Domain model](docs/domain-model.md)
 - [Deployment](docs/deployment.md) · [Roadmap](docs/roadmap.md) · [Decision records](docs/adr/README.md)
+
+## Contributing
+
+Bug reports, fixes, and ideas are welcome — see [CONTRIBUTING.md](CONTRIBUTING.md)
+and the [Code of Conduct](CODE_OF_CONDUCT.md). Report security problems
+privately as described in [SECURITY.md](SECURITY.md).
+
+## Licence
+
+[MIT](LICENSE) © Jowin John Chemban.
+
+SCORMite runs on [scorm-again](https://github.com/jcputney/scorm-again) (MIT);
+the open-source packages it ships, with their licences, are listed on the
+[About page](https://scormite.jowinjc.in/about/).
