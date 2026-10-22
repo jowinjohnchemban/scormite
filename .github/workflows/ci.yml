@@ -28,6 +28,9 @@ jobs:
       - name: Lint (includes architecture boundaries)
         run: pnpm run lint
 
+      - name: Formatting
+        run: pnpm run format:check
+
       - name: Typecheck
         run: pnpm run typecheck
 

@@ -21,11 +21,11 @@ Recipes for some hosts follow; the requirements are the same everywhere.
 
 All optional; set them as build-time environment variables.
 
-| Variable | Effect |
-|---|---|
-| `VITE_SITE_URL` (or `SITE_URL`) | The public origin used for the canonical link, Open Graph / Twitter image URLs, JSON-LD, `sitemap.xml`, `robots.txt`, and `llms.txt`. Defaults to the origin in `src/shared/config/seo.ts`; set it when deploying under another domain. |
-| `SEO_INDEX` (or `VITE_SEO_INDEX`) | `false` keeps search engines out of the deployment; `true` lets them in. Set `false` for preview and staging builds on hosts not listed below. |
-| `SEO_PRODUCTION_BRANCH` | On Cloudflare, the branch whose builds are production (default `main`). |
+| Variable                          | Effect                                                                                                                                                                                                                                  |
+| --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `VITE_SITE_URL` (or `SITE_URL`)   | The public origin used for the canonical link, Open Graph / Twitter image URLs, JSON-LD, `sitemap.xml`, `robots.txt`, and `llms.txt`. Defaults to the origin in `src/shared/config/seo.ts`; set it when deploying under another domain. |
+| `SEO_INDEX` (or `VITE_SEO_INDEX`) | `false` keeps search engines out of the deployment; `true` lets them in. Set `false` for preview and staging builds on hosts not listed below.                                                                                          |
+| `SEO_PRODUCTION_BRANCH`           | On Cloudflare, the branch whose builds are production (default `main`).                                                                                                                                                                 |
 
 Unset, `SEO_INDEX` is decided from the platforms that announce a preview
 build: Cloudflare Workers Builds and Pages (a branch other than the production
@@ -36,13 +36,13 @@ branch), Vercel (`VERCEL_ENV` other than `production`), and Netlify
 
 The build generates these files; nothing in `public/` needs editing:
 
-| File | Contents |
-|---|---|
-| `robots.txt` | Allows the app, keeps crawlers out of `/scorm-files/`, and points to the sitemap. On a deployment that must not be indexed: `Disallow: /`, and the page carries `noindex, nofollow`. |
-| `sitemap.xml` | Every HTML page the build emits. `lastmod` is the date of the last commit that changed the page (`index.html`, `src/`, `public/`); without git history — a container build, which leaves out `.git` — the build date. |
-| `llms.txt` | What SCORMite is, its features and FAQ (from the SEO config), and a link to each published document with its opening paragraph. |
-| `llms-full.txt` | The same summary followed by the full text of every published document. |
-| `docs/user-guide.md`, `docs/scorm-support.md` | The published documents (the `docs` list in the SEO config), served as Markdown. Their relative links may only point at each other; the build fails otherwise. |
+| File                                          | Contents                                                                                                                                                                                                              |
+| --------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `robots.txt`                                  | Allows the app, keeps crawlers out of `/scorm-files/`, and points to the sitemap. On a deployment that must not be indexed: `Disallow: /`, and the page carries `noindex, nofollow`.                                  |
+| `sitemap.xml`                                 | Every HTML page the build emits. `lastmod` is the date of the last commit that changed the page (`index.html`, `src/`, `public/`); without git history — a container build, which leaves out `.git` — the build date. |
+| `llms.txt`                                    | What SCORMite is, its features and FAQ (from the SEO config), and a link to each published document with its opening paragraph.                                                                                       |
+| `llms-full.txt`                               | The same summary followed by the full text of every published document.                                                                                                                                               |
+| `docs/user-guide.md`, `docs/scorm-support.md` | The published documents (the `docs` list in the SEO config), served as Markdown. Their relative links may only point at each other; the build fails otherwise.                                                        |
 
 ## Hosts
 

@@ -30,8 +30,7 @@ export const useInspectorStore = create<InspectorState>((set) => ({
       values,
       changedPaths: findChangedPaths(state.values, values),
     })),
-  showSnapshot: (data, changedPaths) =>
-    set({ values: data, changedPaths, isReplay: true }),
+  showSnapshot: (data, changedPaths) => set({ values: data, changedPaths, isReplay: true }),
   showLive: () => set({ isReplay: false }),
   reset: () => set({ values: {}, changedPaths: [], isReplay: false }),
 }))

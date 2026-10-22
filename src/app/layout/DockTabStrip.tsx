@@ -61,8 +61,7 @@ export function DockTabStrip() {
         }
         return
       }
-      const delta =
-        event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1 : 0
+      const delta = event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1 : 0
       if (delta === 0 || panelIds.length === 0) return
       event.preventDefault()
       const current = activeId ? panelIds.indexOf(activeId) : 0
@@ -70,9 +69,7 @@ export function DockTabStrip() {
       if (!next) return
       setActiveBottomTab(next)
       // Roving tabindex: focus follows selection, per the ARIA tabs pattern.
-      stripRef.current
-        ?.querySelector<HTMLButtonElement>(`#dock-tab-${CSS.escape(next)}`)
-        ?.focus()
+      stripRef.current?.querySelector<HTMLButtonElement>(`#dock-tab-${CSS.escape(next)}`)?.focus()
     },
     [panelIds, activeId, setActiveBottomTab, close],
   )

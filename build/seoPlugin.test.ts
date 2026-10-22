@@ -20,7 +20,10 @@ import {
 
 const ORIGIN = 'https://example.test'
 const DOCS = [
-  parseDoc('docs/guide.md', '# Guide\n\nHow to [test](other.md#x) a package.\n\n## One\n\nSee [this](#one) and [scorm-again](https://example.org/a).\n'),
+  parseDoc(
+    'docs/guide.md',
+    '# Guide\n\nHow to [test](other.md#x) a package.\n\n## One\n\nSee [this](#one) and [scorm-again](https://example.org/a).\n',
+  ),
   parseDoc('docs/other.md', '# Other\n\nMore detail.\n\n## X\n'),
 ]
 
@@ -72,11 +75,9 @@ describe('generated files', () => {
   })
 
   it('the sitemap pages are the emitted HTML files, without the 404 page or other assets', () => {
-    expect(pagesFromHtmlFiles(['index.html', 'assets/app.js', 'guide/index.html', 'pricing.html', '404.html'])).toEqual([
-      '/',
-      '/guide/',
-      '/pricing',
-    ])
+    expect(pagesFromHtmlFiles(['index.html', 'assets/app.js', 'guide/index.html', 'pricing.html', '404.html'])).toEqual(
+      ['/', '/guide/', '/pricing'],
+    )
   })
 
   it('llms.txt follows the llmstxt.org shape and links each published doc with its summary', () => {

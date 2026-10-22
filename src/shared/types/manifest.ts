@@ -5,11 +5,7 @@
  * without violating the ESLint feature-boundary rules.
  */
 
-import type {
-  CompletionThresholdDefinition,
-  HideLmsUiToken,
-  SequencingDefinition,
-} from './sequencing'
+import type { CompletionThresholdDefinition, HideLmsUiToken, SequencingDefinition } from './sequencing'
 
 export interface ManifestMetadata {
   schema?: string

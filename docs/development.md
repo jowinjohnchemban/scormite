@@ -25,16 +25,17 @@ pnpm install            # pnpm only — the version is pinned in package.json
 pnpm run dev            # Vite dev server on http://localhost:5173
 ```
 
-| Command | Purpose |
-|---|---|
-| `pnpm run lint` | ESLint, including the architecture boundary rules |
-| `pnpm run typecheck` | `tsc -b --noEmit` across app, Node, and e2e configs |
-| `pnpm run build` | Production build into `dist/` (also emits robots.txt, sitemap.xml, llms.txt, llms-full.txt, manifest.webmanifest, and the published docs) |
-| `pnpm run test` | Vitest unit tests, including axe-core accessibility audits |
-| `pnpm run test:coverage` | Unit tests with enforced coverage thresholds |
-| `pnpm run test:e2e` | Playwright end-to-end suite in Chromium against committed fixture packages |
-| `node scripts/make-fixtures.mjs` | Regenerate the e2e fixture packages (byte-stable) |
-| `node scripts/make-brand-assets.mjs` | Regenerate the logo SVGs, app icons, and social preview image from the mark's geometry |
+| Command                              | Purpose                                                                                                                                   |
+| ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm run lint`                      | ESLint, including the architecture boundary rules                                                                                         |
+| `pnpm run format` / `format:check`   | Prettier (`.prettierrc.json`: no semicolons, single quotes, 120 columns); CI runs the check                                               |
+| `pnpm run typecheck`                 | `tsc -b --noEmit` across app, Node, and e2e configs                                                                                       |
+| `pnpm run build`                     | Production build into `dist/` (also emits robots.txt, sitemap.xml, llms.txt, llms-full.txt, manifest.webmanifest, and the published docs) |
+| `pnpm run test`                      | Vitest unit tests, including axe-core accessibility audits                                                                                |
+| `pnpm run test:coverage`             | Unit tests with enforced coverage thresholds                                                                                              |
+| `pnpm run test:e2e`                  | Playwright end-to-end suite in Chromium against committed fixture packages                                                                |
+| `node scripts/make-fixtures.mjs`     | Regenerate the e2e fixture packages (byte-stable)                                                                                         |
+| `node scripts/make-brand-assets.mjs` | Regenerate the logo SVGs, app icons, and social preview image from the mark's geometry                                                    |
 
 Use `pnpm add` / `pnpm add -D` for dependencies; never commit a
 `package-lock.json` or `yarn.lock`.
@@ -86,18 +87,18 @@ rule that only looks right in config gives false confidence.
 
 ## Where code goes
 
-| Adding… | Goes in… |
-|---|---|
-| Anything that calls scorm-again | `src/features/runtime/adapter/` |
-| Runtime middleware (recording, breakpoints, validation, …) | `src/features/runtime/adapter/middleware/`, implementing `RuntimeMiddleware` |
-| Manifest parsing (including sequencing) | `src/features/manifest/services/` |
-| A dock panel for Advanced mode | The owning feature's `components/`, registered in `src/app/layout/panels.ts` |
-| A Zustand store | The feature that owns the data (see [Domain model](domain-model.md)) |
-| A shared UI primitive | `src/components/ui/`, in the shadcn/ui shape (cva variants + `cn()`) |
-| A cross-feature utility without UI | `src/shared/lib/` |
-| A type used by more than one feature | `src/shared/types/` |
-| Logic that joins several features | `src/app/` (for course playback: `src/app/course/`) |
-| A new feature | `src/features/<name>/` with a `README.md` and an `index.ts` barrel that is its only public surface |
+| Adding…                                                    | Goes in…                                                                                           |
+| ---------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| Anything that calls scorm-again                            | `src/features/runtime/adapter/`                                                                    |
+| Runtime middleware (recording, breakpoints, validation, …) | `src/features/runtime/adapter/middleware/`, implementing `RuntimeMiddleware`                       |
+| Manifest parsing (including sequencing)                    | `src/features/manifest/services/`                                                                  |
+| A dock panel for Advanced mode                             | The owning feature's `components/`, registered in `src/app/layout/panels.ts`                       |
+| A Zustand store                                            | The feature that owns the data (see [Domain model](domain-model.md))                               |
+| A shared UI primitive                                      | `src/components/ui/`, in the shadcn/ui shape (cva variants + `cn()`)                               |
+| A cross-feature utility without UI                         | `src/shared/lib/`                                                                                  |
+| A type used by more than one feature                       | `src/shared/types/`                                                                                |
+| Logic that joins several features                          | `src/app/` (for course playback: `src/app/course/`)                                                |
+| A new feature                                              | `src/features/<name>/` with a `README.md` and an `index.ts` barrel that is its only public surface |
 
 ### Shared entity types
 
@@ -176,6 +177,7 @@ A change is done when, in this order:
 
 ```bash
 pnpm run lint
+pnpm run format:check
 pnpm run typecheck
 pnpm run build
 pnpm run test
@@ -189,17 +191,17 @@ updated in the same change. Debatable architectural choices get a
 ## Brand
 
 The SCORMite mark is an open SCORM package with its lid lifted and the
-*mite* — a tiny cube, the defect SCORMite exists to find — inside. It is
+_mite_ — a tiny cube, the defect SCORMite exists to find — inside. It is
 generated by `scripts/brand/mark.mjs` on a true pixel-art isometric grid
 (2:1 slopes, integer vertices), so it renders pixel-exact at its native
 sizes, and uses only the theme's colours.
 
-| Asset | Use |
-|---|---|
-| `public/logo-mark.svg` | The mark on dark surfaces (social image, large placements) |
-| `public/logo-mark-24.svg` | The mark drawn natively at 24 px (app header) |
-| `public/logo.svg` | The mark on its tile — favicon, README, any light or unknown background |
-| `public/icon-*.png`, `apple-touch-icon.png` | App icons (Apple's is full-bleed; iOS rounds it) |
+| Asset                                       | Use                                                                     |
+| ------------------------------------------- | ----------------------------------------------------------------------- |
+| `public/logo-mark.svg`                      | The mark on dark surfaces (social image, large placements)              |
+| `public/logo-mark-24.svg`                   | The mark drawn natively at 24 px (app header)                           |
+| `public/logo.svg`                           | The mark on its tile — favicon, README, any light or unknown background |
+| `public/icon-*.png`, `apple-touch-icon.png` | App icons (Apple's is full-bleed; iOS rounds it)                        |
 
 Never scale the 32-unit mark to a non-multiple size where crispness
 matters; add a geometry drawn for that size instead. The mark is an

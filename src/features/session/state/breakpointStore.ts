@@ -47,14 +47,11 @@ export const useBreakpointStore = create<BreakpointState>((set, get) => ({
     return breakpoint
   },
 
-  removeBreakpoint: (id) =>
-    set((state) => ({ breakpoints: state.breakpoints.filter((bp) => bp.id !== id) })),
+  removeBreakpoint: (id) => set((state) => ({ breakpoints: state.breakpoints.filter((bp) => bp.id !== id) })),
 
   toggleBreakpoint: (id) =>
     set((state) => ({
-      breakpoints: state.breakpoints.map((bp) =>
-        bp.id === id ? { ...bp, enabled: !bp.enabled } : bp,
-      ),
+      breakpoints: state.breakpoints.map((bp) => (bp.id === id ? { ...bp, enabled: !bp.enabled } : bp)),
     })),
 
   clearBreakpoints: () => set({ breakpoints: [] }),
@@ -68,8 +65,7 @@ export const useBreakpointStore = create<BreakpointState>((set, get) => ({
       ),
     })),
 
-  setPausedFlag: (paused) =>
-    set({ paused, ...(paused ? {} : { currentHit: null }) }),
+  setPausedFlag: (paused) => set({ paused, ...(paused ? {} : { currentHit: null }) }),
 
   setResumeHandler: (resumeHandler) => set({ resumeHandler }),
 
@@ -78,6 +74,5 @@ export const useBreakpointStore = create<BreakpointState>((set, get) => ({
     if (handler) handler()
   },
 
-  reset: () =>
-    set({ breakpoints: [], paused: false, currentHit: null, resumeHandler: null }),
+  reset: () => set({ breakpoints: [], paused: false, currentHit: null, resumeHandler: null }),
 }))

@@ -45,7 +45,12 @@ describe('matchesBreakpoint', () => {
   })
 
   it('ignores disabled breakpoints', () => {
-    expect(matchesBreakpoint(breakpoint({ enabled: false, element: 'cmi.suspend_data' }), ctx({ element: 'cmi.suspend_data' }))).toBe(false)
+    expect(
+      matchesBreakpoint(
+        breakpoint({ enabled: false, element: 'cmi.suspend_data' }),
+        ctx({ element: 'cmi.suspend_data' }),
+      ),
+    ).toBe(false)
   })
 })
 
@@ -53,7 +58,9 @@ describe('holding execution in the adapter', () => {
   function setup(breakpoints: Breakpoint[]) {
     const hits: BreakpointHit[] = []
     const adapter = new Scorm12Adapter('s')
-    adapter.addMiddleware(createBreakpointMiddleware({ getBreakpoints: () => breakpoints, onHit: (hit) => hits.push(hit) }))
+    adapter.addMiddleware(
+      createBreakpointMiddleware({ getBreakpoints: () => breakpoints, onHit: (hit) => hits.push(hit) }),
+    )
     adapter.initialize()
     return { adapter, hits }
   }

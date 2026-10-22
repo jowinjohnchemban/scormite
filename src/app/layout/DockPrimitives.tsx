@@ -5,11 +5,7 @@ import { X } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import { usePanelRegistry, type PanelDef } from './PanelRegistry'
 
-export function ResizeHandle({
-  orientation,
-}: {
-  orientation: 'horizontal' | 'vertical'
-}) {
+export function ResizeHandle({ orientation }: { orientation: 'horizontal' | 'vertical' }) {
   return (
     <PanelResizeHandle
       className={cn(
@@ -57,10 +53,7 @@ export function PanelChrome({ panel }: { panel: PanelDef }) {
 export function PanelBody({ panel }: { panel: PanelDef }) {
   const Component = panel.component
   return (
-    <div
-      className="min-h-0 flex-1 overflow-auto bg-surface-950"
-      data-testid={`panel-body-${panel.id}`}
-    >
+    <div className="min-h-0 flex-1 overflow-auto bg-surface-950" data-testid={`panel-body-${panel.id}`}>
       <Component />
     </div>
   )

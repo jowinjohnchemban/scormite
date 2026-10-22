@@ -57,7 +57,12 @@ export function markShapes({ cx, top, w, lidT, rimTop, wall, miteW, miteY }) {
     // The mite: a tiny cube in the package's own visual language.
     `<polygon points="${points([[cx - miteW, miteY], [cx, miteY + mh], down([cx, miteY + mh], mh), down([cx - miteW, miteY], mh)])}" fill="${COLORS.miteLight}"/>`,
     `<polygon points="${points([[cx + miteW, miteY], [cx, miteY + mh], down([cx, miteY + mh], mh), down([cx + miteW, miteY], mh)])}" fill="${COLORS.miteDark}"/>`,
-    `<polygon points="${points([[cx, miteY - mh], [cx + miteW, miteY], [cx, miteY + mh], [cx - miteW, miteY]])}" fill="${COLORS.mite}"/>`,
+    `<polygon points="${points([
+      [cx, miteY - mh],
+      [cx + miteW, miteY],
+      [cx, miteY + mh],
+      [cx - miteW, miteY],
+    ])}" fill="${COLORS.mite}"/>`,
     // Front walls.
     `<polygon points="${points([rim.l, rim.b, down(rim.b, wall), down(rim.l, wall)])}" fill="${COLORS.light}"/>`,
     `<polygon points="${points([rim.r, rim.b, down(rim.b, wall), down(rim.r, wall)])}" fill="${COLORS.dark}"/>`,

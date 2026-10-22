@@ -87,9 +87,7 @@ export function renderStaticContent(config: SiteSeoConfig): string {
   const features = config.features
     .map((f) => `<li><h3>${escapeHtml(f.title)}</h3><p>${escapeHtml(f.description)}</p></li>`)
     .join('')
-  const faqs = config.faqs
-    .map((f) => `<dt>${escapeHtml(f.question)}</dt><dd>${escapeHtml(f.answer)}</dd>`)
-    .join('')
+  const faqs = config.faqs.map((f) => `<dt>${escapeHtml(f.question)}</dt><dd>${escapeHtml(f.answer)}</dd>`).join('')
   return `<div class="seo-fallback">
       <h1>${escapeHtml(config.headline)}</h1>
       <p>${escapeHtml(config.summary)}</p>
@@ -175,7 +173,9 @@ ${faqs}
 /** llms-full.txt — the site summary followed by the full text of every published doc. */
 export function renderLlmsFullTxt(config: SiteSeoConfig, origin: string, docs: readonly PublishedDoc[]): string {
   const summary = `# ${config.name}\n\n> ${config.description}\n\n${config.summary}\n`
-  const bodies = docs.map((doc) => `Source: ${absoluteUrl(origin, doc.path)}\n\n${absolutizeLinks(doc, origin).trim()}\n`)
+  const bodies = docs.map(
+    (doc) => `Source: ${absoluteUrl(origin, doc.path)}\n\n${absolutizeLinks(doc, origin).trim()}\n`,
+  )
   return [summary, ...bodies].join('\n---\n\n')
 }
 
@@ -290,7 +290,10 @@ export function createSeoPlugin(config: SiteSeoConfig, context: SeoBuildContext)
       order: 'post',
       handler(_options, bundle) {
         const pages = pagesFromHtmlFiles(Object.keys(bundle))
-        const emitted = { ...files, 'sitemap.xml': { contentType: XML, source: renderSitemapXml(pages, origin, context.lastmod) } }
+        const emitted = {
+          ...files,
+          'sitemap.xml': { contentType: XML, source: renderSitemapXml(pages, origin, context.lastmod) },
+        }
         for (const [fileName, file] of Object.entries(emitted)) {
           this.emitFile({ type: 'asset', fileName, source: file.source })
         }

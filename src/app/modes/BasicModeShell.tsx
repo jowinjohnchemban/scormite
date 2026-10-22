@@ -183,7 +183,12 @@ function BasicApiLog() {
                     <span className="text-accent">{record.method}</span>
                     {record.element ? <span className="text-slate-500"> {record.element}</span> : null}
                   </td>
-                  <td className={cn('truncate px-2 py-1 align-top', record.errorCode ? 'text-red-400' : 'text-emerald-400')}>
+                  <td
+                    className={cn(
+                      'truncate px-2 py-1 align-top',
+                      record.errorCode ? 'text-red-400' : 'text-emerald-400',
+                    )}
+                  >
                     {callValue(record)}
                   </td>
                 </tr>
@@ -229,14 +234,21 @@ function CompactSidebar() {
             onClick={() => setTab(entry.id)}
             className={cn(
               'flex-1 border-b-2 text-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-accent',
-              tab === entry.id ? 'border-accent text-slate-100' : 'border-transparent text-slate-500 hover:text-slate-300',
+              tab === entry.id
+                ? 'border-accent text-slate-100'
+                : 'border-transparent text-slate-500 hover:text-slate-300',
             )}
           >
             {entry.label}
           </button>
         ))}
       </div>
-      <div id="sidebar-panel" role="tabpanel" aria-labelledby={`sidebar-tab-${tab}`} className="flex min-h-0 flex-1 flex-col overflow-hidden">
+      <div
+        id="sidebar-panel"
+        role="tabpanel"
+        aria-labelledby={`sidebar-tab-${tab}`}
+        className="flex min-h-0 flex-1 flex-col overflow-hidden"
+      >
         {tab === 'course' && (
           <>
             <PackageHeader />
@@ -267,9 +279,7 @@ export function BasicModeShell({ session }: { session: PackageSession }) {
       {pkg === null ? (
         /* Opaque backdrop so the upload state covers the player layer. */
         <div className="pointer-events-auto h-full w-full bg-surface-950">
-          <LandingContent
-            dropZone={<DropZone onFile={session.loadFile} loading={loading} error={error} />}
-          />
+          <LandingContent dropZone={<DropZone onFile={session.loadFile} loading={loading} error={error} />} />
         </div>
       ) : (
         <>

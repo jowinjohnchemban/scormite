@@ -21,11 +21,9 @@ test('switches Basic ↔ Advanced without killing the running SCO', async ({ pag
 
   // Capture the launched iframe before switching.
   const player = page.frameLocator('iframe[title="SCORM Package"]')
-  await expect(page.locator('iframe[title="SCORM Package"]')).toHaveAttribute(
-    'src',
-    /\/scorm-files\//,
-    { timeout: 15_000 },
-  )
+  await expect(page.locator('iframe[title="SCORM Package"]')).toHaveAttribute('src', /\/scorm-files\//, {
+    timeout: 15_000,
+  })
   const srcBefore = await page.locator('iframe[title="SCORM Package"]').getAttribute('src')
 
   // Switch to Advanced.
@@ -34,22 +32,14 @@ test('switches Basic ↔ Advanced without killing the running SCO', async ({ pag
 
   // Advanced chrome: package status in the top toolbar, Manifest panel open by default.
   await expect(page.getByText('SCORM 1.2', { exact: true })).toBeVisible()
-  await expect(
-    page.locator('[data-testid="panel-header-manifest-explorer"]'),
-  ).toBeVisible()
+  await expect(page.locator('[data-testid="panel-header-manifest-explorer"]')).toBeVisible()
 
   // The SCO iframe is untouched by the switch.
-  await expect(page.locator('iframe[title="SCORM Package"]')).toHaveAttribute(
-    'src',
-    srcBefore ?? '',
-  )
+  await expect(page.locator('iframe[title="SCORM Package"]')).toHaveAttribute('src', srcBefore ?? '')
   await expect(player.locator('body')).toContainText('init=')
 
   // Switch back to Basic.
   await page.getByRole('button', { name: 'Basic', exact: true }).click()
   await expect(page.getByText('scorm12-basic', { exact: true })).toBeVisible()
-  await expect(page.locator('iframe[title="SCORM Package"]')).toHaveAttribute(
-    'src',
-    srcBefore ?? '',
-  )
+  await expect(page.locator('iframe[title="SCORM Package"]')).toHaveAttribute('src', srcBefore ?? '')
 })

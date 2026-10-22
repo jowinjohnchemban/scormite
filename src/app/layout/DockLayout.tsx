@@ -31,10 +31,7 @@ export function DockLayout({ center }: DockLayoutProps) {
 
   // Sizes are remembered per combination of visible docks, so closing the
   // bottom dock and reopening it restores the height it had before.
-  const shellIds = useMemo(
-    () => (hasBottom ? ['workspace', 'bottom-dock'] : ['workspace']),
-    [hasBottom],
-  )
+  const shellIds = useMemo(() => (hasBottom ? ['workspace', 'bottom-dock'] : ['workspace']), [hasBottom])
   const workspaceIds = useMemo(
     () =>
       [hasLeft ? 'left-dock' : null, 'center', hasRight ? 'right-dock' : null].filter(
@@ -79,9 +76,7 @@ export function DockLayout({ center }: DockLayoutProps) {
 
               <Panel id="center" minSize="25%">
                 {/* Transparent so the persistent player layer (App) shows through. */}
-                <div className="h-full overflow-hidden">
-                  {center}
-                </div>
+                <div className="h-full overflow-hidden">{center}</div>
               </Panel>
 
               {hasRight && <ResizeHandle orientation="horizontal" />}

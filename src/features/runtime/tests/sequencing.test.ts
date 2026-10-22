@@ -58,7 +58,10 @@ describe('SequencingConfigBuilder', () => {
     expect(warnings).toEqual([])
     const root = settings.activityTree
     expect(root?.sequencingControls).toMatchObject({ flow: true, choice: false, randomizeChildren: true })
-    expect(root?.rollupRules?.rules[0]).toMatchObject({ minimumPercent: 50, conditions: [{ condition: 'progressKnown' }] })
+    expect(root?.rollupRules?.rules[0]).toMatchObject({
+      minimumPercent: 50,
+      conditions: [{ condition: 'progressKnown' }],
+    })
     expect(root?.primaryObjective?.objectiveID).toBe('org#primary')
     expect(root?.children?.map((c) => c.id)).toEqual(['a', 'b'])
   })
@@ -69,14 +72,31 @@ describe('SequencingConfigBuilder', () => {
         leaf('a', {
           sequencing: {
             rules: {
-              preConditionRules: [{ action: 'exitAll', conditionCombination: 'all', conditions: [{ condition: 'always' }] }],
+              preConditionRules: [
+                { action: 'exitAll', conditionCombination: 'all', conditions: [{ condition: 'always' }] },
+              ],
               exitConditionRules: [],
               postConditionRules: [],
             },
             rollupRules: [
-              { action: 'satisfied', childActivitySet: 'all', conditionCombination: 'any', conditions: [{ condition: 'satisfied', operator: 'not' }] },
-              { action: 'satisfied', childActivitySet: 'all', conditionCombination: 'any', conditions: [{ condition: 'satisfied' }, { condition: 'completed' }] },
-              { action: 'satisfied', childActivitySet: 'all', conditionCombination: 'all', conditions: [{ condition: 'timeLimitExceeded' }] },
+              {
+                action: 'satisfied',
+                childActivitySet: 'all',
+                conditionCombination: 'any',
+                conditions: [{ condition: 'satisfied', operator: 'not' }],
+              },
+              {
+                action: 'satisfied',
+                childActivitySet: 'all',
+                conditionCombination: 'any',
+                conditions: [{ condition: 'satisfied' }, { condition: 'completed' }],
+              },
+              {
+                action: 'satisfied',
+                childActivitySet: 'all',
+                conditionCombination: 'all',
+                conditions: [{ condition: 'timeLimitExceeded' }],
+              },
             ],
           },
         }),
@@ -146,7 +166,9 @@ describe('Scorm2004Adapter with sequencing', () => {
               exitConditionRules: [],
               postConditionRules: [],
             },
-            objectives: [{ objectiveID: 'gate', mapInfo: [{ targetObjectiveID: 'g-intro', readSatisfiedStatus: true }] }],
+            objectives: [
+              { objectiveID: 'gate', mapInfo: [{ targetObjectiveID: 'g-intro', readSatisfiedStatus: true }] },
+            ],
           },
         }),
       ],

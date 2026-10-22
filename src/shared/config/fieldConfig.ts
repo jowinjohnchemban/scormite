@@ -63,9 +63,10 @@ const fieldDisplayConfig: Readonly<FieldDisplayConfig[]> = [
   },
 ]
 
-const fieldDisplayMap = Object.fromEntries(
-  fieldDisplayConfig.map((field) => [field.path, field]),
-) as Record<string, FieldDisplayConfig>
+const fieldDisplayMap = Object.fromEntries(fieldDisplayConfig.map((field) => [field.path, field])) as Record<
+  string,
+  FieldDisplayConfig
+>
 
 export function getFieldLabel(path: string): string {
   return fieldDisplayMap[path]?.label ?? path

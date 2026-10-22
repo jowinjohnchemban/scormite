@@ -18,14 +18,7 @@ export interface AttemptRecord {
  * raises it; the adapter forwards it as a `navigation-request` event.
  */
 export type NavigationRequest =
-  | 'continue'
-  | 'previous'
-  | 'choice'
-  | 'jump'
-  | 'exit'
-  | 'exitAll'
-  | 'abandon'
-  | 'abandonAll'
+  'continue' | 'previous' | 'choice' | 'jump' | 'exit' | 'exitAll' | 'abandon' | 'abandonAll'
 
 export interface NavigationRequestEvent {
   sessionId: string

@@ -86,7 +86,12 @@ function escapeHtml(value: string): string {
 
 /** A Markdown table cell: pipes escaped, line breaks flattened. */
 function mdCell(value: string): string {
-  return value.replace(/\\/g, '\\\\').replace(/\|/g, '\\|').replace(/\r\n|\r|\n/g, ' ') || ' '
+  return (
+    value
+      .replace(/\\/g, '\\\\')
+      .replace(/\|/g, '\\|')
+      .replace(/\r\n|\r|\n/g, ' ') || ' '
+  )
 }
 
 function errorText(record: ApiCallRecord): string {
@@ -97,7 +102,10 @@ function errorText(record: ApiCallRecord): string {
 function packageRows(report: ReportData): [string, string][] {
   return [
     ['Name', report.package.name],
-    ['SCORM version', `${report.package.scormVersion}${report.package.scormEdition ? ` (${report.package.scormEdition} Edition)` : ''}`],
+    [
+      'SCORM version',
+      `${report.package.scormVersion}${report.package.scormEdition ? ` (${report.package.scormEdition} Edition)` : ''}`,
+    ],
     ['First launch', report.package.launchUrl],
     ['Loaded at', report.package.loadedAt],
     ['Resources', String(report.package.resourceCount)],
@@ -127,7 +135,12 @@ const courseRow = (item: CourseItemResult): string[] => [
 ]
 
 const ISSUE_HEADERS = ['Severity', 'Rule', 'Location', 'Message']
-const issueRow = (issue: ValidationIssue): string[] => [issue.severity, issue.ruleId, issue.location ?? '—', issue.message]
+const issueRow = (issue: ValidationIssue): string[] => [
+  issue.severity,
+  issue.ruleId,
+  issue.location ?? '—',
+  issue.message,
+]
 
 const CALL_HEADERS = ['Time', 'Method', 'Element', 'Value', 'Result', 'Error']
 const callRow = (record: ApiCallRecord): string[] => [
@@ -251,7 +264,10 @@ export const ReportBuilderService = {
       `<table>${rows.map(([label, value]) => `<tr><th scope="row">${escapeHtml(label)}</th><td>${escapeHtml(value)}</td></tr>`).join('')}</table>`
     const table = (headers: string[], rows: string[][], rowClass?: (index: number) => string) =>
       `<table><thead><tr>${headers.map((h) => `<th scope="col">${escapeHtml(h)}</th>`).join('')}</tr></thead><tbody>${rows
-        .map((row, index) => `<tr${rowClass ? ` class="${rowClass(index)}"` : ''}>${row.map((cell) => `<td>${escapeHtml(cell)}</td>`).join('')}</tr>`)
+        .map(
+          (row, index) =>
+            `<tr${rowClass ? ` class="${rowClass(index)}"` : ''}>${row.map((cell) => `<td>${escapeHtml(cell)}</td>`).join('')}</tr>`,
+        )
         .join('')}</tbody></table>`
 
     return `<!DOCTYPE html>
@@ -297,14 +313,20 @@ export const ReportBuilderService = {
   ${
     report.validationIssues.length === 0
       ? '<p>No validation issues found.</p>'
-      : table(ISSUE_HEADERS, report.validationIssues.map(issueRow), (index) => report.validationIssues[index]?.severity ?? '')
+      : table(
+          ISSUE_HEADERS,
+          report.validationIssues.map(issueRow),
+          (index) => report.validationIssues[index]?.severity ?? '',
+        )
   }
 
   <h2>API log</h2>
   ${
     report.apiCalls.length === 0
       ? '<p>No API calls recorded.</p>'
-      : table(CALL_HEADERS, report.apiCalls.map(callRow), (index) => (report.apiCalls[index]?.errorCode ? 'failed' : ''))
+      : table(CALL_HEADERS, report.apiCalls.map(callRow), (index) =>
+          report.apiCalls[index]?.errorCode ? 'failed' : '',
+        )
   }
 
   <h2>Data changes of the current item</h2>

@@ -5,14 +5,7 @@
  */
 
 export type ScormApiMethod =
-  | 'Initialize'
-  | 'Terminate'
-  | 'GetValue'
-  | 'SetValue'
-  | 'Commit'
-  | 'GetLastError'
-  | 'GetErrorString'
-  | 'GetDiagnostic'
+  'Initialize' | 'Terminate' | 'GetValue' | 'SetValue' | 'Commit' | 'GetLastError' | 'GetErrorString' | 'GetDiagnostic'
 
 export interface ApiCallRecord {
   id: string

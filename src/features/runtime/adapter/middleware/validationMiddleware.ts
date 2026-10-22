@@ -161,14 +161,16 @@ function statusRuleReason(element: string, cmi: Record<string, string>): string 
     const passing = cmi['cmi.scaled_passing_score'] ?? ''
     if (passing === '') return null
     const scaled = cmi['cmi.score.scaled'] ?? ''
-    if (scaled === '') return `The manifest sets a passing score of ${passing} (imsss:minNormalizedMeasure), and the SCO reported no cmi.score.scaled.`
+    if (scaled === '')
+      return `The manifest sets a passing score of ${passing} (imsss:minNormalizedMeasure), and the SCO reported no cmi.score.scaled.`
     return `Scaled score ${scaled} is ${below(scaled, passing) ? 'below' : 'at or above'} the manifest's passing score of ${passing} (imsss:minNormalizedMeasure).`
   }
   if (element === 'cmi.completion_status') {
     const threshold = cmi['cmi.completion_threshold'] ?? ''
     if (threshold === '') return null
     const progress = cmi['cmi.progress_measure'] ?? ''
-    if (progress === '') return `The manifest sets a completion threshold of ${threshold} (adlcp:completionThreshold), and the SCO reported no cmi.progress_measure.`
+    if (progress === '')
+      return `The manifest sets a completion threshold of ${threshold} (adlcp:completionThreshold), and the SCO reported no cmi.progress_measure.`
     return `Progress ${progress} is ${below(progress, threshold) ? 'below' : 'at or above'} the manifest's completion threshold of ${threshold} (adlcp:completionThreshold).`
   }
   return null

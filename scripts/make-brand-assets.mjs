@@ -85,7 +85,11 @@ try {
     const [width, height] = shot.size
     const page = await browser.newPage({ viewport: { width, height } })
     await page.setContent(shot.html, { waitUntil: 'load' })
-    await page.screenshot({ path: join(publicDir, shot.file), type: 'png', omitBackground: shot.file !== 'og-image.png' })
+    await page.screenshot({
+      path: join(publicDir, shot.file),
+      type: 'png',
+      omitBackground: shot.file !== 'og-image.png',
+    })
     await page.close()
     console.log(`wrote public/${shot.file} (${width}×${height})`)
   }

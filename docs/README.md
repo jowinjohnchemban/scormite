@@ -11,22 +11,22 @@ a document disagree, the document is the bug.
 
 ## Using SCORMite
 
-| Document | What it covers |
-|---|---|
-| [User guide](user-guide.md) | Testing a package end to end: loading, playing, resume and attempts, reading the API log, validation, reports |
+| Document                          | What it covers                                                                                                     |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| [User guide](user-guide.md)       | Testing a package end to end: loading, playing, resume and attempts, reading the API log, validation, reports      |
 | [SCORM support](scorm-support.md) | Versions and editions, LMS behaviour SCORMite reproduces, sequencing coverage, validation rules, known limitations |
 
 ## Building SCORMite
 
-| Document | What it covers |
-|---|---|
-| [Development](development.md) | Principles, setup, enforced rules, conventions, testing, definition of done |
-| [Architecture](architecture.md) | Layers, folder structure, the course player, panels, accessibility, tooling |
-| [Domain model](domain-model.md) | Core entities and which feature owns each |
-| [Deployment](deployment.md) | Hosting requirements, build settings, generated SEO files, and recipes for common hosts |
-| [Roadmap](roadmap.md) | Milestones delivered, with exit criteria, and what comes next |
-| [Decision records](adr/README.md) | Why debatable technical choices were made |
-| [Archive](archive/) | Superseded documents kept for their rationale, not maintained |
+| Document                          | What it covers                                                                          |
+| --------------------------------- | --------------------------------------------------------------------------------------- |
+| [Development](development.md)     | Principles, setup, enforced rules, conventions, testing, definition of done             |
+| [Architecture](architecture.md)   | Layers, folder structure, the course player, panels, accessibility, tooling             |
+| [Domain model](domain-model.md)   | Core entities and which feature owns each                                               |
+| [Deployment](deployment.md)       | Hosting requirements, build settings, generated SEO files, and recipes for common hosts |
+| [Roadmap](roadmap.md)             | Milestones delivered, with exit criteria, and what comes next                           |
+| [Decision records](adr/README.md) | Why debatable technical choices were made                                               |
+| [Archive](archive/)               | Superseded documents kept for their rationale, not maintained                           |
 
 ## Writing these documents
 

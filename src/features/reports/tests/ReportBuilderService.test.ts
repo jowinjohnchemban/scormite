@@ -1,8 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import {
-  ReportBuilderService,
-  type BuildReportOptions,
-} from '../services/ReportBuilderService'
+import { ReportBuilderService, type BuildReportOptions } from '../services/ReportBuilderService'
 import type { Manifest, Package } from '@/shared/types'
 
 const mockManifest: Manifest = {
@@ -51,7 +48,14 @@ const baseOptions: BuildReportOptions = {
     sequenced: false,
     currentItemTitle: 'Module 1',
     items: [
-      { identifier: 'item-1', title: 'Module 1', scormType: 'sco', completionStatus: 'passed', successStatus: 'passed', score: '90' },
+      {
+        identifier: 'item-1',
+        title: 'Module 1',
+        scormType: 'sco',
+        completionStatus: 'passed',
+        successStatus: 'passed',
+        score: '90',
+      },
     ],
   },
   sessionId: 'session-456',

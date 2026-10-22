@@ -7,14 +7,14 @@ configures and wraps but never modifies.
 
 ## Standards
 
-| Standard | Support |
-|---|---|
-| SCORM 1.2 | Full runtime (`window.API`, `LMS*` calls) |
-| SCORM 1.1 | Runs on the SCORM 1.2 API, as on production LMSs |
+| Standard                           | Support                                            |
+| ---------------------------------- | -------------------------------------------------- |
+| SCORM 1.2                          | Full runtime (`window.API`, `LMS*` calls)          |
+| SCORM 1.1                          | Runs on the SCORM 1.2 API, as on production LMSs   |
 | SCORM 2004 2nd Edition (`CAM 1.3`) | Full runtime (`window.API_1484_11`) and sequencing |
-| SCORM 2004 3rd Edition | Full runtime and sequencing |
-| SCORM 2004 4th Edition | Full runtime and sequencing |
-| AICC, xAPI (Tin Can), cmi5 | Not supported |
+| SCORM 2004 3rd Edition             | Full runtime and sequencing                        |
+| SCORM 2004 4th Edition             | Full runtime and sequencing                        |
+| AICC, xAPI (Tin Can), cmi5         | Not supported                                      |
 
 The version and edition come from `<schemaversion>`; when it is missing,
 from the manifest's namespaces.
@@ -42,15 +42,15 @@ from the manifest's namespaces.
 **Launch data.** Before a SCO initializes, the item's manifest data is
 loaded into the runtime:
 
-| Manifest | SCORM 1.2 element | SCORM 2004 element |
-|---|---|---|
-| `adlcp:datafromlms` / `adlcp:dataFromLMS` | `cmi.launch_data` | `cmi.launch_data` |
-| `adlcp:masteryscore` | `cmi.student_data.mastery_score` | — |
-| `adlcp:maxtimeallowed` | `cmi.student_data.max_time_allowed` | — |
-| `adlcp:timelimitaction` | `cmi.student_data.time_limit_action` | `cmi.time_limit_action` |
-| `adlcp:completionThreshold` | — | `cmi.completion_threshold` |
-| primary objective `minNormalizedMeasure` (when `satisfiedByMeasure`) | — | `cmi.scaled_passing_score` |
-| (always) | `cmi.core.credit = credit` | `cmi.credit = credit` (runtime default) |
+| Manifest                                                             | SCORM 1.2 element                    | SCORM 2004 element                      |
+| -------------------------------------------------------------------- | ------------------------------------ | --------------------------------------- |
+| `adlcp:datafromlms` / `adlcp:dataFromLMS`                            | `cmi.launch_data`                    | `cmi.launch_data`                       |
+| `adlcp:masteryscore`                                                 | `cmi.student_data.mastery_score`     | —                                       |
+| `adlcp:maxtimeallowed`                                               | `cmi.student_data.max_time_allowed`  | —                                       |
+| `adlcp:timelimitaction`                                              | `cmi.student_data.time_limit_action` | `cmi.time_limit_action`                 |
+| `adlcp:completionThreshold`                                          | —                                    | `cmi.completion_threshold`              |
+| primary objective `minNormalizedMeasure` (when `satisfiedByMeasure`) | —                                    | `cmi.scaled_passing_score`              |
+| (always)                                                             | `cmi.core.credit = credit`           | `cmi.credit = credit` (runtime default) |
 
 **Status rules** (fixed, modelled on SCORM Cloud): at Finish a mastery
 score decides passed / failed when the SCO reported a score; a status the
@@ -61,20 +61,20 @@ When a SCO is left, its data is stored exactly as scorm-again would commit
 it at Terminate (including accumulated `total_time`). What a relaunch
 starts from follows each version's rules:
 
-| Previous exit | SCORM 1.2 | SCORM 2004 |
-|---|---|---|
-| `suspend` | Same attempt, data restored, `entry` = `resume` | Same attempt, data restored, `entry` = `resume` |
-| anything else | Same attempt (1.2 has no attempt boundary), data restored, `entry` blank | New attempt, fresh data, `entry` = `ab-initio` |
+| Previous exit | SCORM 1.2                                                                | SCORM 2004                                      |
+| ------------- | ------------------------------------------------------------------------ | ----------------------------------------------- |
+| `suspend`     | Same attempt, data restored, `entry` = `resume`                          | Same attempt, data restored, `entry` = `resume` |
+| anything else | Same attempt (1.2 has no attempt boundary), data restored, `entry` blank | New attempt, fresh data, `entry` = `ab-initio`  |
 
-*New attempt* discards one SCO's data; *Restart whole course* discards all
+_New attempt_ discards one SCO's data; _Restart whole course_ discards all
 of it.
 
 **Saved progress.** Like an LMS keeping a learner record, SCORMite saves
 each SCO's attempt, per-item progress, the current item, and — for SCORM
 2004 — the sequencing engine's state in this browser (IndexedDB) on every
 Commit, Terminate, and SCO change. Reopening the same package (same
-manifest and zip size) resumes where you were, with a notice; *Restart
-whole course* forgets it. Nothing is uploaded, and private browsing modes
+manifest and zip size) resumes where you were, with a notice; _Restart
+whole course_ forgets it. Nothing is uploaded, and private browsing modes
 that block IndexedDB simply start fresh each time.
 
 **Breakpoints** hold `SetValue` / `Commit` calls (the SCO is answered
@@ -97,18 +97,18 @@ Next launch any item.
 **SCORM 2004** courses run on scorm-again's SCORM 2004 sequencing engine,
 configured from the manifest's IMS Simple Sequencing:
 
-| Supported | Notes |
-|---|---|
-| `controlMode` (choice, choiceExit, flow, forwardOnly, useCurrentAttempt…) | |
-| Pre-, exit-, and post-condition rules | All IMS conditions, `not`, `all` / `any`, `measureThreshold` |
-| `limitConditions` | `attemptLimit`, `attemptAbsoluteDurationLimit` |
-| Rollup rules and rollup controls | Single-condition rules, and multi-condition rules combined with `all` |
-| `adlseq:rollupConsiderations`, `constrainedChoiceConsiderations` | |
-| Objectives, global objectives (`mapInfo`, extended `adlseq:mapInfo`) | |
-| `randomizationControls`, `deliveryControls` | |
-| `imsss:sequencingCollection` (`IDRef`) | Controls, rules, and rollup |
-| `adlnav:hideLMSUI` | Hides the player's Previous / Next |
-| SCO navigation requests | `continue`, `previous`, `choice`, `jump`, `exit`, `exitAll`, `suspendAll`, `abandon`, `abandonAll` |
+| Supported                                                                 | Notes                                                                                              |
+| ------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `controlMode` (choice, choiceExit, flow, forwardOnly, useCurrentAttempt…) |                                                                                                    |
+| Pre-, exit-, and post-condition rules                                     | All IMS conditions, `not`, `all` / `any`, `measureThreshold`                                       |
+| `limitConditions`                                                         | `attemptLimit`, `attemptAbsoluteDurationLimit`                                                     |
+| Rollup rules and rollup controls                                          | Single-condition rules, and multi-condition rules combined with `all`                              |
+| `adlseq:rollupConsiderations`, `constrainedChoiceConsiderations`          |                                                                                                    |
+| Objectives, global objectives (`mapInfo`, extended `adlseq:mapInfo`)      |                                                                                                    |
+| `randomizationControls`, `deliveryControls`                               |                                                                                                    |
+| `imsss:sequencingCollection` (`IDRef`)                                    | Controls, rules, and rollup                                                                        |
+| `adlnav:hideLMSUI`                                                        | Hides the player's Previous / Next                                                                 |
+| SCO navigation requests                                                   | `continue`, `previous`, `choice`, `jump`, `exit`, `exitAll`, `suspendAll`, `abandon`, `abandonAll` |
 
 The outline disables items the rules do not currently allow (using the
 engine's look-ahead), Previous / Next follow the engine, and item statuses
@@ -130,21 +130,21 @@ and a `sequencing.start-failed` warning is reported.
 
 ## Validation rules
 
-| Rule | Severity | When it fires |
-|---|---|---|
-| `package.manifest-not-at-root` | error | The manifest is inside a folder of the zip |
-| `manifest.missing-launch-file` | error | A resource's launch file is not in the package |
-| `manifest.missing-resource-file` | error | A file a resource declares is not in the package |
-| `manifest.broken-item-reference` | error | An item references a resource that does not exist |
-| `manifest.duplicate-identifier` | warning | Two resources share an identifier |
-| `manifest.no-sco-resource` | warning | The package has no SCO resource |
-| `sequencing.unsupported` | warning | Declared sequencing the runtime will not evaluate (see above) |
-| `sequencing.start-failed` | warning | The sequencing engine could not start the course |
-| `runtime.score-out-of-range` | error | SCORM 1.2 score outside 0–100 or not a number |
-| `runtime.suspend-data-oversized` | warning | `suspend_data` longer than 4096 (1.2), 4000 (2004 2nd / 3rd), or 64000 (2004 4th) characters |
-| `runtime.missing-commit` | warning | Terminate without a successful Commit in that session |
-| `runtime.status-overridden` | warning | The status recorded at Terminate differs from the one the SCO set, with the rule that decided it (1.2 mastery score; 2004 passing score or completion threshold) |
-| `sequencing.request-refused` | warning | The course requested navigation its rules do not allow |
+| Rule                             | Severity | When it fires                                                                                                                                                    |
+| -------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `package.manifest-not-at-root`   | error    | The manifest is inside a folder of the zip                                                                                                                       |
+| `manifest.missing-launch-file`   | error    | A resource's launch file is not in the package                                                                                                                   |
+| `manifest.missing-resource-file` | error    | A file a resource declares is not in the package                                                                                                                 |
+| `manifest.broken-item-reference` | error    | An item references a resource that does not exist                                                                                                                |
+| `manifest.duplicate-identifier`  | warning  | Two resources share an identifier                                                                                                                                |
+| `manifest.no-sco-resource`       | warning  | The package has no SCO resource                                                                                                                                  |
+| `sequencing.unsupported`         | warning  | Declared sequencing the runtime will not evaluate (see above)                                                                                                    |
+| `sequencing.start-failed`        | warning  | The sequencing engine could not start the course                                                                                                                 |
+| `runtime.score-out-of-range`     | error    | SCORM 1.2 score outside 0–100 or not a number                                                                                                                    |
+| `runtime.suspend-data-oversized` | warning  | `suspend_data` longer than 4096 (1.2), 4000 (2004 2nd / 3rd), or 64000 (2004 4th) characters                                                                     |
+| `runtime.missing-commit`         | warning  | Terminate without a successful Commit in that session                                                                                                            |
+| `runtime.status-overridden`      | warning  | The status recorded at Terminate differs from the one the SCO set, with the rule that decided it (1.2 mastery score; 2004 passing score or completion threshold) |
+| `sequencing.request-refused`     | warning  | The course requested navigation its rules do not allow                                                                                                           |
 
 Every failed API call is also shown in the API log with its SCORM error
 code and scorm-again's explanation (`GetErrorString` / `GetDiagnostic`).

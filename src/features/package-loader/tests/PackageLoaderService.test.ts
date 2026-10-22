@@ -70,9 +70,7 @@ describe('loadZip', () => {
   })
 
   it('rejects a zip without a manifest', async () => {
-    await expect(loadZip(await zipFile('nope.zip', { 'index.html': 'x' }))).rejects.toBeInstanceOf(
-      PackageLoadError,
-    )
+    await expect(loadZip(await zipFile('nope.zip', { 'index.html': 'x' }))).rejects.toBeInstanceOf(PackageLoadError)
   })
 
   it('rejects something that is not a zip', async () => {

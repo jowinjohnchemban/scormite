@@ -12,5 +12,5 @@ export {
   packageLaunchUrl,
   injectApiProxy,
   removeApiProxy,
-} from './services/PlayerBridgeService';
-export { startNetworkMonitor, clearNetworkEntries } from './services/networkMonitor';
+} from './services/PlayerBridgeService'
+export { startNetworkMonitor, clearNetworkEntries } from './services/networkMonitor'

@@ -51,27 +51,45 @@ export function ScoEndedBar({ session }: { session: PackageSession }) {
           )}
         </span>
         <div className="flex flex-wrap items-center justify-center gap-1">
-          <Button size="sm" variant="ghost" onClick={session.relaunch} title="Relaunch with the saved data (entry = resume after a suspend)">
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={session.relaunch}
+            title="Relaunch with the saved data (entry = resume after a suspend)"
+          >
             <Play aria-hidden />
             Relaunch
           </Button>
           {courseEnded ? (
-            <Button size="sm" variant="ghost" onClick={session.restartCourse} title="Discard all data and start the course again">
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={session.restartCourse}
+              title="Discard all data and start the course again"
+            >
               <ListRestart aria-hidden />
               Restart course
             </Button>
           ) : (
-            <Button size="sm" variant="ghost" onClick={session.newAttempt} title="Discard this item's data and launch it fresh">
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={session.newAttempt}
+              title="Discard this item's data and launch it fresh"
+            >
               <RotateCcw aria-hidden />
               New attempt
             </Button>
           )}
-          {!courseEnded && items.length > 1 && navigation.canContinue && !navigation.hiddenControls.includes('continue') && (
-            <Button size="sm" onClick={() => go({ request: 'continue', mode: 'resume' })}>
-              Next
-              <ChevronRight aria-hidden />
-            </Button>
-          )}
+          {!courseEnded &&
+            items.length > 1 &&
+            navigation.canContinue &&
+            !navigation.hiddenControls.includes('continue') && (
+              <Button size="sm" onClick={() => go({ request: 'continue', mode: 'resume' })}>
+                Next
+                <ChevronRight aria-hidden />
+              </Button>
+            )}
         </div>
       </div>
     </div>
