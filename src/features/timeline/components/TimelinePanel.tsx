@@ -35,7 +35,7 @@ export function TimelinePanel() {
 
   const selected = snapshots[current]
   return (
-    <section className="flex h-full min-h-0 flex-col" aria-label="Timeline">
+    <section className="flex h-full min-h-0 flex-col" aria-label="CMI History">
       <header className="flex h-8 shrink-0 items-center justify-between border-b border-border-subtle px-2">
         <span className="text-[11px] text-slate-500">
           {cursor === null ? 'Live' : `Snapshot ${current + 1} of ${snapshots.length}`}

@@ -1,6 +1,7 @@
 # features/package-loader
 
-ZIP/folder ingestion, drag and drop, and SCORM version/manifest detection.
+ZIP ingestion (including packages zipped one folder deep), drag and drop,
+SCORM version / manifest detection, and the Files panel (`PackageExplorerPanel`).
 
 ## Public surface
 

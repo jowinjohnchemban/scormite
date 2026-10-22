@@ -62,8 +62,8 @@ describe('accessibility (axe-core, AA)', () => {
 })
 
 /**
- * Data-rich audit: the panels in Advanced mode (Package Explorer tree,
- * Network table, API monitor) only render their interactive
+ * Data-rich audit: the panels in Advanced mode (Files tree,
+ * Network table, API Log) only render their interactive
  * content when their stores hold data. Seeding the stores directly is safe —
  * the package load flow only runs through `loadFile`, and `launchUrl` is
  * derived from a runtime session, which stays null here.

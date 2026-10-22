@@ -34,7 +34,7 @@ export function ApiMonitorPanel() {
   const visible = errorsOnly ? records.filter((record) => record.errorCode) : records
 
   return (
-    <section className="flex h-full min-h-0 flex-col" aria-label="API Monitor">
+    <section className="flex h-full min-h-0 flex-col" aria-label="API Log">
       <header className="flex min-h-8 shrink-0 flex-wrap items-center justify-between gap-x-3 gap-y-1 border-b border-border-subtle px-2 py-1">
         <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-slate-500">
           <span>

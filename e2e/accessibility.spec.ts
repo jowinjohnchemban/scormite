@@ -47,7 +47,7 @@ test('a running sequenced course meets WCAG 2.1 AA in both modes and on a phone'
 
   await page.getByRole('button', { name: 'Advanced', exact: true }).click()
   await page.getByRole('button', { name: 'Panels' }).click()
-  for (const name of ['Package', 'Network', 'Validation', 'Timeline', 'Breakpoints']) {
+  for (const name of ['Files', 'Network', 'Validation', 'CMI History', 'Breakpoints']) {
     const item = page.getByRole('menuitemcheckbox', { name })
     if ((await item.getAttribute('aria-checked')) === 'false') await item.click()
   }
