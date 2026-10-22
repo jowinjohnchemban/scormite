@@ -27,7 +27,9 @@ export function ScoEndedBar({ session }: { session: PackageSession }) {
   const go = useCourseStore((s) => s.go)
 
   const current = session.currentItem
-  if ((!isTerminated && !endedReason) || session.launchUrl === null || !current) return null
+  if (!current) return null
+  // A terminated SCO is still on screen; an ended course has nothing playing.
+  if (endedReason === null && (!isTerminated || session.launchUrl === null)) return null
 
   const navigation = sequenced ? engineNavigation : flowAvailability(items, current.identifier)
   const courseEnded = endedReason !== null
