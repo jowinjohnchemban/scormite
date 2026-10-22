@@ -46,6 +46,13 @@ describe('normalizeFlattenedCmi', () => {
     })
   })
 
+  it('shows empty collections as empty values', () => {
+    expect(normalizeFlattenedCmi({ 'cmi.interactions': {}, 'cmi.objectives': [] })).toEqual({
+      'cmi.interactions': '',
+      'cmi.objectives': '',
+    })
+  })
+
   it('preserves every key and does not mutate the input', () => {
     const input: Record<string, unknown> = {
       'cmi.core.lesson_status': 'incomplete',
