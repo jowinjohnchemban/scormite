@@ -46,8 +46,6 @@ export interface SiteSeoConfig {
   /** 1200×630 social preview, relative to the site root. */
   ogImage: string
   ogImageAlt: string
-  twitterSite: string
-  twitterCreator: string
   locale: string
   siteUrl: string
   /**
@@ -104,8 +102,6 @@ export const siteSeoConfig: SiteSeoConfig = {
   favicon: '/logo.svg',
   ogImage: '/og-image.png',
   ogImageAlt: 'SCORMite — test, debug and validate SCORM 1.2 and 2004 packages in your browser',
-  twitterSite: '@scormite',
-  twitterCreator: '@scormite',
   locale: 'en_US',
   siteUrl: 'https://scormite.jowinjc.in',
   docs: ['docs/user-guide.md', 'docs/scorm-support.md'],

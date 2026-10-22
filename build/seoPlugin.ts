@@ -277,8 +277,6 @@ export function createSeoPlugin(config: SiteSeoConfig, context: SeoBuildContext)
           meta({ property: 'og:image:height', content: '630' }),
           meta({ property: 'og:image:alt', content: config.ogImageAlt }),
           meta({ name: 'twitter:card', content: 'summary_large_image' }),
-          meta({ name: 'twitter:site', content: config.twitterSite }),
-          meta({ name: 'twitter:creator', content: config.twitterCreator }),
           meta({ name: 'twitter:title', content: title }),
           meta({ name: 'twitter:description', content: description }),
           meta({ name: 'twitter:image', content: ogImage }),
