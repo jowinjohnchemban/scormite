@@ -49,10 +49,7 @@ function TreeRow({ node, depth, expanded, toggle, launchPaths }: TreeRowProps) {
             aria-label={isOpen ? `Collapse ${node.name}` : `Expand ${node.name}`}
             onClick={() => toggle(node.path)}
           >
-            <ChevronRight
-              aria-hidden
-              className={`size-3 transition-transform ${isOpen ? 'rotate-90' : ''}`}
-            />
+            <ChevronRight aria-hidden className={`size-3 transition-transform ${isOpen ? 'rotate-90' : ''}`} />
           </button>
         ) : (
           <span className="size-4 shrink-0" aria-hidden />
@@ -72,11 +69,7 @@ function TreeRow({ node, depth, expanded, toggle, launchPaths }: TreeRowProps) {
         >
           {node.name}
         </span>
-        {isLaunch && (
-          <span className="ml-1 shrink-0 rounded-sm bg-accent/15 px-1 text-[9px] text-accent">
-            launch
-          </span>
-        )}
+        {isLaunch && <span className="ml-1 shrink-0 rounded-sm bg-accent/15 px-1 text-[9px] text-accent">launch</span>}
       </div>
       {node.isDirectory &&
         isOpen &&
@@ -115,16 +108,14 @@ function FileTreeView({ filePaths, launchPaths }: { filePaths: string[]; launchP
   }
 
   return (
-    <div role="tree" aria-label="Package files" tabIndex={0} className="min-h-0 overflow-auto py-1 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-accent">
+    <div
+      role="tree"
+      aria-label="Package files"
+      tabIndex={0}
+      className="min-h-0 overflow-auto py-1 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-accent"
+    >
       {tree.map((node) => (
-        <TreeRow
-          key={node.path}
-          node={node}
-          depth={0}
-          expanded={expanded}
-          toggle={toggle}
-          launchPaths={launchPaths}
-        />
+        <TreeRow key={node.path} node={node} depth={0} expanded={expanded} toggle={toggle} launchPaths={launchPaths} />
       ))}
     </div>
   )
@@ -149,9 +140,7 @@ export function PackageExplorerPanel() {
       </header>
 
       {pkg === null ? (
-        <p className="p-3 text-xs text-slate-600">
-          Load a package to explore its file structure.
-        </p>
+        <p className="p-3 text-xs text-slate-600">Load a package to explore its file structure.</p>
       ) : (
         <FileTreeView
           key={pkg.id}

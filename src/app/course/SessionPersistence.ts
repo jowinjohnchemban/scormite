@@ -55,7 +55,10 @@ export class IndexedDbStore implements KeyValueStore {
     return this.db
   }
 
-  private async run<T>(mode: IDBTransactionMode, action: (store: IDBObjectStore) => IDBRequest<T>): Promise<T | undefined> {
+  private async run<T>(
+    mode: IDBTransactionMode,
+    action: (store: IDBObjectStore) => IDBRequest<T>,
+  ): Promise<T | undefined> {
     const db = await this.open()
     if (!db) return undefined
     return new Promise((resolve) => {

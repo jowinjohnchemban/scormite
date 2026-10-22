@@ -39,8 +39,7 @@ const PARSER = new XMLParser({
   attributeNamePrefix: '@_',
   // Always produce arrays for these elements so we never have to
   // branch on "is this an object or array?" downstream.
-  isArray: (tagName) =>
-    ['organization', 'item', 'resource', 'file', 'dependency'].includes(localName(tagName)),
+  isArray: (tagName) => ['organization', 'item', 'resource', 'file', 'dependency'].includes(localName(tagName)),
   // Treat all text content as strings — prevents '1.2' being coerced to number.
   parseTagValue: false,
   // Trim whitespace from text values.
@@ -100,9 +99,7 @@ export function parseManifest(xml: string): Manifest {
   try {
     raw = PARSER.parse(xml)
   } catch (e) {
-    throw new ManifestParseError(
-      `Failed to parse imsmanifest.xml: ${e instanceof Error ? e.message : String(e)}`,
-    )
+    throw new ManifestParseError(`Failed to parse imsmanifest.xml: ${e instanceof Error ? e.message : String(e)}`)
   }
 
   const manifest = child(raw, 'manifest')
@@ -120,9 +117,7 @@ export function parseManifest(xml: string): Manifest {
   return {
     ...(defaultOrgId !== undefined ? { defaultOrganizationIdentifier: defaultOrgId } : {}),
     organizations: toArray(child(organizationsNode, 'organization')).map(parseOrganization),
-    resources: toArray(child(resourcesNode, 'resource')).map((r) =>
-      parseResource(r, resourceBases),
-    ),
+    resources: toArray(child(resourcesNode, 'resource')).map((r) => parseResource(r, resourceBases)),
     metadata: parseMetadata(child(manifest, 'metadata')),
     ...(sequencingCollections !== undefined ? { sequencingCollections } : {}),
   }
@@ -222,8 +217,7 @@ function parseScaledPassingScore(sequencing: unknown): string | undefined {
 
 function parseResource(raw: unknown, inheritedBases: (string | undefined)[]): ManifestResource {
   const scormType = attr(raw, 'scormtype')?.toLowerCase()
-  const normalised: 'sco' | 'asset' | undefined =
-    scormType === 'sco' || scormType === 'asset' ? scormType : undefined
+  const normalised: 'sco' | 'asset' | undefined = scormType === 'sco' || scormType === 'asset' ? scormType : undefined
   const bases = [...inheritedBases, attr(raw, 'base')]
   const rawHref = attr(raw, 'href')
   const href = rawHref !== undefined ? resolveXmlBase(bases, rawHref) : undefined

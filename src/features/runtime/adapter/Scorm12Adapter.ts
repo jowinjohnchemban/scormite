@@ -49,8 +49,7 @@ export class Scorm12Adapter extends ScormRuntimeAdapter {
    */
   protected resumeData(cmi: Record<string, unknown>): Record<string, unknown> {
     const rawCore = cmi['core']
-    const core: Record<string, unknown> =
-      typeof rawCore === 'object' && rawCore !== null ? { ...rawCore } : {}
+    const core: Record<string, unknown> = typeof rawCore === 'object' && rawCore !== null ? { ...rawCore } : {}
     core['entry'] = core['exit'] === 'suspend' ? 'resume' : ''
     delete core['exit']
     delete core['session_time']
@@ -79,9 +78,15 @@ export class Scorm12Adapter extends ScormRuntimeAdapter {
   }
 
   terminate(): string {
-    const result = this.runCall('Terminate', () => this.api.LMSFinish(''), undefined, undefined, (r) => {
-      if (r === 'true') runtimeEvents.emit('terminated', { sessionId: this.sessionId })
-    })
+    const result = this.runCall(
+      'Terminate',
+      () => this.api.LMSFinish(''),
+      undefined,
+      undefined,
+      (r) => {
+        if (r === 'true') runtimeEvents.emit('terminated', { sessionId: this.sessionId })
+      },
+    )
     return result
   }
 

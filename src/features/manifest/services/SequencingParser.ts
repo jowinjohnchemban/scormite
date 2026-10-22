@@ -194,8 +194,7 @@ export class SequencingParser {
       exitConditionRules: parse('exitConditionRule'),
       postConditionRules: parse('postConditionRule'),
     }
-    const count =
-      rules.preConditionRules.length + rules.exitConditionRules.length + rules.postConditionRules.length
+    const count = rules.preConditionRules.length + rules.exitConditionRules.length + rules.postConditionRules.length
     return count > 0 ? rules : undefined
   }
 

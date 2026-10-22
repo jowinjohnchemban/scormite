@@ -7,13 +7,7 @@
  * evaluated here (that is the runtime's job); this is flow order only.
  */
 
-import type {
-  LaunchableItem,
-  Manifest,
-  ManifestItem,
-  ManifestOrganization,
-  ManifestResource,
-} from '@/shared/types'
+import type { LaunchableItem, Manifest, ManifestItem, ManifestOrganization, ManifestResource } from '@/shared/types'
 
 /** The organization a learner sees: the declared default, else the first one. */
 export function getDefaultOrganization(manifest: Manifest): ManifestOrganization | undefined {
@@ -41,9 +35,7 @@ export function applyLaunchParameters(href: string, parameters: string | undefin
 export function getLaunchableItems(manifest: Manifest): LaunchableItem[] {
   const org = getDefaultOrganization(manifest)
   if (!org) return []
-  const resources = new Map<string, ManifestResource>(
-    manifest.resources.map((r) => [r.identifier, r]),
-  )
+  const resources = new Map<string, ManifestResource>(manifest.resources.map((r) => [r.identifier, r]))
   const out: LaunchableItem[] = []
 
   const walk = (items: ManifestItem[], depth: number): void => {

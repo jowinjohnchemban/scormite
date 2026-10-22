@@ -64,9 +64,7 @@ describe('buildFileTree', () => {
 
   it('strips a leading ./ prefix', () => {
     const tree = buildFileTree(['./index.html'])
-    expect(tree).toEqual([
-      { name: 'index.html', path: 'index.html', isDirectory: false, children: [] },
-    ])
+    expect(tree).toEqual([{ name: 'index.html', path: 'index.html', isDirectory: false, children: [] }])
   })
 
   it('ignores empty paths', () => {
@@ -107,8 +105,6 @@ describe('buildFileTree', () => {
 
   it('treats an explicit trailing-slash path segment as a directory', () => {
     const tree = buildFileTree(['assets/'])
-    expect(tree).toEqual([
-      { name: 'assets', path: 'assets', isDirectory: true, children: [] },
-    ])
+    expect(tree).toEqual([{ name: 'assets', path: 'assets', isDirectory: true, children: [] }])
   })
 })

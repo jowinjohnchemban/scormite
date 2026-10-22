@@ -7,9 +7,5 @@
 export { ManifestExplorer } from './components/ManifestExplorer'
 export { useManifestStore } from './state/manifestStore'
 export { parseManifest, ManifestParseError } from './services/ManifestParserService'
-export {
-  applyLaunchParameters,
-  getDefaultOrganization,
-  getLaunchableItems,
-} from './services/launchables'
+export { applyLaunchParameters, getDefaultOrganization, getLaunchableItems } from './services/launchables'
 export { getActivityTree } from './services/activityTree'

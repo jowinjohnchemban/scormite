@@ -60,10 +60,22 @@ function manifestXml(version: '1.2' | '2004'): string {
 </manifest>`
 }
 
-function newSession(version: '1.2' | '2004', persistence: SessionPersistence, saved: SessionSnapshot | null): CourseSession {
+function newSession(
+  version: '1.2' | '2004',
+  persistence: SessionPersistence,
+  saved: SessionSnapshot | null,
+): CourseSession {
   const manifest = parseManifest(manifestXml(version))
   const items = getLaunchableItems(manifest)
-  const pkg: Package = { id: `pkg-${version}`, name: 'p', sourceType: 'zip', scormVersion: version, manifest, launchUrl: 'a.html', loadedAt: new Date() }
+  const pkg: Package = {
+    id: `pkg-${version}`,
+    name: 'p',
+    sourceType: 'zip',
+    scormVersion: version,
+    manifest,
+    launchUrl: 'a.html',
+    loadedAt: new Date(),
+  }
   const tree = getActivityTree(manifest)
   return new CourseSession(pkg, items, version === '2004' && tree ? { activityTree: tree } : null, persistence, saved)
 }

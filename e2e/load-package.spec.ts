@@ -34,11 +34,9 @@ test('loads a SCORM 1.2 package and runs the SCO end to end', async ({ page }) =
 
   // The SCO iframe is launched through the service worker (scorm-files URL).
   const player = page.frameLocator('iframe[title="SCORM Package"]')
-  await expect(page.locator('iframe[title="SCORM Package"]')).toHaveAttribute(
-    'src',
-    /\/scorm-files\//,
-    { timeout: 15_000 },
-  )
+  await expect(page.locator('iframe[title="SCORM Package"]')).toHaveAttribute('src', /\/scorm-files\//, {
+    timeout: 15_000,
+  })
 
   // The SCO ran against the injected API: its log is written to the body.
   await expect(player.locator('body')).toContainText('init=', { timeout: 15_000 })

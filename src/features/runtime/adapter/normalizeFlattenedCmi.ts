@@ -23,9 +23,7 @@ function normalizeValue(value: unknown): string {
 }
 
 /** Coerces every leaf value of a flattened CMI map to a string. */
-export function normalizeFlattenedCmi(
-  raw: Record<string, unknown>,
-): Record<string, string> {
+export function normalizeFlattenedCmi(raw: Record<string, unknown>): Record<string, string> {
   const result: Record<string, string> = {}
   for (const key of Object.keys(raw)) {
     result[key] = normalizeValue(raw[key])

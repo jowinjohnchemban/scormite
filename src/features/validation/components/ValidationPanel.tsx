@@ -1,8 +1,5 @@
 import { Button } from '@/components/ui/button'
-import {
-  ValidationService,
-  countBySeverity,
-} from '@/features/validation/services/ValidationService'
+import { ValidationService, countBySeverity } from '@/features/validation/services/ValidationService'
 import { useValidationStore } from '@/features/validation/state/validationStore'
 import { cn } from '@/shared/lib/utils'
 import type { ValidationSeverity } from '@/shared/types'
@@ -32,20 +29,14 @@ export function ValidationPanel() {
   const summary = [
     counts.error > 0 ? `${counts.error} error${counts.error === 1 ? '' : 's'}` : null,
     counts.warning > 0 ? `${counts.warning} warning${counts.warning === 1 ? '' : 's'}` : null,
-    counts.suggestion > 0
-      ? `${counts.suggestion} suggestion${counts.suggestion === 1 ? '' : 's'}`
-      : null,
+    counts.suggestion > 0 ? `${counts.suggestion} suggestion${counts.suggestion === 1 ? '' : 's'}` : null,
   ].filter((part): part is string => part !== null)
 
   return (
     <section className="flex h-full min-h-0 flex-col" aria-label="Validation">
       <header className="flex h-8 shrink-0 items-center justify-between border-b border-border-subtle px-2">
         <span className="text-[11px] text-slate-500">
-          {issues.length === 0
-            ? lastRunAt === null
-              ? 'Not run yet'
-              : 'No issues'
-            : summary.join(' · ')}
+          {issues.length === 0 ? (lastRunAt === null ? 'Not run yet' : 'No issues') : summary.join(' · ')}
         </span>
         {issues.length > 0 && (
           <Button variant="ghost" size="sm" onClick={() => ValidationService.clear()}>
@@ -54,7 +45,10 @@ export function ValidationPanel() {
         )}
       </header>
 
-      <div tabIndex={0} className="min-h-0 flex-1 overflow-auto p-3 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-accent">
+      <div
+        tabIndex={0}
+        className="min-h-0 flex-1 overflow-auto p-3 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-accent"
+      >
         {issues.length === 0 ? (
           <p className="text-xs text-slate-600">
             {lastRunAt === null
@@ -64,10 +58,7 @@ export function ValidationPanel() {
         ) : (
           <ul className="space-y-1" aria-label="Validation issue list">
             {issues.map((issue) => (
-              <li
-                key={issue.id}
-                className="flex items-start gap-2 rounded-sm border border-border-subtle px-2 py-1.5"
-              >
+              <li key={issue.id} className="flex items-start gap-2 rounded-sm border border-border-subtle px-2 py-1.5">
                 <span
                   className={cn(
                     'mt-px shrink-0 rounded-sm px-1.5 py-px text-[10px] font-medium uppercase tracking-wide',

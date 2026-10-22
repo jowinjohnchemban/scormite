@@ -20,9 +20,7 @@ export function validateBreakpointDraft(draft: BreakpointDraft): string | null {
         ? 'An element path is required (e.g. cmi.core.score.raw).'
         : null
     case 'score-threshold':
-      return draft.threshold === undefined || Number.isNaN(draft.threshold)
-        ? 'A numeric threshold is required.'
-        : null
+      return draft.threshold === undefined || Number.isNaN(draft.threshold) ? 'A numeric threshold is required.' : null
     case 'objective-update':
       return null
   }
@@ -54,9 +52,7 @@ export const BreakpointService = {
     const normalized: Omit<Breakpoint, 'id' | 'enabled' | 'hitCount'> = {
       kind: draft.kind,
       ...(draft.method !== undefined ? { method: draft.method } : {}),
-      ...(draft.element !== undefined && draft.element.trim() !== ''
-        ? { element: draft.element.trim() }
-        : {}),
+      ...(draft.element !== undefined && draft.element.trim() !== '' ? { element: draft.element.trim() } : {}),
       ...(draft.value !== undefined && draft.value.trim() !== '' ? { value: draft.value } : {}),
       ...(draft.threshold !== undefined ? { threshold: draft.threshold } : {}),
     }

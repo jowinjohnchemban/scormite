@@ -64,14 +64,10 @@ export function matchesBreakpoint(breakpoint: Breakpoint, ctx: ApiCallContext): 
  * mutation in behind the breakpoint's back. Read-only calls still return real
  * values so the frozen state can be inspected.
  */
-export function createBreakpointMiddleware(
-  options: BreakpointMiddlewareOptions,
-): RuntimeMiddleware {
+export function createBreakpointMiddleware(options: BreakpointMiddlewareOptions): RuntimeMiddleware {
   return {
     pre(ctx: ApiCallContext): MiddlewareDecision {
-      const breakpoint = options
-        .getBreakpoints()
-        .find((candidate) => matchesBreakpoint(candidate, ctx))
+      const breakpoint = options.getBreakpoints().find((candidate) => matchesBreakpoint(candidate, ctx))
       if (!breakpoint) return 'continue'
       options.onHit({
         breakpointId: breakpoint.id,

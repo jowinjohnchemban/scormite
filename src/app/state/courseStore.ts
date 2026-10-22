@@ -163,8 +163,7 @@ export const useCourseStore = create<CourseState>((set, get) => ({
 
   completeNavigation: () => set({ pendingNavigation: null }),
 
-  setProgress: (itemId, summary) =>
-    set((state) => ({ progress: { ...state.progress, [itemId]: summary } })),
+  setProgress: (itemId, summary) => set((state) => ({ progress: { ...state.progress, [itemId]: summary } })),
 
   mergeProgress: (progress) => set((state) => ({ progress: { ...state.progress, ...progress } })),
 

@@ -25,12 +25,12 @@ The first item starts immediately. The sidebar (Basic mode) or the
 **Outline** panel (Advanced mode) lists the course's items with their
 status:
 
-| Icon | Meaning |
-|---|---|
-| Green check | Passed or completed |
-| Red cross | Failed |
-| Amber dot | In progress (incomplete) |
-| Grey circle | Not started |
+| Icon        | Meaning                  |
+| ----------- | ------------------------ |
+| Green check | Passed or completed      |
+| Red cross   | Failed                   |
+| Amber dot   | In progress (incomplete) |
+| Grey circle | Not started              |
 
 Choose an item, or use **Previous** / **Next**, to move through the course.
 In a SCORM 2004 course the course's own sequencing rules decide what is
@@ -73,17 +73,17 @@ explanation.
 **Advanced mode** (screens 1024 px and wider) adds dockable panels, opened
 from **Panels** in the toolbar:
 
-| Panel | Use it to |
-|---|---|
-| Outline | Navigate the course (as in Basic mode) |
-| Manifest | Browse the organizations, items, and resources of `imsmanifest.xml`; expand an item to see its resource, href, parameters, launch data, and sequencing |
-| Files | Browse the files in the zip; launch files are marked |
-| CMI Inspector | See the live data model; changed values are highlighted; filter by path or value |
-| API Log | See every API call, how often each method was called, and why failed calls failed ("Failed only" filter) |
-| CMI History | Scrub through the current launch and see the data model at any point |
-| Breakpoints | Hold a specific `SetValue` or `Commit` before it is applied, inspect the data, then resume. The course keeps running and is told the call succeeded; held calls are applied in order on Resume |
-| Validation | See every packaging and runtime issue — including when the LMS rules recorded a different status than the course reported, and which rule did it |
-| Network | See each file the course requested and which are missing from the package ("Missing only" filter) |
+| Panel         | Use it to                                                                                                                                                                                      |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Outline       | Navigate the course (as in Basic mode)                                                                                                                                                         |
+| Manifest      | Browse the organizations, items, and resources of `imsmanifest.xml`; expand an item to see its resource, href, parameters, launch data, and sequencing                                         |
+| Files         | Browse the files in the zip; launch files are marked                                                                                                                                           |
+| CMI Inspector | See the live data model; changed values are highlighted; filter by path or value                                                                                                               |
+| API Log       | See every API call, how often each method was called, and why failed calls failed ("Failed only" filter)                                                                                       |
+| CMI History   | Scrub through the current launch and see the data model at any point                                                                                                                           |
+| Breakpoints   | Hold a specific `SetValue` or `Commit` before it is applied, inspect the data, then resume. The course keeps running and is told the call succeeded; held calls are applied in order on Resume |
+| Validation    | See every packaging and runtime issue — including when the LMS rules recorded a different status than the course reported, and which rule did it                                               |
+| Network       | See each file the course requested and which are missing from the package ("Missing only" filter)                                                                                              |
 
 Each panel has a fixed place — course structure on the left, runtime state
 on the right, logs and tools as tabs at the bottom. Show or hide panels from

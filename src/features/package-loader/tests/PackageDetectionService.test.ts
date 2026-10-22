@@ -7,7 +7,8 @@ import { detectScormVersion } from '../services/PackageDetectionService'
 
 describe('detectScormVersion', () => {
   it('detects 1.2 from the <schemaversion> metadata', () => {
-    const xml = '<?xml version="1.0"?><manifest><metadata><schema>ADL SCORM</schema><schemaversion>1.2</schemaversion></metadata></manifest>'
+    const xml =
+      '<?xml version="1.0"?><manifest><metadata><schema>ADL SCORM</schema><schemaversion>1.2</schemaversion></metadata></manifest>'
     expect(detectScormVersion(xml)).toEqual({ version: '1.2' })
   })
 
@@ -37,7 +38,8 @@ describe('detectScormVersion', () => {
   })
 
   it('falls back to the 1.2 namespace when metadata is absent', () => {
-    const xml = '<manifest xmlns="http://www.imsproject.org/xsd/imscp_rootv1p1p2" xmlns:adlcp="http://www.adlnet.org/xsd/adlcp_rootv1p2"><organizations/></manifest>'
+    const xml =
+      '<manifest xmlns="http://www.imsproject.org/xsd/imscp_rootv1p1p2" xmlns:adlcp="http://www.adlnet.org/xsd/adlcp_rootv1p2"><organizations/></manifest>'
     expect(detectScormVersion(xml)).toEqual({ version: '1.2' })
   })
 
@@ -75,7 +77,8 @@ describe('detectScormVersion', () => {
   })
 
   it('prefers explicit metadata over a conflicting namespace', () => {
-    const xml = '<metadata><schemaversion>2004 3rd Edition</schemaversion></metadata><manifest xmlns:adlcp="http://www.adlnet.org/xsd/adlcp_rootv1p2"/>'
+    const xml =
+      '<metadata><schemaversion>2004 3rd Edition</schemaversion></metadata><manifest xmlns:adlcp="http://www.adlnet.org/xsd/adlcp_rootv1p2"/>'
     expect(detectScormVersion(xml)).toEqual({ version: '2004', edition: '3rd' })
   })
 })

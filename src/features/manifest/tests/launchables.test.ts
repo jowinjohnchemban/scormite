@@ -105,14 +105,16 @@ describe('resolveXmlBase', () => {
   })
 
   it('treats an absolute base as a directory too', () => {
-    expect(resolveXmlBase(['https://cdn.example.com/course'], 'index.html')).toBe('https://cdn.example.com/course/index.html')
-    expect(resolveXmlBase(['https://cdn.example.com/course', 'sub'], 'a.html')).toBe('https://cdn.example.com/course/sub/a.html')
+    expect(resolveXmlBase(['https://cdn.example.com/course'], 'index.html')).toBe(
+      'https://cdn.example.com/course/index.html',
+    )
+    expect(resolveXmlBase(['https://cdn.example.com/course', 'sub'], 'a.html')).toBe(
+      'https://cdn.example.com/course/sub/a.html',
+    )
   })
 
   it('leaves absolute URLs alone', () => {
-    expect(resolveXmlBase(['content/'], 'https://example.com/x.html')).toBe(
-      'https://example.com/x.html',
-    )
+    expect(resolveXmlBase(['content/'], 'https://example.com/x.html')).toBe('https://example.com/x.html')
   })
 
   it('preserves query strings and fragments', () => {
@@ -164,9 +166,7 @@ describe('getLaunchableItems', () => {
   })
 
   it('returns nothing for a manifest without organizations', () => {
-    expect(
-      getLaunchableItems({ organizations: [], resources: [], metadata: {} }),
-    ).toEqual([])
+    expect(getLaunchableItems({ organizations: [], resources: [], metadata: {} })).toEqual([])
   })
 })
 

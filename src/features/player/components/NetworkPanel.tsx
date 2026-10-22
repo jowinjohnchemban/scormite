@@ -32,12 +32,7 @@ export function NetworkPanel() {
       <header className="flex min-h-8 shrink-0 flex-wrap items-center justify-between gap-x-3 gap-y-1 border-b border-border-subtle px-2 py-1">
         <span className="text-[11px] text-slate-500">
           {entries.length} {entries.length === 1 ? 'request' : 'requests'}
-          {missing > 0 && (
-            <span className="text-red-400">
-              {' '}
-              · {missing} not in package
-            </span>
-          )}
+          {missing > 0 && <span className="text-red-400"> · {missing} not in package</span>}
         </span>
         <div className="flex shrink-0 items-center gap-1">
           <label className="flex cursor-pointer items-center gap-1.5 text-[11px] text-slate-400">
@@ -70,7 +65,10 @@ export function NetworkPanel() {
             : 'Every requested file was found in the package.'}
         </p>
       ) : (
-        <div tabIndex={0} className="min-h-0 overflow-auto focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-accent">
+        <div
+          tabIndex={0}
+          className="min-h-0 overflow-auto focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-accent"
+        >
           <table className="w-full border-collapse text-left font-mono text-[11px]">
             <thead className="sticky top-0 bg-surface-900 text-slate-500">
               <tr>

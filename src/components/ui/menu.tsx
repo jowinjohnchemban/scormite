@@ -116,16 +116,10 @@ export function MenuLabel({ children }: { children: React.ReactNode }) {
 }
 
 export function MenuSeparator() {
-  return (
-    <div
-      role="separator"
-      className="my-1 h-px bg-border-subtle"
-    />
-  )
+  return <div role="separator" className="my-1 h-px bg-border-subtle" />
 }
 
-export interface MenuItemProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+export interface MenuItemProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   /** Renders as a checkbox item and reflects state to assistive tech. */
   checked?: boolean
 }

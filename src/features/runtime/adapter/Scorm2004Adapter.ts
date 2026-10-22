@@ -314,9 +314,15 @@ export class Scorm2004Adapter extends ScormRuntimeAdapter {
   terminate(): string {
     // A SCO-initiated navigation request is processed inside Terminate.
     this.deliveredThisRound = null
-    const result = this.runCall('Terminate', () => this.api.Terminate(''), undefined, undefined, (r) => {
-      if (r === 'true') runtimeEvents.emit('terminated', { sessionId: this.sessionId })
-    })
+    const result = this.runCall(
+      'Terminate',
+      () => this.api.Terminate(''),
+      undefined,
+      undefined,
+      (r) => {
+        if (r === 'true') runtimeEvents.emit('terminated', { sessionId: this.sessionId })
+      },
+    )
     return result
   }
 

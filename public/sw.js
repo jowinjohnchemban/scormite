@@ -35,15 +35,18 @@ self.addEventListener('message', (event) => {
     const url = `/scorm-files/${sessionId}/${path}`
     if (debug) console.debug('[Scormite service worker] caching', url)
     event.waitUntil(
-      caches.open(CACHE_PREFIX + sessionId).then((cache) => {
-        const response = new Response(buffer, {
-          headers: { 'Content-Type': mimeType || 'application/octet-stream' },
+      caches
+        .open(CACHE_PREFIX + sessionId)
+        .then((cache) => {
+          const response = new Response(buffer, {
+            headers: { 'Content-Type': mimeType || 'application/octet-stream' },
+          })
+          return cache.put(url, response)
         })
-        return cache.put(url, response)
-      }).then(
-        () => event.ports[0]?.postMessage({ ok: true }),
-        (error) => event.ports[0]?.postMessage({ ok: false, error: String(error) }),
-      ),
+        .then(
+          () => event.ports[0]?.postMessage({ ok: true }),
+          (error) => event.ports[0]?.postMessage({ ok: false, error: String(error) }),
+        ),
     )
   }
 
@@ -83,27 +86,25 @@ self.addEventListener('fetch', (event) => {
     // Package files are cached by path only. Launch URLs routinely carry a
     // query string (manifest item parameters, authoring-tool flags), so the
     // lookup must ignore it or the SCO itself 404s.
-    caches.match(event.request, { ignoreSearch: true }).then(
-      (cached) => {
-        const hit = cached !== undefined
-        const status = hit ? 200 : 404
-        if (debug) console.debug(`[Scormite service worker] ${hit ? 'hit' : 'miss'}`, url.pathname)
-        // Report the fetch to every window client. The course itself loads in
-        // an iframe, so the requesting client is usually the iframe — but the
-        // Network panel lives in the main window, which must see it too.
-        const payload = {
-          type: 'FETCH_EVENT',
-          path: url.pathname,
-          hit,
-          status,
-          timestamp: Date.now(),
-          durationMs: performance.now() - startedAt,
-        }
-        self.clients.matchAll({ type: 'window' }).then((clients) => {
-          for (const client of clients) client.postMessage(payload)
-        })
-        return cached ?? notFound(url.pathname)
-      },
-    ),
+    caches.match(event.request, { ignoreSearch: true }).then((cached) => {
+      const hit = cached !== undefined
+      const status = hit ? 200 : 404
+      if (debug) console.debug(`[Scormite service worker] ${hit ? 'hit' : 'miss'}`, url.pathname)
+      // Report the fetch to every window client. The course itself loads in
+      // an iframe, so the requesting client is usually the iframe — but the
+      // Network panel lives in the main window, which must see it too.
+      const payload = {
+        type: 'FETCH_EVENT',
+        path: url.pathname,
+        hit,
+        status,
+        timestamp: Date.now(),
+        durationMs: performance.now() - startedAt,
+      }
+      self.clients.matchAll({ type: 'window' }).then((clients) => {
+        for (const client of clients) client.postMessage(payload)
+      })
+      return cached ?? notFound(url.pathname)
+    }),
   )
 })

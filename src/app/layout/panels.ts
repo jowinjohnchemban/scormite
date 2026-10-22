@@ -4,17 +4,7 @@
  * persisted (show / hide choices), so they stay stable when a title changes.
  */
 
-import {
-  Activity,
-  Bug,
-  Clock,
-  FileCode,
-  ListOrdered,
-  ListTree,
-  Network,
-  Package,
-  ShieldCheck,
-} from 'lucide-react'
+import { Activity, Bug, Clock, FileCode, ListOrdered, ListTree, Network, Package, ShieldCheck } from 'lucide-react'
 import { ManifestExplorer } from '@/features/manifest'
 import { CmiInspectorPanel } from '@/features/inspector'
 import { ApiMonitorPanel } from '@/features/logging'

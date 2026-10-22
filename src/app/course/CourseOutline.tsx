@@ -56,7 +56,9 @@ export function CourseOutline({ className }: { className?: string }) {
       <header className="flex h-8 shrink-0 items-center justify-between gap-2 border-b border-border-subtle bg-surface-900 px-2">
         <span className="truncate text-[11px] text-slate-500">
           {items.length === 1 ? '1 item' : `Item ${position || '–'} of ${items.length}`}
-          {sequenced && <span title="Navigation is decided by the course's SCORM 2004 sequencing rules"> · sequenced</span>}
+          {sequenced && (
+            <span title="Navigation is decided by the course's SCORM 2004 sequencing rules"> · sequenced</span>
+          )}
         </span>
         {items.length > 1 && (
           <div className="flex shrink-0 items-center gap-0.5">
@@ -66,7 +68,11 @@ export function CourseOutline({ className }: { className?: string }) {
                 size="icon"
                 className="size-7 lg:size-6"
                 aria-label="Previous item"
-                title={navigation.canPrevious ? `Previous${!sequenced && previous ? `: ${previous.title}` : ''}` : 'No previous item available'}
+                title={
+                  navigation.canPrevious
+                    ? `Previous${!sequenced && previous ? `: ${previous.title}` : ''}`
+                    : 'No previous item available'
+                }
                 disabled={busy || !navigation.canPrevious}
                 onClick={() => go({ request: 'previous', mode: 'resume' })}
               >
@@ -79,7 +85,11 @@ export function CourseOutline({ className }: { className?: string }) {
                 size="icon"
                 className="size-7 lg:size-6"
                 aria-label="Next item"
-                title={navigation.canContinue ? `Next${!sequenced && next ? `: ${next.title}` : ''}` : 'No next item available'}
+                title={
+                  navigation.canContinue
+                    ? `Next${!sequenced && next ? `: ${next.title}` : ''}`
+                    : 'No next item available'
+                }
                 disabled={busy || !navigation.canContinue}
                 onClick={() => go({ request: 'continue', mode: 'resume' })}
               >

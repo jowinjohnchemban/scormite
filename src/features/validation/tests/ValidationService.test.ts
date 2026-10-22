@@ -91,9 +91,17 @@ describe('missingLaunchFileValidator', () => {
 describe('missingResourceFileValidator', () => {
   it('flags declared files missing from the package', () => {
     const findings = missingResourceFileValidator.check({
-      manifest: makeManifest({ resources: [
-        { identifier: 'res-1', type: 'webcontent', href: 'index.html', scormType: 'sco', files: ['index.html', 'missing.js'] },
-      ] }),
+      manifest: makeManifest({
+        resources: [
+          {
+            identifier: 'res-1',
+            type: 'webcontent',
+            href: 'index.html',
+            scormType: 'sco',
+            files: ['index.html', 'missing.js'],
+          },
+        ],
+      }),
       filePaths: ['index.html'],
     })
     expect(findings).toHaveLength(1)
@@ -117,9 +125,7 @@ describe('brokenItemReferenceValidator', () => {
         {
           identifier: 'org-1',
           title: 'Org',
-          items: [
-            { identifier: 'item-1', title: 'L', identifierref: 'ghost-res', isvisible: true, children: [] },
-          ],
+          items: [{ identifier: 'item-1', title: 'L', identifierref: 'ghost-res', isvisible: true, children: [] }],
         },
       ],
     })
@@ -170,9 +176,7 @@ describe('duplicateResourceIdentifierValidator', () => {
   })
 
   it('passes for unique identifiers', () => {
-    expect(
-      duplicateResourceIdentifierValidator.check({ manifest: makeManifest(), filePaths: [] }),
-    ).toEqual([])
+    expect(duplicateResourceIdentifierValidator.check({ manifest: makeManifest(), filePaths: [] })).toEqual([])
   })
 })
 
@@ -199,9 +203,13 @@ describe('missingLaunchFileValidator — launch URL forms', () => {
       resources: manifest.resources.map((r, i) => (i === 0 ? { ...r, href } : r)),
     })
     const files = ['My Course.html', 'index.html', 'course/main.js']
-    expect(missingLaunchFileValidator.check({ manifest: withHref('index.html?lang=en#p2'), filePaths: files })).toEqual([])
+    expect(missingLaunchFileValidator.check({ manifest: withHref('index.html?lang=en#p2'), filePaths: files })).toEqual(
+      [],
+    )
     expect(missingLaunchFileValidator.check({ manifest: withHref('My%20Course.html'), filePaths: files })).toEqual([])
-    expect(missingLaunchFileValidator.check({ manifest: withHref('https://cdn.example.com/x.html'), filePaths: files })).toEqual([])
+    expect(
+      missingLaunchFileValidator.check({ manifest: withHref('https://cdn.example.com/x.html'), filePaths: files }),
+    ).toEqual([])
   })
 })
 
@@ -229,10 +237,7 @@ describe('validateManifest', () => {
   })
 
   it('returns no issues for a fully valid package', () => {
-    const issues = validateManifest(
-      makeManifest(),
-      ['index.html', 'course/main.js'],
-    )
+    const issues = validateManifest(makeManifest(), ['index.html', 'course/main.js'])
     expect(issues).toEqual([])
   })
 })

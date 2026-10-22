@@ -28,9 +28,15 @@ const CTX_2004: RuntimeValidatorContext = { scormVersion: '2004', suspendDataLim
 
 describe('outOfRangeScoreValidator', () => {
   it('flags SCORM 1.2 scores outside 0–100 and non-numbers', () => {
-    expect(outOfRangeScoreValidator.check(call({ element: 'cmi.core.score.raw', value: '101' }), CTX_12)).toMatch(/out of range/)
-    expect(outOfRangeScoreValidator.check(call({ element: 'cmi.objectives.0.score.raw', value: '-1' }), CTX_12)).toMatch(/out of range/)
-    expect(outOfRangeScoreValidator.check(call({ element: 'cmi.core.score.raw', value: 'abc' }), CTX_12)).toMatch(/not a valid number/)
+    expect(outOfRangeScoreValidator.check(call({ element: 'cmi.core.score.raw', value: '101' }), CTX_12)).toMatch(
+      /out of range/,
+    )
+    expect(
+      outOfRangeScoreValidator.check(call({ element: 'cmi.objectives.0.score.raw', value: '-1' }), CTX_12),
+    ).toMatch(/out of range/)
+    expect(outOfRangeScoreValidator.check(call({ element: 'cmi.core.score.raw', value: 'abc' }), CTX_12)).toMatch(
+      /not a valid number/,
+    )
     expect(outOfRangeScoreValidator.check(call({ element: 'cmi.core.score.raw', value: '85.5' }), CTX_12)).toBeNull()
   })
 
@@ -39,8 +45,12 @@ describe('outOfRangeScoreValidator', () => {
   })
 
   it('ignores other elements and methods', () => {
-    expect(outOfRangeScoreValidator.check(call({ element: 'cmi.core.lesson_location', value: '500' }), CTX_12)).toBeNull()
-    expect(outOfRangeScoreValidator.check(call({ method: 'GetValue', element: 'cmi.core.score.raw' }), CTX_12)).toBeNull()
+    expect(
+      outOfRangeScoreValidator.check(call({ element: 'cmi.core.lesson_location', value: '500' }), CTX_12),
+    ).toBeNull()
+    expect(
+      outOfRangeScoreValidator.check(call({ method: 'GetValue', element: 'cmi.core.score.raw' }), CTX_12),
+    ).toBeNull()
   })
 })
 

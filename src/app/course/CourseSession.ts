@@ -24,12 +24,7 @@ import { useInspectorStore } from '@/features/inspector'
 import { useTimelineStore } from '@/features/timeline'
 import { useValidationStore } from '@/features/validation'
 import type { LaunchableItem, Package, ValidationIssue } from '@/shared/types'
-import {
-  useCourseStore,
-  type LaunchMode,
-  type LaunchRequest,
-  type NavigationIntent,
-} from '@/app/state/courseStore'
+import { useCourseStore, type LaunchMode, type LaunchRequest, type NavigationIntent } from '@/app/state/courseStore'
 import { AttemptStore } from './AttemptStore'
 import { CourseNavigator } from './CourseNavigator'
 import { ScoLauncher } from './ScoLauncher'
@@ -97,7 +92,13 @@ export class CourseSession {
     }
     const savedItem = this.navigator.find(saved?.currentItemId)
 
-    if (this.sequencing && this.startEngine(this.sequencing, saved && savedItem ? { item: savedItem.identifier, state: saved.sequencingState } : null)) {
+    if (
+      this.sequencing &&
+      this.startEngine(
+        this.sequencing,
+        saved && savedItem ? { item: savedItem.identifier, state: saved.sequencingState } : null,
+      )
+    ) {
       if (saved) this.announceResume(saved)
       return
     }
@@ -111,7 +112,10 @@ export class CourseSession {
     const when = new Date(saved.savedAt).toLocaleString()
     useCourseStore
       .getState()
-      .setNotice(`Resumed the progress saved in this browser on ${when}. Restart › Restart whole course starts fresh.`, 'info')
+      .setNotice(
+        `Resumed the progress saved in this browser on ${when}. Restart › Restart whole course starts fresh.`,
+        'info',
+      )
   }
 
   /**
@@ -223,7 +227,10 @@ export class CourseSession {
       after.completeNavigation()
       return
     }
-    const label = intent.request === 'choice' ? `"${this.navigator.find(intent.targetId)?.title ?? intent.targetId}"` : intent.request
+    const label =
+      intent.request === 'choice'
+        ? `"${this.navigator.find(intent.targetId)?.title ?? intent.targetId}"`
+        : intent.request
     after.setNotice(`The course's sequencing rules do not allow ${label} right now.`)
     if (after.currentItemId) after.requestLaunch(after.currentItemId, 'resume')
     else after.completeNavigation()
@@ -240,7 +247,12 @@ export class CourseSession {
     if (!engine) return
     const state = engine.navigationState()
     const navigation = state
-      ? { canContinue: state.canContinue, canPrevious: state.canPrevious, choices: state.choices, hiddenControls: state.hiddenControls }
+      ? {
+          canContinue: state.canContinue,
+          canPrevious: state.canPrevious,
+          choices: state.choices,
+          hiddenControls: state.hiddenControls,
+        }
       : { canContinue: false, canPrevious: false, choices: [], hiddenControls: [] }
     if (JSON.stringify(navigation) !== JSON.stringify(course.navigation)) course.setNavigation(navigation)
 
@@ -281,7 +293,11 @@ export class CourseSession {
     this.engine = null
   }
 
-  private engineNavigate(engine: Scorm2004Adapter, request: Parameters<Scorm2004Adapter['navigate']>[0], targetId?: string): void {
+  private engineNavigate(
+    engine: Scorm2004Adapter,
+    request: Parameters<Scorm2004Adapter['navigate']>[0],
+    targetId?: string,
+  ): void {
     this.navigating = true
     try {
       engine.navigate(request, targetId)
@@ -290,7 +306,10 @@ export class CourseSession {
     }
   }
 
-  private startEngine(sequencing: SequencingOptions, resume: { item: string; state: string | undefined } | null): boolean {
+  private startEngine(
+    sequencing: SequencingOptions,
+    resume: { item: string; state: string | undefined } | null,
+  ): boolean {
     const course = useCourseStore.getState()
     const validation = useValidationStore.getState()
     if (resume?.state && this.resumeEngine(sequencing, resume.item, resume.state)) return true
@@ -322,11 +341,13 @@ export class CourseSession {
     useValidationStore.setState((state) => ({
       issues: state.issues.filter((i) => !(i.source === 'manifest' && i.ruleId.startsWith('sequencing.'))),
     }))
-    useValidationStore.getState().addIssues(
-      engine.sequencingWarnings.map((message) =>
-        issue({ severity: 'warning', source: 'manifest', ruleId: 'sequencing.unsupported', message }),
-      ),
-    )
+    useValidationStore
+      .getState()
+      .addIssues(
+        engine.sequencingWarnings.map((message) =>
+          issue({ severity: 'warning', source: 'manifest', ruleId: 'sequencing.unsupported', message }),
+        ),
+      )
   }
 
   /**

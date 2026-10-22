@@ -128,14 +128,7 @@ export interface SequencingDefinition {
 }
 
 /** adlnav:hideLMSUI tokens. */
-export type HideLmsUiToken =
-  | 'continue'
-  | 'previous'
-  | 'exit'
-  | 'exitAll'
-  | 'abandon'
-  | 'abandonAll'
-  | 'suspendAll'
+export type HideLmsUiToken = 'continue' | 'previous' | 'exit' | 'exitAll' | 'abandon' | 'abandonAll' | 'suspendAll'
 
 /**
  * One node of the activity tree: the organization is the root, every item

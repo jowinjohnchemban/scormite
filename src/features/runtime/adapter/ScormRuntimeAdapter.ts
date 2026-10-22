@@ -125,10 +125,7 @@ export abstract class ScormRuntimeAdapter {
    * (suspend_data, lesson_status, …), so the restart resumes like a real LMS
    * session instead of crashing on error 101.
    */
-  protected resetApiIfNeeded(api: {
-    isNotInitialized(): boolean
-    reset(settings?: Partial<Settings>): void
-  }): void {
+  protected resetApiIfNeeded(api: { isNotInitialized(): boolean; reset(settings?: Partial<Settings>): void }): void {
     if (!api.isNotInitialized()) {
       api.reset(this.apiSettings)
       this.afterApiReset()
@@ -191,24 +188,13 @@ export abstract class ScormRuntimeAdapter {
   }
 
   /** Queue a call to run on resume (exactOptionalPropertyTypes-safe). */
-  private park(
-    ctx: ApiCallContext,
-    invoke: () => string,
-    settle?: (result: string) => void,
-  ): void {
-    this._pendingCalls.push(
-      settle ? { ctx, invoke, settle } : { ctx, invoke },
-    )
+  private park(ctx: ApiCallContext, invoke: () => string, settle?: (result: string) => void): void {
+    this._pendingCalls.push(settle ? { ctx, invoke, settle } : { ctx, invoke })
   }
 
   /** Mutating calls are deferred while paused; read-only calls pass through. */
   private isMutating(method: ApiCallContext['method']): boolean {
-    return (
-      method === 'SetValue' ||
-      method === 'Commit' ||
-      method === 'Initialize' ||
-      method === 'Terminate'
-    )
+    return method === 'SetValue' || method === 'Commit' || method === 'Initialize' || method === 'Terminate'
   }
 
   /**
@@ -227,9 +213,7 @@ export abstract class ScormRuntimeAdapter {
    * GetDiagnostic only read the API's error state, so asking does not
    * disturb what the SCO will see from its own GetLastError.
    */
-  private describeError(
-    errorCode: string,
-  ): Pick<ApiCallResult, 'errorCode' | 'errorString' | 'diagnostic'> {
+  private describeError(errorCode: string): Pick<ApiCallResult, 'errorCode' | 'errorString' | 'diagnostic'> {
     const errorString = this.getErrorString(errorCode)
     const diagnostic = this.getDiagnostic(errorCode)
     return {
@@ -240,11 +224,7 @@ export abstract class ScormRuntimeAdapter {
   }
 
   /** Invoke `fn`, run post hooks, then hand the result to `settle`. */
-  private execute(
-    ctx: ApiCallContext,
-    fn: () => string,
-    settle?: (result: string) => void,
-  ): string {
+  private execute(ctx: ApiCallContext, fn: () => string, settle?: (result: string) => void): string {
     const t0 = performance.now()
     const returnValue = fn()
     const durationMs = performance.now() - t0

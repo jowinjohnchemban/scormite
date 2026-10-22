@@ -3,11 +3,7 @@
  */
 
 import { describe, expect, it } from 'vitest'
-import {
-  getFieldCategory,
-  getFieldDescription,
-  getFieldLabel,
-} from './fieldConfig'
+import { getFieldCategory, getFieldDescription, getFieldLabel } from './fieldConfig'
 
 describe('field config lookups', () => {
   it('maps known SCORM 1.2 paths to friendly labels', () => {
@@ -26,9 +22,7 @@ describe('field config lookups', () => {
   })
 
   it('falls back to the raw path for unknown fields', () => {
-    expect(getFieldLabel('cmi.interactions.0.numeric_response')).toBe(
-      'cmi.interactions.0.numeric_response',
-    )
+    expect(getFieldLabel('cmi.interactions.0.numeric_response')).toBe('cmi.interactions.0.numeric_response')
   })
 
   it('returns undefined descriptions for configured fields without one', () => {

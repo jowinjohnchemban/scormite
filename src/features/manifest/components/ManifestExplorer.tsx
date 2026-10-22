@@ -1,11 +1,6 @@
 import { useState, type ReactNode } from 'react'
 import { cn } from '@/shared/lib/utils'
-import type {
-  ManifestItem,
-  ManifestOrganization,
-  ManifestResource,
-  SequencingDefinition,
-} from '@/shared/types'
+import type { ManifestItem, ManifestOrganization, ManifestResource, SequencingDefinition } from '@/shared/types'
 import { useManifestStore } from '../state/manifestStore'
 
 /**
@@ -55,7 +50,8 @@ function sequencingSummary(sequencing: SequencingDefinition): string {
   }
   const objectives = (sequencing.primaryObjective ? 1 : 0) + (sequencing.objectives?.length ?? 0)
   if (objectives > 0) parts.push(`${objectives} objective${objectives === 1 ? '' : 's'}`)
-  if (sequencing.rollupRules?.length) parts.push(`${sequencing.rollupRules.length} rollup rule${sequencing.rollupRules.length === 1 ? '' : 's'}`)
+  if (sequencing.rollupRules?.length)
+    parts.push(`${sequencing.rollupRules.length} rollup rule${sequencing.rollupRules.length === 1 ? '' : 's'}`)
   if (sequencing.attemptLimit !== undefined) parts.push(`attempt limit ${sequencing.attemptLimit}`)
   if (sequencing.collectionRef) parts.push(`uses collection ${sequencing.collectionRef}`)
   return parts.join(' · ') || 'declared, no settings'
@@ -134,9 +130,7 @@ function TreeItem({
           title="Show what the manifest declares for this item"
         >
           <span className="truncate text-slate-300">{item.title || item.identifier}</span>
-          {item.sequencing && (
-            <span className="shrink-0 rounded bg-accent/15 px-1 text-[10px] text-accent">seq</span>
-          )}
+          {item.sequencing && <span className="shrink-0 rounded bg-accent/15 px-1 text-[10px] text-accent">seq</span>}
           {item.identifierref && (
             <span className={cn('ml-auto shrink-0 text-[10px]', resource ? 'text-slate-500' : 'text-red-400')}>
               {item.identifierref}
@@ -156,7 +150,17 @@ function TreeItem({
   )
 }
 
-function Section({ title, badge, children, defaultOpen }: { title: string; badge?: ReactNode; children: ReactNode; defaultOpen: boolean }) {
+function Section({
+  title,
+  badge,
+  children,
+  defaultOpen,
+}: {
+  title: string
+  badge?: ReactNode
+  children: ReactNode
+  defaultOpen: boolean
+}) {
   const [open, setOpen] = useState(defaultOpen)
   return (
     <div>
@@ -233,7 +237,10 @@ function ResourceList({ resources }: { resources: ManifestResource[] }) {
             >
               {res.scormType ?? 'asset'}
             </span>
-            <span className="min-w-0 truncate text-slate-400" title={`${res.identifier} · ${res.files.length} declared files`}>
+            <span
+              className="min-w-0 truncate text-slate-400"
+              title={`${res.identifier} · ${res.files.length} declared files`}
+            >
               {res.href ?? res.identifier}
             </span>
             <span className="ml-auto shrink-0 text-[10px] text-slate-600">{res.files.length} files</span>
@@ -255,7 +262,9 @@ export function ManifestExplorer() {
       {(manifest.metadata.schema ?? manifest.metadata.schemaVersion) && (
         <div className="shrink-0 border-b border-border-subtle px-3 py-1.5 text-[10px] text-slate-500">
           {manifest.metadata.schema}
-          {manifest.metadata.schemaVersion && <span className="ml-1 text-slate-400">{manifest.metadata.schemaVersion}</span>}
+          {manifest.metadata.schemaVersion && (
+            <span className="ml-1 text-slate-400">{manifest.metadata.schemaVersion}</span>
+          )}
           {manifest.sequencingCollections && (
             <span className="ml-2">
               · {Object.keys(manifest.sequencingCollections).length} sequencing collection

@@ -110,9 +110,7 @@ export async function loadZip(file: File): Promise<RawPackageData> {
  * archive holds exactly one top-level folder containing it — inside that
  * folder. Returns the path prefix to strip and the manifest's own file name.
  */
-export function findPackageRoot(
-  paths: string[],
-): { prefix: string; manifestName: string } | null {
+export function findPackageRoot(paths: string[]): { prefix: string; manifestName: string } | null {
   const atRoot = paths.find((p) => p === 'imsmanifest.xml') ?? paths.find((p) => /^imsmanifest\.xml$/i.test(p))
   if (atRoot) return { prefix: '', manifestName: atRoot }
 

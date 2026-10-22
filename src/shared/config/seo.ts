@@ -106,8 +106,7 @@ export const siteSeoConfig: SiteSeoConfig = {
     },
     {
       title: 'Multi-SCO courses and resume',
-      description:
-        'Move between lessons, and relaunch a lesson to check it resumes where the learner left off.',
+      description: 'Move between lessons, and relaunch a lesson to check it resumes where the learner left off.',
     },
     {
       title: 'See what the course reports',
@@ -137,8 +136,7 @@ export const siteSeoConfig: SiteSeoConfig = {
     },
     {
       question: 'Is SCORMite an LMS?',
-      answer:
-        'No. It is a testing tool: it plays the course and shows what it reports, but keeps no learner records.',
+      answer: 'No. It is a testing tool: it plays the course and shows what it reports, but keeps no learner records.',
     },
     {
       question: 'How do I test resume?',

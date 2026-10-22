@@ -83,7 +83,9 @@ describe('summarizeCmi', () => {
   })
 
   it('prefers total time, falls back to session time, and hides zero durations', () => {
-    expect(summarizeCmi({ 'cmi.core.total_time': '0000:00:00', 'cmi.core.session_time': '00:01:30' }, '1.2').time).toBe('00:01:30')
+    expect(summarizeCmi({ 'cmi.core.total_time': '0000:00:00', 'cmi.core.session_time': '00:01:30' }, '1.2').time).toBe(
+      '00:01:30',
+    )
     expect(summarizeCmi({ 'cmi.total_time': 'PT0S' }, '2004').time).toBe('')
     expect(summarizeCmi({ 'cmi.total_time': 'PT2M' }, '2004').time).toBe('PT2M')
   })

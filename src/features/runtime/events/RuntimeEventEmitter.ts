@@ -28,10 +28,7 @@ type Listener<T> = (data: T) => void
 class RuntimeEventEmitter {
   private readonly _listeners = new Map<string, Set<Listener<unknown>>>()
 
-  on<K extends keyof RuntimeEventMap>(
-    event: K,
-    listener: Listener<RuntimeEventMap[K]>,
-  ): () => void {
+  on<K extends keyof RuntimeEventMap>(event: K, listener: Listener<RuntimeEventMap[K]>): () => void {
     if (!this._listeners.has(event)) {
       this._listeners.set(event, new Set())
     }
