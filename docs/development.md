@@ -43,6 +43,9 @@ Dependabot (`.github/dependabot.yml`) opens grouped PRs every Monday: one
 for all minor and patch releases, one per major, one for security fixes, and
 one for GitHub Actions. Merge them only when CI is green; `@types/node`
 majors are skipped because it follows the Node version CI runs (24).
+When `@playwright/test` moves, move the e2e job's
+`mcr.microsoft.com/playwright` image tag in `.github/workflows/ci.yml` to the
+same version — Dependabot does not update it.
 
 ## Rules the build enforces
 
