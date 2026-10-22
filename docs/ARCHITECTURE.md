@@ -201,10 +201,11 @@ WCAG 2.1 AA is an enforced baseline, verified by axe-core in two layers:
   scrollTo mocks). Data-rich state is seeded by calling
   `useXStore.setState(...)` directly with real Manifest/Package/Network/
   log/storage shapes.
-- **Color audit (browser only)** — axe's `color-contrast` rule cannot
-  compute real colors in jsdom, so every theme-token change must be
-  re-verified against the dev server with axe-core injected into the
-  page. The populated Advanced-mode audit passes 26 contrast nodes.
+- **Browser audit (e2e)** — axe's `color-contrast` rule cannot compute
+  real colours in jsdom, so `e2e/accessibility.spec.ts` runs axe-core in
+  Chromium on the start page, Basic mode, the Learner popover, Advanced
+  mode with every panel open, and the phone layout's tabs, and fails on any
+  WCAG 2.1 AA violation, contrast included.
 
 Conventions enforced by this milestone:
 
