@@ -56,12 +56,24 @@ loaded into the runtime:
 score decides passed / failed when the SCO reported a score; a status the
 SCO set itself is respected; an unset status stays incomplete.
 
-**Attempts and resume.** When a SCO is left, its data is stored exactly as
-scorm-again would commit it at Terminate (including accumulated
-`total_time`). Relaunching restores it with `entry` set to `resume` after a
-`suspend` exit (blank otherwise). *New attempt* discards one SCO's data;
-*Restart whole course* discards all of it. Data lives in memory for the
-session and is cleared when the package is closed or the page reloads.
+**Attempts and resume.** A new attempt starts with `entry` = `ab-initio`.
+When a SCO is left, its data is stored exactly as scorm-again would commit
+it at Terminate (including accumulated `total_time`). What a relaunch
+starts from follows each version's rules:
+
+| Previous exit | SCORM 1.2 | SCORM 2004 |
+|---|---|---|
+| `suspend` | Same attempt, data restored, `entry` = `resume` | Same attempt, data restored, `entry` = `resume` |
+| anything else | Same attempt (1.2 has no attempt boundary), data restored, `entry` blank | New attempt, fresh data, `entry` = `ab-initio` |
+
+*New attempt* discards one SCO's data; *Restart whole course* discards all
+of it. Data lives in memory for the session and is cleared when the
+package is closed or the page reloads.
+
+**Breakpoints** hold `SetValue` / `Commit` calls (the SCO is answered
+`true` immediately; the SCORM API cannot wait). Held calls are applied in
+order on Resume — or discarded, unapplied, if you navigate to another SCO
+first, so one SCO's data never lands in the next one's runtime.
 
 **Learner.** No learner is configured: `cmi.core.student_id` /
 `cmi.learner_id` and the learner name are empty.
