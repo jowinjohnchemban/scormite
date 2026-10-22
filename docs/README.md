@@ -13,17 +13,36 @@ a document disagree, the document is the bug.
 
 | Document | What it covers |
 |---|---|
-| [User guide](USER_GUIDE.md) | Testing a package end to end: loading, playing, resume and attempts, reading the API log, validation, reports |
-| [SCORM support](SCORM_SUPPORT.md) | Versions and editions, LMS behaviour SCORMite reproduces, sequencing coverage, validation rules, known limitations |
+| [User guide](user-guide.md) | Testing a package end to end: loading, playing, resume and attempts, reading the API log, validation, reports |
+| [SCORM support](scorm-support.md) | Versions and editions, LMS behaviour SCORMite reproduces, sequencing coverage, validation rules, known limitations |
 
 ## Building SCORMite
 
 | Document | What it covers |
 |---|---|
-| [Architecture](ARCHITECTURE.md) | Layers, enforced boundaries, folder structure, the course player, panels, accessibility, tooling |
-| [Development](DEVELOPMENT.md) | Setup, conventions, TypeScript and parser gotchas, testing, definition of done |
-| [Domain model](DOMAIN_MODEL.md) | Core entities and which feature owns each |
-| [Deployment](DEPLOYMENT.md) | Static hosting on Vercel, Cloudflare, or a container; build-time settings |
-| [Roadmap](ROADMAP.md) | Milestones delivered, with exit criteria, and what comes next |
-| [Architecture decision records](adr/) | Why debatable technical choices were made |
-| [Original design](milestones/01-architecture-and-design.md) | The initial design document — a historical snapshot |
+| [Development](development.md) | Principles, setup, enforced rules, conventions, testing, definition of done |
+| [Architecture](architecture.md) | Layers, folder structure, the course player, panels, accessibility, tooling |
+| [Domain model](domain-model.md) | Core entities and which feature owns each |
+| [Deployment](deployment.md) | Static hosting on Vercel, Cloudflare, or a container; build-time settings |
+| [Roadmap](roadmap.md) | Milestones delivered, with exit criteria, and what comes next |
+| [Decision records](adr/README.md) | Why debatable technical choices were made |
+| [Archive](archive/) | Superseded documents kept for their rationale, not maintained |
+
+## Writing these documents
+
+- **Names.** Lower-case kebab-case (`scorm-support.md`); each folder's index
+  is `README.md`. Decision records are `adr/NNNN-short-title.md`.
+- **Shape.** One `#` title, then a short paragraph saying what the document
+  covers and who it is for, then `##` sections. Describe the product as it
+  is now — history belongs in the [Roadmap](roadmap.md) and in commits, and
+  milestone numbers stay out of headings.
+- **Links.** Refer to other documents with relative Markdown links
+  (`[Architecture](architecture.md#layers)`), and to code with its path from
+  the repository root in backticks (`src/app/course/CourseSession.ts`).
+- **Same change.** A change that alters behaviour, a rule, or a workflow
+  updates the affected documents in the same commit. A new document is
+  added to the tables above.
+- **Where else.** Each feature's `src/features/<name>/README.md` says what
+  that feature owns. Agent working notes go in `.agent-docs/`, which is
+  git-ignored; superseded documents move to `archive/` with a note at the
+  top.

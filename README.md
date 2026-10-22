@@ -46,14 +46,14 @@ pnpm run dev        # http://localhost:5173
 ```
 
 Requires Node.js 24 (the CI version) and pnpm (pinned in `package.json`). See
-[Development](docs/DEVELOPMENT.md) for every command and the definition of
-done, and [Deployment](docs/DEPLOYMENT.md) for hosting the static build.
+[Development](docs/development.md) for every command and the definition of
+done, and [Deployment](docs/deployment.md) for hosting the static build.
 
 ## Documentation
 
 All documentation lives in [`docs/`](docs/README.md) — the knowledge hub for
 people and agents:
 
-- [User guide](docs/USER_GUIDE.md) · [SCORM support](docs/SCORM_SUPPORT.md)
-- [Architecture](docs/ARCHITECTURE.md) · [Development](docs/DEVELOPMENT.md) · [Domain model](docs/DOMAIN_MODEL.md)
-- [Deployment](docs/DEPLOYMENT.md) · [Roadmap](docs/ROADMAP.md) · [Decision records](docs/adr/)
+- [User guide](docs/user-guide.md) · [SCORM support](docs/scorm-support.md)
+- [Architecture](docs/architecture.md) · [Development](docs/development.md) · [Domain model](docs/domain-model.md)
+- [Deployment](docs/deployment.md) · [Roadmap](docs/roadmap.md) · [Decision records](docs/adr/README.md)

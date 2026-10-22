@@ -1,7 +1,7 @@
 # User guide
 
 How to test a SCORM package with SCORMite, from opening it to sharing a QA
-report. For what is supported and checked, see [SCORM support](SCORM_SUPPORT.md).
+report. For what is supported and checked, see [SCORM support](scorm-support.md).
 
 ## 1. Open a package
 
@@ -52,7 +52,7 @@ course**.
   interactions are restored and `cmi.entry` is `resume`. After any other
   exit, SCORM 2004 starts a new attempt with fresh data; SCORM 1.2
   continues the same attempt with its data (see
-  [SCORM support](SCORM_SUPPORT.md#lms-behaviour-scormite-reproduces)).
+  [SCORM support](scorm-support.md#lms-behaviour-scormite-reproduces)).
 - **New attempt** — discard its saved data and start it fresh.
 - **Restart whole course** — discard all saved data and start from the
   beginning.
@@ -98,7 +98,7 @@ not at the zip root, …) are found as soon as the package opens. Runtime
 problems (out-of-range scores, oversized suspend data, terminating without
 a commit, refused navigation) appear while the course runs. Basic mode
 counts package errors under the package name; Advanced mode lists every
-issue in **Validation**. The [rule list](SCORM_SUPPORT.md#validation-rules)
+issue in **Validation**. The [rule list](scorm-support.md#validation-rules)
 explains each one.
 
 ## 6. Share a report

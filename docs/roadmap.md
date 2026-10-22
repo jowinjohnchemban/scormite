@@ -1,10 +1,18 @@
 # Roadmap
 
-Same milestone list as `milestones/01-architecture-and-design.md` §9, kept here as the
-version that gets checked off as work actually lands. Each milestone must
-build (`pnpm run build`), lint clean (`pnpm run lint`), and typecheck
-(`pnpm run typecheck`) before the next one starts.
+What has been delivered, milestone by milestone, with each milestone's exit
+criteria — and what comes next. The milestone plan started in the
+[original design](archive/original-design.md#9-implementation-roadmap);
+this is the record of what actually landed, including what was later
+removed and why. A milestone is finished only when it meets the
+[definition of done](development.md#definition-of-done).
 
+## Delivered
+
+- [x] **Milestone 1 — Architecture and design.** Layering, folder
+      structure, domain model, runtime adapter interface, and the milestone
+      plan, written before any code
+      ([archived](archive/original-design.md)).
 - [x] **Milestone 2 — Project scaffold.** Vite + React 19 + TS strict +
       Tailwind v4 + pnpm; ESLint architecture-boundary rules
       (`no-restricted-imports` for scorm-again, `eslint-plugin-boundaries`
@@ -12,8 +20,8 @@ build (`pnpm run build`), lint clean (`pnpm run lint`), and typecheck
       shadcn/ui file
       conventions in place (`components.json`, `cn()`, hand-authored
       `Button` — CLI needs network access this sandbox didn't have);
-      feature-first folder tree with README + barrel per feature; `/docs/`
-      folder; agent instructions for future sessions.
+      feature-first folder tree with README + barrel per feature; `docs/`
+      folder; agent instructions.
 - [x] **Milestone 3 — Package loader + Manifest parser.** ZIP/folder/drag-drop
       ingestion, SCORM version detection, manifest tree parse
       (fast-xml-parser). *Exit criteria:* load a real SCORM 1.2 and a real
@@ -62,15 +70,6 @@ build (`pnpm run build`), lint clean (`pnpm run lint`), and typecheck
       SCORM 1.2 status switches and were never verified against the real
       LMSs, so they implied an emulation that did not exist. The runtime now
       uses one fixed rule set modelled on SCORM Cloud.
-
-## Recent infra updates
-
-- [x] **Static SEO & build assets (dev+prod):** Added a small Vite plugin and
-      shared SEO config to generate and serve `robots.txt`, `sitemap.xml`, and
-      `llms.txt` at dev-time and build-time. See `src/shared/config/seo.ts` and
-      `vite.config.ts`. *Next:* wire `siteUrl` from environment in CI, expand
-      `routes` for dynamic pages, and surface SEO metadata in any server-side
-      rendering if added later.
 - [x] **Milestone 12 — Reports.** One-click QA report
       (JSON/CSV/Markdown/HTML export). *Exit criteria:* generated report
       contains manifest summary, runtime summary, timeline, logs, and
@@ -144,7 +143,6 @@ build (`pnpm run build`), lint clean (`pnpm run lint`), and typecheck
       detection; folder-wrapped zips re-rooted and reported as a package
       error; service worker ignores launch query strings; SEO metadata,
       JSON-LD, llms.txt, sitemap, and a landing screen from one config.
-
 - [x] **Milestone 17 — Sequencing, honesty pass, production polish.**
       *Exit criteria:* SCORM 2004 courses are driven by scorm-again's
       sequencing engine from the manifest's `imsss` rules; every feature
@@ -163,9 +161,20 @@ build (`pnpm run build`), lint clean (`pnpm run lint`), and typecheck
       from 913 kB to 279 kB; a new pixel-exact brand mark; docs hub. 175
       unit + 8 e2e tests green; lint, typecheck, build clean.
 
-## Next candidates
+## Since Milestone 17
 
-- [x] **Saved progress** (delivered after M17): attempts, position, and
-  sequencing state kept in IndexedDB; reopening a package resumes it.
-- [x] **Learner identity** (delivered after M17): set from the header,
-  seeded into each launch.
+- [x] **Saved progress.** Attempts, position, and sequencing state kept in
+      IndexedDB; reopening a package resumes it.
+- [x] **Learner identity.** Set from the header, seeded into each launch;
+      a sample learner until one is set.
+- [x] **Runtime and readability fixes.** Each SCO loads once per launch;
+      `total_time` and empty collections appear in the CMI; a `runtime.status-overridden`
+      warning explains a status the LMS rules changed on exit; Basic mode's
+      API log and package summary made readable; panels renamed for what
+      they show (Files, API Log, CMI History).
+
+## Next
+
+No milestone is scheduled. Known gaps are listed under
+[Known limitations](scorm-support.md#known-limitations) and in the
+unsupported standards of [SCORM support](scorm-support.md#standards).

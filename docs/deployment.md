@@ -1,6 +1,6 @@
 # Deployment
 
-Scormite is a static, browser-only application. It has no server API, database,
+SCORMite is a static, browser-only application. It has no server API, database,
 accounts, or telemetry. Deploy the generated `dist/` directory at the root of an
 HTTPS origin: the service worker requires a secure context (localhost is also
 accepted by browsers).

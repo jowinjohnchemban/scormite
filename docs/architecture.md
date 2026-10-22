@@ -1,9 +1,9 @@
 # Architecture
 
-This is the living reference. The original full design rationale is in
-`milestones/01-architecture-and-design.md` — this file is the version that's meant to be kept in
-sync with the actual code as the codebase grows. When the two disagree,
-the code and this file win; the milestone doc is a historical snapshot.
+How SCORMite is built: its layers, folder structure, course player, panels,
+accessibility baseline, and tooling. The rules and conventions for changing
+it are in [Development](development.md); the original design rationale is
+[archived](archive/original-design.md).
 
 ## Layers
 
@@ -11,7 +11,7 @@ the code and this file win; the milestone doc is a historical snapshot.
 UI (React)
   → Studio Services (pure application logic, no React/DOM)
     → Runtime Adapter (wraps scorm-again; the only layer allowed to import it)
-      → scorm-again (vendored, never modified)
+      → scorm-again (npm dependency, never modified)
         → SCORM Package (iframe-sandboxed)
 ```
 
@@ -29,7 +29,7 @@ top-level shape:
 
 ```
 src/
-  app/            # shell, mode switch, dock layout engine
+  app/            # shell, mode switch, dock layout, course player (joins features)
   features/       # one folder per feature (see individual READMEs)
   components/     # shared dumb UI (shadcn-pattern primitives, icons)
   shared/         # cross-feature utilities, types, test helpers
@@ -67,11 +67,11 @@ render a second iframe.
 
 ## State
 
-One Zustand store per feature — see `docs/DOMAIN_MODEL.md` for what each
-store owns. Stores update only in response to `RuntimeEventEmitter` events
+One Zustand store per feature — see [Domain model](domain-model.md) for
+what each store owns. Stores update only in response to `RuntimeEventEmitter` events
 or explicit user actions; components never call the adapter directly.
 
-## Course player (M16–M17)
+## Course player
 
 SCORMite plays the LMS for one course session. The course-session logic
 lives in `src/app/course/` (the app layer, because it joins package-loader,
@@ -143,10 +143,15 @@ dismissible strip; the open session keeps running.
 ## Removed features
 
 Features that did not earn their place were removed from the product and
-the code, not just hidden:
+the code, not just hidden (see the [Roadmap](roadmap.md) for when):
 
-- The **plugin system** (M13), the **Storage** panel (M14), and the
-  **Console** panel (M7) — none was reachable from the UI any more.
+- The **plugin system**, and the **Storage** and **Console** panels — none
+  was reachable from the UI any more.
+
+- The **Performance** panel — in-memory API call timings say nothing about
+  LMS performance; its per-method counts moved to the API Log.
+
+- The **Reports** panel — it duplicated the header's Report export.
 
 - **Moving panels between docks** (drag-and-drop, per-panel L / R / B dock
   buttons) and the **activity bars** — layout furniture that added
@@ -164,8 +169,7 @@ Each panel has a fixed home dock, set in its definition (`region`), and a
 purpose group (`group`: course / runtime / problems) the Panels menu uses.
 `PanelRegistry` persists only show/hide choices and the active bottom tab;
 dock sizes are persisted by react-resizable-panels. Moving panels between
-docks was removed (see "Removed features").
-
+docks was removed (see [Removed features](#removed-features)).
 
 Every panel in `src/app/layout/panels.ts` (`ADVANCED_PANELS`) shows real
 data from the running session and earns its place by answering a question a
@@ -195,11 +199,7 @@ applying the held calls in order on Resume. Initialize, Terminate, and reads
 are never breakpoint targets, because holding them would mean lying to the
 course about whether it started or what a value is.
 
-**Removed for not earning their place:** Performance (in-memory API call
-timings say nothing about LMS performance; per-method counts moved to the
-API Log) and Reports (duplicated the header's Report export).
-
-## Accessibility (M15)
+## Accessibility
 
 WCAG 2.1 AA is an enforced baseline, verified by axe-core in two layers:
 
@@ -211,14 +211,14 @@ WCAG 2.1 AA is an enforced baseline, verified by axe-core in two layers:
   throws without `--localstorage-file` — and ResizeObserver/matchMedia/
   scrollTo mocks). Data-rich state is seeded by calling
   `useXStore.setState(...)` directly with real Manifest/Package/Network/
-  log/storage shapes.
+  log shapes.
 - **Browser audit (e2e)** — axe's `color-contrast` rule cannot compute
   real colours in jsdom, so `e2e/accessibility.spec.ts` runs axe-core in
   Chromium on the start page, Basic mode, the Learner popover, Advanced
   mode with every panel open, and the phone layout's tabs, and fails on any
   WCAG 2.1 AA violation, contrast included.
 
-Conventions enforced by this milestone:
+Conventions the audits enforce:
 
 - **Contrast tokens** — `src/index.css` `@theme` overrides Tailwind's
   default slate-500 (`#7f93ab`, 6.2:1) and slate-600 (`#6d829c`, 4.9:1)
@@ -252,11 +252,9 @@ the augmentation-required `any`/empty-interface patterns for `**/*.d.ts`.
 Tailwind v4 via `@tailwindcss/vite` (no separate `tailwind.config.*` — theme
 tokens live in `@theme` inside `src/index.css`). UI primitives follow the
 shadcn/ui file convention (`src/components/ui/*.tsx`, `cn()` helper in
-`src/shared/lib/utils.ts`, `components.json` at the root) so `pnpm dlx shadcn
-add <component>` works normally once you're on a machine with network access
-to `ui.shadcn.com` — the sandbox this scaffold was built in has that domain
-blocked, so `Button` was hand-authored to match the CLI's output shape
-exactly; treat it as a stand-in for the real CLI run.
+`src/shared/lib/utils.ts`, `components.json` at the root), so
+`pnpm dlx shadcn add <component>` works; primitives written by hand (where
+the CLI could not reach `ui.shadcn.com`) match the CLI's output shape.
 
 ## Tooling
 
@@ -276,15 +274,16 @@ exactly; treat it as a stand-in for the real CLI run.
 ## Adding a new feature
 
 1. `mkdir src/features/<name>` with `README.md` + `index.ts` (barrel) at minimum.
-2. Add it to the roadmap in `docs/ROADMAP.md` if it's not already there.
-3. If it needs to depend on another feature, that dependency must go through
-   the target feature's `index.ts` — `eslint-plugin-boundaries` will fail the
-   build otherwise.
+2. Add it to the [Roadmap](roadmap.md) if it's not already there.
+3. It must not import another feature — `eslint-plugin-boundaries` fails
+   the build. Types used by both go in `src/shared/types/`; logic that
+   joins features goes in `src/app/`.
 4. If it needs scorm-again, it doesn't — go through `@/features/runtime`
    instead. `no-restricted-imports` will fail the build otherwise.
 
-## Architecture Decision Records
+## Architecture decision records
 
-Non-obvious or debatable technical choices get an ADR in `docs/adr/`, not
-just a comment. See `docs/adr/0001-use-eslint-boundaries-for-architecture.md`
-for the template/example.
+Non-obvious or debatable technical choices get a
+[decision record](adr/README.md), not just a comment — for example
+[ADR 0001](adr/0001-eslint-architecture-boundaries.md), on enforcing these
+boundaries with ESLint.
