@@ -1,0 +1,18 @@
+name: Feature request
+description: Something SCORMite should show or check when testing a package.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What are you trying to find out or check about a package, and what makes it hard today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What would help
+      description: How you imagine SCORMite helping. Mention the SCORM specification section or LMS behaviour it relates to, if any.
+    validations:
+      required: true

@@ -1,0 +1,50 @@
+name: Bug report
+description: SCORMite behaves differently from what a SCORM package or an LMS would do.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. Please do not attach SCORM packages you do not have the right to share, and report security problems privately (see SECURITY.md).
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what SCORMite did instead.
+    validations:
+      required: true
+  - type: dropdown
+    id: version
+    attributes:
+      label: SCORM version
+      options:
+        - SCORM 1.2
+        - SCORM 2004 2nd Edition
+        - SCORM 2004 3rd Edition
+        - SCORM 2004 4th Edition
+        - Not sure
+    validations:
+      required: true
+  - type: input
+    id: tool
+    attributes:
+      label: Authoring tool
+      placeholder: e.g. Storyline 360, Rise, Captivate, iSpring, hand-written
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and version
+      placeholder: e.g. Chrome 140, Firefox 145
+    validations:
+      required: true
+  - type: textarea
+    id: report
+    attributes:
+      label: SCORMite report
+      description: Export Report › Markdown from SCORMite and paste it here (or the relevant part of the API log and validation issues).
+      render: markdown
+  - type: textarea
+    id: lms
+    attributes:
+      label: How an LMS behaves
+      description: If the package behaves differently on an LMS (SCORM Cloud, Moodle, …), say which and how.

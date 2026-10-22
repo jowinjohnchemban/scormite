@@ -5,9 +5,9 @@ SCORMite is a browser-based tester and debugger for SCORM 1.2 and SCORM
 open-source [scorm-again](https://github.com/jcputney/scorm-again) runtime —
 and shows everything the course reports, without uploading it anywhere.
 
-This folder is the project's knowledge hub, written for both people and
-AI agents. Every document is kept in sync with the code; where the code and
-a document disagree, the document is the bug.
+This folder is the project's knowledge hub, for users, contributors, and AI
+coding agents alike. Every document is kept in sync with the code; where the
+code and a document disagree, the document is the bug.
 
 ## Using SCORMite
 
@@ -27,6 +27,11 @@ a document disagree, the document is the bug.
 | [Roadmap](roadmap.md)             | Milestones delivered, with exit criteria, and what comes next                           |
 | [Decision records](adr/README.md) | Why debatable technical choices were made                                               |
 | [Archive](archive/)               | Superseded documents kept for their rationale, not maintained                           |
+
+Contributing, the code of conduct, the security policy, and the changelog
+are at the repository root: [CONTRIBUTING.md](../CONTRIBUTING.md),
+[CODE_OF_CONDUCT.md](../CODE_OF_CONDUCT.md), [SECURITY.md](../SECURITY.md),
+[CHANGELOG.md](../CHANGELOG.md).
 
 ## Writing these documents
 

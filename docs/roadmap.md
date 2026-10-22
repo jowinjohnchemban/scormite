@@ -172,6 +172,12 @@ removed and why. A milestone is finished only when it meets the
       warning explains a status the LMS rules changed on exit; Basic mode's
       API log and package summary made readable; panels renamed for what
       they show (Files, API Log, CMI History).
+- [x] **About page and architecture diagram.** Developer credit, build
+      details, a diagram generated from the source, and the licences of
+      everything shipped.
+- [x] **Open-source release 1.0.0.** MIT licence; contributing guide, code
+      of conduct, security policy, changelog, issue and pull request
+      templates.
 
 ## Next
 
