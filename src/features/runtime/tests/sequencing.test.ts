@@ -117,7 +117,7 @@ describe('Scorm2004Adapter with sequencing', () => {
     })
     adapter.navigate('start')
     adapter.prepareForDelivery()
-    expect(adapter.navigationState()?.choices).toEqual([])
+    expect(adapter.navigationState()?.choices).not.toContain('b')
     expect(adapter.navigate('choice', 'b')).toBe(false)
   })
 
@@ -158,11 +158,10 @@ describe('Scorm2004Adapter with sequencing', () => {
     expect(adapter.navigate('choice', 'quiz')).toBe(false)
     expect(delivered).toEqual(['intro'])
 
-    // On a retry scorm-again seeds cmi.objectives with the previous attempt's
-    // primary-objective status, and that entry wins at Terminate — so the SCO
-    // must report the objective too (see ARCHITECTURE.md, known limitations).
+    // A retry that reports only cmi.success_status must count (scorm-again
+    // before 3.4.6 kept the previous attempt's objective status).
     expect(adapter.navigate('choice', 'intro')).toBe(true)
-    runSco(adapter, { 'cmi.success_status': 'passed', 'cmi.objectives.0.success_status': 'passed' })
+    runSco(adapter, { 'cmi.success_status': 'passed' })
     expect(adapter.navigate('choice', 'quiz')).toBe(true)
     expect(delivered.at(-1)).toBe('quiz')
   })

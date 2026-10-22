@@ -7,7 +7,7 @@
 [![CI](https://github.com/jowinjohnchemban/scormite/actions/workflows/ci.yml/badge.svg)](https://github.com/jowinjohnchemban/scormite/actions/workflows/ci.yml)
 ![SCORM 1.2](https://img.shields.io/badge/SCORM-1.2-2f6fb0)
 ![SCORM 2004](https://img.shields.io/badge/SCORM%202004-2nd%20%7C%203rd%20%7C%204th%20Edition-2f6fb0)
-[![Runtime: scorm-again 3.2](https://img.shields.io/badge/runtime-scorm--again%203.2-3fb950)](https://github.com/jcputney/scorm-again)
+[![Runtime: scorm-again 3.4](https://img.shields.io/badge/runtime-scorm--again%203.4-3fb950)](https://github.com/jcputney/scorm-again)
 ![Sequencing](https://img.shields.io/badge/SCORM%202004-sequencing-3fb950)
 ![Accessibility: WCAG 2.1 AA](https://img.shields.io/badge/a11y-WCAG%202.1%20AA%20(axe--core)-3fb950)
 ![Privacy: runs locally](https://img.shields.io/badge/privacy-runs%20locally%2C%20no%20upload-7f93ab)

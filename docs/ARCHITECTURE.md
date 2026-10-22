@@ -120,13 +120,12 @@ manifest, runtime, player, session, and validation):
   `GetDiagnostic` on its `ApiCallRecord`; refused navigation requests
   become `sequencing.request-refused` warnings.
 
-**Known runtime limitation (scorm-again 3.2.0).** When a sequenced activity
-is retried, scorm-again seeds `cmi.objectives` with the primary objective's
-status from the previous attempt, and that entry wins at Terminate. A SCO
-that only sets `cmi.success_status` on the retry therefore keeps the old
-satisfaction status; SCOs that also report their primary objective in
-`cmi.objectives` behave correctly. Scormite does not patch scorm-again, so
-the behaviour is shown as the runtime produces it.
+**Runtime version.** scorm-again 3.4.6. Upstream fixes are adopted by
+upgrading, never by patching: 3.4.6 fixed a retried activity keeping its
+previous primary-objective status (pinned by a test), and reports a
+course's refused navigation through `onSequencingError` (with the IMS
+exception code), which the adapter turns into a readable
+`sequencing.request-refused` warning.
 
 **Launch ordering.** Launches and engine navigation are two-step
 requests: the request blanks the player (unmounting the old iframe, whose

@@ -2,7 +2,7 @@
 
 What SCORMite supports, what it reproduces of an LMS, what it checks, and
 where its limits are. Every runtime behaviour comes from
-[scorm-again](https://github.com/jcputney/scorm-again) 3.2, which SCORMite
+[scorm-again](https://github.com/jcputney/scorm-again) 3.4.6, which SCORMite
 configures and wraps but never modifies.
 
 ## Standards
@@ -142,12 +142,6 @@ code and scorm-again's explanation (`GetErrorString` / `GetDiagnostic`).
 
 ## Known limitations
 
-- **Retried activities (scorm-again 3.2).** When a sequenced activity is
-  retried, scorm-again pre-fills `cmi.objectives` with the primary
-  objective's previous status, and that entry wins at Terminate. A SCO that
-  only sets `cmi.success_status` on the retry keeps the old status; SCOs
-  that also report their primary objective in `cmi.objectives` behave
-  correctly.
 - **External launch URLs.** Resources whose `href` is an absolute URL on
   another site cannot reach the SCORM API from SCORMite's player and are not
   supported.
