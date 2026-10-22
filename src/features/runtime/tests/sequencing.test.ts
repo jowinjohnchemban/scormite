@@ -104,17 +104,92 @@ describe('SequencingConfigBuilder', () => {
       { shared: { attemptLimit: 2 } },
     )
     expect(settings.activityTree?.children?.[0]?.sequencingRules).toBeUndefined()
-    expect(settings.activityTree?.children?.[0]?.rollupRules).toBeUndefined()
-    expect(warnings).toHaveLength(5)
+    // The negated and "any" rules are kept; only the time-based one is dropped.
+    expect(settings.activityTree?.children?.[0]?.rollupRules?.rules).toHaveLength(2)
+    expect(warnings).toHaveLength(3)
     expect(warnings.join('\n')).toMatch(/"exitAll" is not valid here/)
-    expect(warnings.join('\n')).toMatch(/"not" condition/)
-    expect(warnings.join('\n')).toMatch(/with "any"/)
-    expect(warnings.join('\n')).toMatch(/"timeLimitExceeded"/)
+    expect(warnings.join('\n')).toMatch(/rollup condition "timeLimitExceeded" is not supported by the runtime/)
     expect(warnings.join('\n')).toMatch(/collection "shared"/)
+  })
+
+  it('passes negated conditions, "any" combinations, and attemptLimitExceeded to the engine', () => {
+    const { settings, warnings } = new SequencingConfigBuilder().build(
+      course([leaf('a'), leaf('b')], {
+        rollupRules: [
+          {
+            action: 'notSatisfied',
+            childActivitySet: 'any',
+            conditionCombination: 'any',
+            conditions: [{ condition: 'satisfied', operator: 'not' }, { condition: 'attemptLimitExceeded' }],
+          },
+          {
+            action: 'completed',
+            childActivitySet: 'all',
+            conditionCombination: 'all',
+            conditions: [{ condition: 'completed' }],
+          },
+        ],
+      }),
+      undefined,
+    )
+    expect(warnings).toEqual([])
+    expect(settings.activityTree?.rollupRules?.rules).toEqual([
+      {
+        action: 'notSatisfied',
+        conditionCombination: 'any',
+        consideration: 'any',
+        conditions: [{ condition: 'satisfied', operator: 'not' }, { condition: 'attemptLimitExceeded' }],
+      },
+      {
+        action: 'completed',
+        conditionCombination: 'all',
+        consideration: 'all',
+        conditions: [{ condition: 'completed' }],
+      },
+    ])
   })
 })
 
 describe('Scorm2004Adapter with sequencing', () => {
+  // Satisfied when every child is satisfied OR completed (IMS RB.1.4.1): child a
+  // completed but failed, child b passed but incomplete. Only "any" lets each
+  // child's two conditions combine; "all" requires both of every child.
+  it.each([
+    ['any', 'passed'],
+    ['all', 'failed'],
+  ] as const)('rolls up a rule whose conditions combine with "%s" for each child', (combination, moduleStatus) => {
+    recordDeliveries()
+    const adapter = new Scorm2004Adapter('s', undefined, {
+      activityTree: course([
+        {
+          id: 'mod',
+          title: 'Module',
+          isVisible: true,
+          children: [leaf('a'), leaf('b')],
+          sequencing: {
+            rollupRules: [
+              {
+                action: 'satisfied',
+                childActivitySet: 'all',
+                conditionCombination: combination,
+                conditions: [{ condition: 'satisfied' }, { condition: 'completed' }],
+              },
+            ],
+          },
+        },
+      ]),
+    })
+    expect(adapter.navigate('start')).toBe(true)
+    runSco(adapter, {
+      'cmi.completion_status': 'completed',
+      'cmi.success_status': 'failed',
+      'adl.nav.request': 'continue',
+    })
+    runSco(adapter, { 'cmi.completion_status': 'incomplete', 'cmi.success_status': 'passed' })
+    adapter.prepareForDelivery()
+    expect(adapter.activityStatus('mod')?.successStatus).toBe(moduleStatus)
+  })
+
   it('starts on the first activity and follows a SCO continue request', () => {
     const delivered = recordDeliveries()
     const adapter = new Scorm2004Adapter('s', undefined, { activityTree: course([leaf('a'), leaf('b'), leaf('c')]) })

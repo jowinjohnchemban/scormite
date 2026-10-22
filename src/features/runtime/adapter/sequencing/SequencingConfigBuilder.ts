@@ -48,7 +48,11 @@ const RULE_ACTIONS: Record<keyof RulesSettings, ReadonlySet<string>> = {
   exitConditionRules: new Set(['exit']),
   postConditionRules: new Set(['exitParent', 'exitAll', 'retry', 'retryAll', 'continue', 'previous']),
 }
-/** IMS rollup condition token → scorm-again's name for it. */
+/**
+ * IMS rollup condition token → scorm-again's name for it. scorm-again does not
+ * evaluate timeLimitExceeded or outsideAvailableTimeRange in rollup rules, so
+ * rules that use them are reported, not approximated.
+ */
 const ROLLUP_CONDITIONS: Readonly<Record<string, string>> = {
   satisfied: 'satisfied',
   objectiveStatusKnown: 'objectiveStatusKnown',
@@ -56,6 +60,7 @@ const ROLLUP_CONDITIONS: Readonly<Record<string, string>> = {
   completed: 'completed',
   activityProgressKnown: 'progressKnown',
   attempted: 'attempted',
+  attemptLimitExceeded: 'attemptLimitExceeded',
 }
 const ROLLUP_ACTIONS = new Set(['satisfied', 'notSatisfied', 'completed', 'incomplete'])
 
@@ -229,30 +234,27 @@ export class SequencingConfigBuilder {
       this.warn(`${where}: rollup action "${rule.action}" is not supported; the rule was ignored.`)
       return null
     }
-    // scorm-again requires every condition of a rollup rule to hold (and has
-    // no "not"), so an "any" combination or a negated condition cannot be
-    // expressed without changing the rule's meaning.
-    if (rule.conditions.some((c) => c.operator === 'not')) {
-      this.warn(`${where}: rollup rules with a "not" condition are not supported by the runtime; the rule was ignored.`)
-      return null
-    }
-    if (rule.conditions.length > 1 && rule.conditionCombination === 'any') {
-      this.warn(
-        `${where}: rollup rules combining several conditions with "any" are not supported by the runtime; the rule was ignored.`,
-      )
-      return null
-    }
     const conditions: RollupRuleSettings['conditions'] = []
     for (const condition of rule.conditions) {
       const mapped = ROLLUP_CONDITIONS[condition.condition]
       if (!mapped) {
-        this.warn(`${where}: rollup condition "${condition.condition}" is not supported; the rule was ignored.`)
+        this.warn(
+          `${where}: rollup condition "${condition.condition}" is not supported by the runtime; the rule was ignored.`,
+        )
         return null
       }
-      conditions.push({ condition: mapped as RollupRuleSettings['conditions'][number]['condition'] })
+      conditions.push({
+        condition: mapped as RollupRuleSettings['conditions'][number]['condition'],
+        ...(condition.operator === 'not'
+          ? { operator: 'not' as NonNullable<RollupRuleSettings['conditions'][number]['operator']> }
+          : {}),
+      })
     }
     return {
       action: rule.action as RollupRuleSettings['action'],
+      // How one child's conditions combine (RB.1.4.1); the parser applies the
+      // IMS default ("any") when the manifest omits it.
+      conditionCombination: rule.conditionCombination as NonNullable<RollupRuleSettings['conditionCombination']>,
       consideration: rule.childActivitySet as NonNullable<RollupRuleSettings['consideration']>,
       ...(rule.minimumCount !== undefined ? { minimumCount: rule.minimumCount } : {}),
       // IMS declares the percentage as 0–1; scorm-again counts 0–100.

@@ -4,6 +4,14 @@ All notable changes to SCORMite are recorded here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- **SCORM 2004 rollup rules** that negate a condition (`not`), combine
+  conditions with `any` (the IMS default), or use `attemptLimitExceeded` are
+  evaluated instead of being dropped with a `sequencing.unsupported` warning.
+
 ## [1.0.0] — 2026-10-22
 
 First public release, under the MIT licence.
