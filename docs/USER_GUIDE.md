@@ -41,9 +41,12 @@ course**.
 
 **Restart** in the header acts on the current item:
 
-- **Relaunch (resume)** — reload it with its saved data. `cmi.entry` is
-  `resume` if the SCO exited with `suspend`; its suspend data, location,
-  score, objectives, and interactions are restored.
+- **Relaunch (resume)** — reload it the way an LMS would. After a
+  `suspend` exit its suspend data, location, score, objectives, and
+  interactions are restored and `cmi.entry` is `resume`. After any other
+  exit, SCORM 2004 starts a new attempt with fresh data; SCORM 1.2
+  continues the same attempt with its data (see
+  [SCORM support](SCORM_SUPPORT.md#lms-behaviour-scormite-reproduces)).
 - **New attempt** — discard its saved data and start it fresh.
 - **Restart whole course** — discard all saved data and start from the
   beginning.
