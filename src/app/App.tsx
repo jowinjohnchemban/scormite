@@ -14,11 +14,11 @@ import { ScoEndedBar } from '@/app/course/ScoEndedBar'
 import { PlayerFrame } from '@/features/player'
 import { Button } from '@/components/ui/button'
 import { logDevDiagnostic } from '@/shared/lib/devDiagnostics'
+import { loadAdvancedMode, preloadOnDemandModules } from '@/app/onDemandModules'
 
-// The dock and its panels are only downloaded when Advanced mode is opened.
-const AdvancedModeShell = lazy(() =>
-  import('@/app/modes/AdvancedModeShell').then((module) => ({ default: module.AdvancedModeShell })),
-)
+// The dock and its panels are not in the start page's JavaScript; they are
+// fetched once the page has loaded (see onDemandModules).
+const AdvancedModeShell = lazy(() => loadAdvancedMode().then((module) => ({ default: module.AdvancedModeShell })))
 
 interface FrameRect {
   left: number
@@ -41,6 +41,11 @@ export function App() {
   // Single subscription for the whole app: the runtime session (and therefore
   // the running SCO) outlives any one mode shell.
   const session = usePackageSession(mode)
+
+  // Have Advanced mode and the package runtime in the browser before they are
+  // needed, so switching modes or opening a package is seamless even after a
+  // deployment replaced the files this page refers to.
+  useEffect(() => preloadOnDemandModules({ advancedMode: isDesktop }), [isDesktop])
   const notice = useCourseStore((s) => s.notice)
   const noticeTone = useCourseStore((s) => s.noticeTone)
   const setNotice = useCourseStore((s) => s.setNotice)
@@ -136,7 +141,8 @@ export function App() {
           <PlayerFrame key={session.launchKey} src={session.launchUrl} />
           <ScoEndedBar session={session} />
         </div>
-        <ErrorBoundary resetKey={session.pkg?.id ?? null}>
+        {/* A new package or a mode switch clears a caught error. */}
+        <ErrorBoundary resetKey={`${session.pkg?.id ?? ''}:${mode}`}>
           {!isDesktop || mode === 'basic' ? (
             <BasicModeShell session={session} />
           ) : (

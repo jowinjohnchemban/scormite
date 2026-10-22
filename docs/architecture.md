@@ -60,19 +60,32 @@ render a second iframe.
 
 ## Loading and failure
 
-- **On demand.** The start page loads only the shell. Opening a package
-  goes through `src/app/course/openPackage.ts`, loaded with `import()`;
-  scorm-again, jszip, and the XML parser live in their own
-  `package-runtime` chunk (see `build.rolldownOptions` in
-  `vite.config.ts`), and Advanced mode's dock is `React.lazy`. Project
-  modules are declared side-effect free (`"sideEffects": ["**/*.css"]` in
-  `package.json`) so feature barrels do not pull the runtime into the
-  start page — keep new modules free of import-time side effects, or list
-  them there.
+- **On demand.** The start page's JavaScript is only the shell. The
+  package runtime (`src/app/course/openPackage.ts`, with scorm-again,
+  jszip, and the XML parser in their own `package-runtime` chunk — see
+  `build.rolldownOptions` in `vite.config.ts`) and Advanced mode's dock
+  (`React.lazy`) are separate files, both reached through
+  `src/app/onDemandModules.ts`. Project modules are declared side-effect
+  free (`"sideEffects": ["**/*.css"]` in `package.json`) so feature
+  barrels do not pull the runtime into the start page — keep new modules
+  free of import-time side effects, or list them there.
+- **Fetched before they are needed.** Once the start page has loaded and
+  the browser is idle, `preloadOnDemandModules` fetches both (Advanced
+  mode only at desktop widths). Chunk names are content hashes, so a
+  deployment replaces them; a tab that waited until the user switched
+  modes would ask for a file that no longer exists. Fetched up front,
+  switching modes and opening a package keep working across a deployment.
 - **Errors.** `ErrorBoundary` (a class component) wraps the mode shells: a
   rendering failure shows a retry instead of a blank page, the header
-  stays usable, and opening another package clears it. Package load
-  failures surface as `OpenPackageError` messages.
+  stays usable, and opening another package or switching modes clears it.
+  An on-demand part that cannot be fetched is retried once through a fresh
+  URL (`importWithRetry`, `src/app/moduleLoad.ts`) — a browser may
+  remember a failed module fetch — so a dropped connection recovers on its
+  own. If the retry fails too (a deployment replaced the file, or the
+  connection is still down), it is explained without guessing the cause,
+  with a reload; Basic mode, part of the start page's JavaScript, keeps
+  working. Package load failures surface as `OpenPackageError` messages, or
+  the same notice.
 
 ## State
 

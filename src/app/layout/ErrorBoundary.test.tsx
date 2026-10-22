@@ -1,6 +1,7 @@
 /**
- * The error boundary contains a rendering failure, offers a retry, and
- * clears itself when its reset key changes.
+ * The error boundary contains a rendering failure, offers a retry, clears
+ * itself when its reset key changes, and explains a part of the app that could
+ * not be fetched.
  */
 
 import { render, screen } from '@testing-library/react'
@@ -12,6 +13,12 @@ let shouldThrow = true
 function Flaky() {
   if (shouldThrow) throw new Error('boom')
   return <p>recovered</p>
+}
+
+function StaleChunk(): never {
+  throw new TypeError(
+    'Failed to fetch dynamically imported module: https://example.test/assets/AdvancedModeShell-old.js',
+  )
 }
 
 describe('ErrorBoundary', () => {
@@ -31,6 +38,17 @@ describe('ErrorBoundary', () => {
     shouldThrow = false
     await userEvent.click(screen.getByRole('button', { name: 'Try again' }))
     expect(screen.getByText('recovered')).toBeInTheDocument()
+  })
+
+  it('explains a part of the app that could not be fetched and offers a reload, not a retry', () => {
+    render(
+      <ErrorBoundary>
+        <StaleChunk />
+      </ErrorBoundary>,
+    )
+    expect(screen.getByRole('alert')).toHaveTextContent('Part of SCORMite could not be loaded')
+    expect(screen.getByRole('button', { name: 'Reload page' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Try again' })).toBeNull()
   })
 
   it('clears the failure when the reset key changes', () => {

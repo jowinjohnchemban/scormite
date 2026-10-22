@@ -1,5 +1,6 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react'
 import { Button } from '@/components/ui/button'
+import { isModuleLoadError, MODULE_LOAD_MESSAGE } from '@/app/moduleLoad'
 
 interface ErrorBoundaryProps {
   children: ReactNode
@@ -16,7 +17,8 @@ interface ErrorBoundaryState {
  * Keeps a rendering failure in the session chrome from blanking the whole
  * app: the header (Open / Close) stays usable, and the failure is shown
  * with a way to retry. The SCO itself runs in its own iframe and is not
- * affected.
+ * affected. A part of the app that could not be fetched is explained as such,
+ * with a reload instead of a retry that cannot succeed.
  */
 export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   override state: ErrorBoundaryState = { error: null, resetKey: this.props.resetKey }
@@ -43,22 +45,39 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   override render(): ReactNode {
     const { error } = this.state
     if (!error) return this.props.children
+    // A part of the app that could not be fetched (already retried once by
+    // importWithRetry): a reload is what loads it again.
+    const unloaded = isModuleLoadError(error)
     return (
       <div className="pointer-events-auto absolute inset-0 flex items-center justify-center bg-surface-950 p-6">
         <div
           role="alert"
           className="max-w-md space-y-3 rounded-md border border-border-subtle bg-surface-900 p-4 text-sm"
         >
-          <p className="font-medium text-slate-100">Part of the interface failed to display.</p>
-          <p className="break-words font-mono text-xs text-red-400">{error.message}</p>
-          <p className="text-xs text-slate-400">
-            Your package is still open. Try again, or reload the page to start over.
-          </p>
+          {unloaded ? (
+            <>
+              <p className="font-medium text-slate-100">{MODULE_LOAD_MESSAGE}</p>
+              <p className="text-xs text-slate-400">
+                Your package is still running: switch to Basic to keep testing. After reloading, open the package again
+                — progress the course has saved is restored.
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="font-medium text-slate-100">Part of the interface failed to display.</p>
+              <p className="break-words font-mono text-xs text-red-400">{error.message}</p>
+              <p className="text-xs text-slate-400">
+                Your package is still open. Try again, or reload the page to start over.
+              </p>
+            </>
+          )}
           <div className="flex gap-2">
-            <Button size="sm" onClick={this.retry}>
-              Try again
-            </Button>
-            <Button size="sm" variant="ghost" onClick={() => window.location.reload()}>
+            {!unloaded && (
+              <Button size="sm" onClick={this.retry}>
+                Try again
+              </Button>
+            )}
+            <Button size="sm" variant={unloaded ? 'default' : 'ghost'} onClick={() => window.location.reload()}>
               Reload page
             </Button>
           </div>

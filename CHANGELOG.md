@@ -11,6 +11,13 @@ All notable changes to SCORMite are recorded here. The format follows
 - **SCORM 2004 rollup rules** that negate a condition (`not`), combine
   conditions with `any` (the IMS default), or use `attemptLimitExceeded` are
   evaluated instead of being dropped with a `sequencing.unsupported` warning.
+- **Switching to Advanced mode after the site was updated** failed with
+  "Failed to fetch dynamically imported module" when the tab had been open
+  across a deployment. Advanced mode and the package runtime are now fetched
+  in the background once the page has loaded, so switching modes and opening
+  a package keep working. A failed fetch is retried once; if it still fails,
+  SCORMite says that part of the app could not be loaded and offers a reload,
+  and Basic mode keeps running.
 
 ## [1.0.0] — 2026-10-22
 
