@@ -39,6 +39,17 @@ describe('useWebMcpTools', () => {
       'relaunch_item',
       'discard_and_restart',
       'set_view_mode',
+      'get_test_plan',
+      'audit_session',
+      'get_manifest',
+      'list_files',
+      'read_file',
+      'read_sco_page',
+      'interact_with_sco',
+      'get_network',
+      'get_cmi_changes',
+      'manage_breakpoints',
+      'set_learner',
     ])
     expect(registered.every((r) => !r.signal.aborted)).toBe(true)
 

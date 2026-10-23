@@ -111,7 +111,21 @@ afterEach(() => {
 describe('WebMCP tools', () => {
   it('flags every tool that returns package content as untrusted, and only discarding data as consequential', () => {
     const untrusted = tools.filter((t) => t.annotations?.untrustedContentHint).map((t) => t.name)
-    expect(untrusted).toEqual(['get_session', 'get_cmi', 'get_api_log', 'get_validation_issues', 'get_report'])
+    expect(untrusted).toEqual([
+      'get_session',
+      'get_cmi',
+      'get_api_log',
+      'get_validation_issues',
+      'get_report',
+      'get_test_plan',
+      'audit_session',
+      'get_manifest',
+      'list_files',
+      'read_file',
+      'read_sco_page',
+      'get_network',
+      'get_cmi_changes',
+    ])
     expect(tools.filter((t) => t.annotations?.consequentialHint).map((t) => t.name)).toEqual(['discard_and_restart'])
     for (const name of untrusted) expect(tool(name).annotations?.readOnlyHint).toBe(true)
   })

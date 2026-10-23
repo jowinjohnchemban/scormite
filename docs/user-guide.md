@@ -112,30 +112,9 @@ changes; the HTML report prints cleanly.
 
 ## 7. Work with an AI agent
 
-SCORMite offers its session to AI agents in your browser through
-[WebMCP](https://webmachinelearning.github.io/webmcp/), so you can ask an
-agent things like "why does the quiz report failed?" or "relaunch this lesson
-and check it resumes". The agent works on the same session you see — the
-package you opened, in your browser — and nothing is uploaded by SCORMite.
-
-| Tool                      | What the agent can do                                                                                                |
-| ------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| `get_session`             | See the package, its items with their status and score, the running item, and what navigation is allowed             |
-| `get_cmi`                 | Read the running item's data model (optionally one branch, e.g. `cmi.objectives`)                                    |
-| `get_api_log`             | Read the API calls, with error explanations (optionally failed calls only)                                           |
-| `get_validation_issues`   | List packaging and runtime problems                                                                                  |
-| `get_report`              | Get the QA report as Markdown or JSON                                                                                |
-| `launch_item`, `navigate` | Launch an item, or go to the next / previous one — within the course's sequencing rules                              |
-| `relaunch_item`           | Relaunch the running item from its saved data, to test resume                                                        |
-| `discard_and_restart`     | Start a new attempt of the item, or restart the course — this discards saved data, so your browser may ask you first |
-| `set_view_mode`           | Switch between Basic and Advanced mode                                                                               |
-
-Opening a package stays with you: drop the zip yourself, then ask the agent.
-Package content — titles, data-model values, API arguments — is marked to
-agents as untrusted, because a package could contain text written to steer
-an agent.
-
-**Where it works.** WebMCP is new. It runs in browsers and assistants that
-support it — Chrome and Edge through their WebMCP trials (or Chrome's
-`chrome://flags/#enable-webmcp-testing` flag), ChatGPT Desktop, and Brave's
-Leo — and SCORMite does nothing extra in browsers that do not.
+In browsers with [WebMCP](https://webmachinelearning.github.io/webmcp/), an AI
+agent can test the package with you: follow a test plan for it, take the
+course like a learner, check what it reports and its content, and summarise
+the findings — on the session you opened, with nothing uploaded by SCORMite.
+The [AI agents](ai-agents.md) guide explains how to connect one, lists what it
+can do, and answers common questions.

@@ -11,7 +11,9 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { test, expect, type Page } from '@playwright/test'
 
-const fixture = path.join(path.dirname(fileURLToPath(import.meta.url)), 'fixtures', 'scorm12-multi-sco.zip')
+const fixtures = path.join(path.dirname(fileURLToPath(import.meta.url)), 'fixtures')
+const fixture = path.join(fixtures, 'scorm12-multi-sco.zip')
+const TOOL_COUNT = 21
 
 /** Call a registered tool as an agent would; the result comes back JSON-serialized. */
 async function callTool(
@@ -32,7 +34,8 @@ async function callTool(
   return JSON.parse(json) as Record<string, unknown>
 }
 
-test('an agent reads and drives the session through WebMCP tools', async ({ page }) => {
+/** Install a stand-in model context, open SCORMite, and wait for its tools. */
+async function openWithModelContext(page: Page): Promise<void> {
   await page.addInitScript(() => {
     const tools = new Map<string, unknown>()
     ;(globalThis as unknown as { __webmcpTools: Map<string, unknown> }).__webmcpTools = tools
@@ -52,7 +55,11 @@ test('an agent reads and drives the session through WebMCP tools', async ({ page
     .poll(() =>
       page.evaluate(() => (globalThis as unknown as { __webmcpTools: Map<string, unknown> }).__webmcpTools.size),
     )
-    .toBe(10)
+    .toBe(TOOL_COUNT)
+}
+
+test('an agent reads and drives the session through WebMCP tools', async ({ page }) => {
+  await openWithModelContext(page)
 
   // Before a package is open the agent is told what to do.
   expect(await callTool(page, 'get_cmi')).toMatchObject({ error: expect.stringMatching(/No package is open/) })
@@ -85,4 +92,39 @@ test('an agent reads and drives the session through WebMCP tools', async ({ page
 
   const report = await callTool(page, 'get_report')
   expect(report).toMatchObject({ format: 'markdown', report: expect.stringContaining('scorm12-multi-sco') })
+})
+
+test('an agent plans, takes, and audits a sequenced course', async ({ page }) => {
+  await openWithModelContext(page)
+  await page.setInputFiles('input[type="file"]', path.join(fixtures, 'scorm2004-sequenced.zip'))
+  const player = page.frameLocator('iframe[title="SCORM Package"]').locator('body')
+  await expect(player.getByRole('button', { name: 'Pass and continue' })).toBeVisible({ timeout: 15_000 })
+
+  // A plan for this package, including its sequencing.
+  const plan = await callTool(page, 'get_test_plan')
+  const goals = (plan['steps'] as { goal: string }[]).map((step) => step.goal)
+  expect(goals).toContain('Check the sequencing rules.')
+
+  // The package's structure and files.
+  const files = await callTool(page, 'list_files')
+  expect(files['files']).toContainEqual({ path: 'imsmanifest.xml' })
+  const manifest = await callTool(page, 'read_file', { path: 'imsmanifest.xml' })
+  expect(manifest['text']).toEqual(expect.stringContaining('<manifest'))
+
+  // Read the running page and complete it like a learner.
+  const pageBefore = await callTool(page, 'read_sco_page')
+  const controls = pageBefore['controls'] as { ref: string; name: string }[]
+  const pass = controls.find((control) => control.name === 'Pass and continue')
+  expect(pass).toBeDefined()
+  expect(await callTool(page, 'interact_with_sco', { ref: pass?.ref, action: 'click' })).toMatchObject({ done: true })
+
+  // The sequencing engine delivers the gated quiz.
+  await expect(player).toContainText('gated quiz delivered', { timeout: 15_000 })
+
+  // The audit sees one item passed and nothing wrong.
+  await expect
+    .poll(async () => ((await callTool(page, 'audit_session'))['coverage'] as { passed: number }).passed)
+    .toBe(1)
+  const audit = await callTool(page, 'audit_session')
+  expect(audit['summary']).toMatchObject({ error: 0 })
 })

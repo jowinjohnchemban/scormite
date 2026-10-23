@@ -22,6 +22,7 @@ import { buildCurrentReport } from '@/app/hooks/useReportExport'
 import type { PackageSession } from '@/app/hooks/usePackageSession'
 import type { AppMode } from '@/app/state/appModeStore'
 import type { ModelContextTool } from './modelContext'
+import { createQaTools } from './qaTools'
 
 /** What the tools need from the React side of the app. */
 export interface ToolHost {
@@ -96,7 +97,7 @@ function go(intent: NavigationIntent): ToolResult {
 const string = (value: unknown): string | undefined => (typeof value === 'string' ? value : undefined)
 
 export function createScormiteTools(host: ToolHost): ModelContextTool[] {
-  return [
+  const sessionTools: ModelContextTool[] = [
     {
       name: 'get_session',
       title: 'Get the SCORM session',
@@ -313,4 +314,5 @@ export function createScormiteTools(host: ToolHost): ModelContextTool[] {
       },
     },
   ]
+  return [...sessionTools, ...createQaTools(host)]
 }
