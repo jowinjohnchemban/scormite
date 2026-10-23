@@ -196,17 +196,20 @@ updated in the same change. Debatable architectural choices get a
 
 ### Automation
 
-| Workflow                | Runs on                                      | Does                                                                                                                                      |
-| ----------------------- | -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| `ci.yml`                | Pushes to `main`, pull requests, merge queue | Audits shipped dependencies, then lint, format, typecheck, unit tests with coverage, build; and the e2e suite in the Playwright container |
-| `pr-title.yml`          | Pull requests                                | Requires a Conventional Commits title — the squash-merged commit message on `main`                                                        |
-| `codeql.yml`            | `main`, pull requests, weekly                | CodeQL security and quality analysis (public repository only)                                                                             |
-| `dependency-review.yml` | Pull requests                                | Fails on a newly added dependency with a high-severity advisory (public repository only)                                                  |
-| `release.yml`           | Tags `v*.*.*`                                | Checks the tag matches `package.json`, tests, builds, and publishes a GitHub release with the CHANGELOG notes and the built site as a zip |
-| Dependabot              | Mondays                                      | Grouped dependency and Actions updates (see [Setup](#setup))                                                                              |
+| Workflow                | Runs on                                      | Does                                                                                                                                                                    |
+| ----------------------- | -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ci.yml`                | Pushes to `main`, pull requests, merge queue | Audits shipped dependencies, then lint, format, typecheck, unit tests with coverage, build; and the e2e suite in the Playwright container                               |
+| `pr-title.yml`          | Pull requests                                | Requires a Conventional Commits title — the squash-merged commit message on `main`                                                                                      |
+| `codeql.yml`            | `main`, pull requests, weekly                | CodeQL security and quality analysis (public repository only)                                                                                                           |
+| `dependency-review.yml` | Pull requests                                | Fails on a newly added dependency with a high-severity advisory (public repository only)                                                                                |
+| `prepare-release.yml`   | Run by hand (Actions tab)                    | Works out the next version from the Conventional Commits, bumps `package.json` and the CHANGELOG on a `release/vX.Y.Z` branch, and links the pull request to open       |
+| `release.yml`           | `package.json` changes on `main`             | When the version has no release yet: tests, builds, tags the commit, and publishes a GitHub release with the CHANGELOG notes and the built site as a zip                |
+| `dependency-check.yml`  | Daily                                        | Newer releases (`pnpm outdated`) and vulnerabilities (`pnpm audit`) in one "Dependency updates available" issue, updated each day and closed when everything is current |
+| Dependabot              | Mondays                                      | Grouped dependency and Actions updates (see [Setup](#setup))                                                                                                            |
 
 Workflows get a read-only token unless a job needs more (CodeQL uploads
-results; the release job creates the release).
+results; the release jobs push the release branch and create the release; the
+dependency check manages its issue).
 
 ### Rulesets
 
@@ -232,11 +235,23 @@ ids with `gh api repos/jowinjohnchemban/scormite/rulesets`.)
 
 ### Releasing
 
-1. In a pull request: bump `version` in `package.json` and add its
-   `## [x.y.z] — date` section (and link) to `CHANGELOG.md`.
-2. After it is merged: `git tag vX.Y.Z && git push origin vX.Y.Z`. The
-   release workflow publishes the GitHub release; a tag that does not match
-   `package.json` or has no changelog section fails.
+Versions follow [Semantic Versioning](https://semver.org/) and are derived
+from the Conventional Commit titles merged since the last release: a
+breaking change (`feat!:` or `BREAKING CHANGE:`) is a major release, `feat`
+a minor one, and `fix`, `perf`, or `revert` a patch. Keep CHANGELOG.md's
+**Unreleased** section current as changes land; it becomes the release notes.
+
+1. Run **Actions → Prepare release** (bump `auto`, or force `patch`,
+   `minor`, or `major`). It bumps `version` in `package.json`, moves the
+   Unreleased notes under `## [x.y.z] — date` with its link, and pushes
+   `release/vX.Y.Z`. (Locally: `pnpm run release:prepare`, or
+   `node build/release.ts --dry-run` to see the next version.)
+2. Open the pull request from the run's summary link, titled
+   `chore(release): vX.Y.Z`. Opening it yourself lets the required checks
+   run.
+3. Merge it. The release workflow tags the merge commit `vX.Y.Z` and
+   publishes the GitHub release; a version without a changelog section fails
+   instead of shipping empty notes.
 
 ### Deployment
 

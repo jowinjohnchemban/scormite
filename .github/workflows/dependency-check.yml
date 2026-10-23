@@ -1,0 +1,64 @@
+name: Dependency check
+
+# Every day: are there newer releases of any dependency, or known
+# vulnerabilities? Keeps one "Dependency updates available" issue up to date
+# with the details (opening it when something is found, closing it when
+# everything is current). Dependabot still opens the update pull requests;
+# this also surfaces the major releases it does not.
+on:
+  schedule:
+    - cron: '17 6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dependency-check
+
+jobs:
+  check:
+    name: Check for dependency updates
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 11.20.0
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build the report
+        id: report
+        run: echo "findings=$(node build/dependencyReport.ts report.md)" >> "$GITHUB_OUTPUT"
+
+      - name: Open, update, or close the issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FINDINGS: ${{ steps.report.outputs.findings }}
+        run: |
+          title='Dependency updates available'
+          gh label create dependencies --color 0366d6 --description 'Dependency updates' 2> /dev/null || true
+          issue=$(gh issue list --state open --label dependencies --search "\"$title\" in:title" --json number,title \
+            --jq "map(select(.title == \"$title\")) | .[0].number // empty")
+          if [ "$FINDINGS" -gt 0 ]; then
+            if [ -n "$issue" ]; then
+              gh issue edit "$issue" --body-file report.md
+            else
+              gh issue create --title "$title" --label dependencies --body-file report.md
+            fi
+          elif [ -n "$issue" ]; then
+            gh issue close "$issue" --comment 'Every dependency is current, with no known vulnerabilities.'
+          fi
+          cat report.md >> "$GITHUB_STEP_SUMMARY"

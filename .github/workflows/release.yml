@@ -1,22 +1,28 @@
 name: Release
 
-# Pushing a version tag (v1.2.3) publishes a GitHub release: notes from that
+# When main gets a package.json version that has no release yet — the merged
+# "chore(release): vX.Y.Z" pull request from the Prepare release workflow —
+# this tags that commit and publishes the GitHub release: notes from the
 # version's CHANGELOG.md section, and the built static site as a zip for
-# self-hosting. Deployment of the live site is separate (the hosting
-# platform builds main); see docs/deployment.md.
+# self-hosting. Deployment of the live site is separate (the hosting platform
+# builds main); see docs/deployment.md.
 on:
   push:
-    tags: ['v*.*.*']
+    branches: [main]
+    paths: [package.json]
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: release-${{ github.ref }}
+  group: release
 
 jobs:
   release:
     name: Publish the GitHub release
+    # Only main is released, also when run by hand from another branch.
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
@@ -24,46 +30,80 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      - name: Is this version released?
+        id: version
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version=$(node -p "require('./package.json').version")
+          if ! [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::package.json version \"$version\" is not x.y.z."
+            exit 1
+          fi
+          tag="v$version"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          if gh release view "$tag" > /dev/null 2>&1; then
+            echo "$tag is already released; nothing to do."
+            echo "new=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          # A tag without a release (a run that failed after tagging) is
+          # released from that tag — if it marks this commit.
+          # An annotated tag lists its tag object first and the commit as "^{}".
+          refs=$(git ls-remote --tags origin "refs/tags/$tag" "refs/tags/$tag^{}")
+          tagged=$(awk -v ref="refs/tags/$tag^{}" '$2 == ref { print $1 }' <<< "$refs")
+          [ -n "$tagged" ] || tagged=$(awk -v ref="refs/tags/$tag" '$2 == ref { print $1 }' <<< "$refs")
+          if [ -n "$tagged" ] && [ "$tagged" != "$GITHUB_SHA" ]; then
+            echo "::error::$tag already exists on $tagged, not on this commit ($GITHUB_SHA). Release it by hand or bump the version."
+            exit 1
+          fi
+          echo "new=true" >> "$GITHUB_OUTPUT"
+
       - uses: pnpm/action-setup@v6
+        if: steps.version.outputs.new == 'true'
         with:
           version: 11.20.0
 
       - uses: actions/setup-node@v7
+        if: steps.version.outputs.new == 'true'
         with:
           node-version: 24
           cache: pnpm
 
-      - name: Check the tag matches package.json
-        run: |
-          expected="v$(node -p "require('./package.json').version")"
-          if [ "$GITHUB_REF_NAME" != "$expected" ]; then
-            echo "::error::Tag $GITHUB_REF_NAME does not match package.json version ($expected)."
-            exit 1
-          fi
-
       - name: Release notes from CHANGELOG.md
-        run: node build/releaseNotes.ts "$GITHUB_REF_NAME" > release-notes.md
+        if: steps.version.outputs.new == 'true'
+        env:
+          TAG: ${{ steps.version.outputs.tag }}
+        run: node build/releaseNotes.ts "$TAG" > release-notes.md
 
       - name: Install dependencies
+        if: steps.version.outputs.new == 'true'
         run: pnpm install --frozen-lockfile
 
       - name: Test
+        if: steps.version.outputs.new == 'true'
         run: pnpm run test
 
       - name: Build the static site
+        if: steps.version.outputs.new == 'true'
         run: pnpm run build
 
       - name: Package the build
+        if: steps.version.outputs.new == 'true'
+        env:
+          TAG: ${{ steps.version.outputs.tag }}
         run: |
           cd dist
-          zip -qr "../scormite-$GITHUB_REF_NAME-dist.zip" .
+          zip -qr "../scormite-$TAG-dist.zip" .
 
-      - name: Create the release
+      - name: Tag the commit and create the release
+        if: steps.version.outputs.new == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.version.outputs.tag }}
         run: |
-          gh release create "$GITHUB_REF_NAME" \
-            --title "SCORMite $GITHUB_REF_NAME" \
+          gh release create "$TAG" \
+            --target "$GITHUB_SHA" \
+            --title "SCORMite $TAG" \
             --notes-file release-notes.md \
-            --verify-tag \
-            "scormite-$GITHUB_REF_NAME-dist.zip"
+            "scormite-$TAG-dist.zip"
