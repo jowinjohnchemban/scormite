@@ -118,15 +118,37 @@ export function dependencyReport(
   return { findings: packages.length + advisories.length, markdown: `${lines.join('\n')}\n` }
 }
 
-/** Run pnpm and parse its JSON, which it also prints when it exits non-zero (findings). */
-function pnpmJson(args: string[], cwd: string): unknown {
+/** Parse a pnpm JSON report; null when the output is not one (pnpm failed before reporting). */
+export function parseReport(output: string): Record<string, unknown> | null {
+  try {
+    const value: unknown = JSON.parse(output)
+    return typeof value === 'object' && value !== null && !Array.isArray(value)
+      ? (value as Record<string, unknown>)
+      : null
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Run pnpm and parse its JSON report. pnpm exits non-zero when it has
+ * findings and still prints the report; a failure without a report (no
+ * network, a broken install) is rethrown, so the check fails instead of
+ * reading as "nothing to update".
+ */
+function pnpmJson(args: string[], cwd: string): Record<string, unknown> {
+  const options = { cwd, encoding: 'utf8' as const, shell: process.platform === 'win32' }
   let output: string
   try {
-    output = execFileSync('pnpm', args, { cwd, encoding: 'utf8', shell: process.platform === 'win32' })
+    output = execFileSync('pnpm', args, options)
   } catch (error) {
-    output = String((error as { stdout?: unknown }).stdout ?? '')
+    const report = parseReport(String((error as { stdout?: unknown }).stdout ?? ''))
+    if (report) return report
+    throw error
   }
-  return output.trim() ? (JSON.parse(output) as unknown) : {}
+  const report = output.trim() === '' ? {} : parseReport(output)
+  if (!report) throw new Error(`pnpm ${args.join(' ')} did not print a JSON report`)
+  return report
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

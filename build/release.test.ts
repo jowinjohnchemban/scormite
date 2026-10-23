@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest'
-import { bumpFor, commitBump, nextVersion, promoteUnreleased, setPackageVersion } from './release.js'
+import { bumpFor, commitBump, latestStableTag, nextVersion, promoteUnreleased, setPackageVersion } from './release.js'
+
+describe('latestStableTag', () => {
+  it('picks the highest vX.Y.Z tag, ignoring pre-releases and other tags', () => {
+    expect(latestStableTag(['v1.0.0', 'v1.10.0', 'v1.9.3', 'v2.0.0-rc.1', 'vnext', ''])).toBe('v1.10.0')
+    expect(latestStableTag(['v2.0.0-rc.1'])).toBeNull()
+    expect(latestStableTag([])).toBeNull()
+  })
+})
 
 describe('commitBump', () => {
   it('maps Conventional Commits to a semver bump', () => {

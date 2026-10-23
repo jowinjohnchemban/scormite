@@ -21,6 +21,8 @@ concurrency:
 jobs:
   release:
     name: Publish the GitHub release
+    # Only main is released, also when run by hand from another branch.
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
@@ -33,14 +35,26 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          tag="v$(node -p "require('./package.json').version")"
+          version=$(node -p "require('./package.json').version")
+          if ! [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::package.json version \"$version\" is not x.y.z."
+            exit 1
+          fi
+          tag="v$version"
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
-          if gh release view "$tag" > /dev/null 2>&1 || git ls-remote --exit-code --tags origin "refs/tags/$tag" > /dev/null; then
+          if gh release view "$tag" > /dev/null 2>&1; then
             echo "$tag is already released; nothing to do."
             echo "new=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "new=true" >> "$GITHUB_OUTPUT"
+            exit 0
           fi
+          # A tag without a release (a run that failed after tagging) is
+          # released from that tag — if it marks this commit.
+          tagged=$(git ls-remote --tags origin "refs/tags/$tag^{}" "refs/tags/$tag" | head -n 1 | cut -f1)
+          if [ -n "$tagged" ] && [ "$tagged" != "$GITHUB_SHA" ]; then
+            echo "::error::$tag already exists on $tagged, not on this commit ($GITHUB_SHA). Release it by hand or bump the version."
+            exit 1
+          fi
+          echo "new=true" >> "$GITHUB_OUTPUT"
 
       - uses: pnpm/action-setup@v6
         if: steps.version.outputs.new == 'true'
@@ -55,7 +69,9 @@ jobs:
 
       - name: Release notes from CHANGELOG.md
         if: steps.version.outputs.new == 'true'
-        run: node build/releaseNotes.ts "${{ steps.version.outputs.tag }}" > release-notes.md
+        env:
+          TAG: ${{ steps.version.outputs.tag }}
+        run: node build/releaseNotes.ts "$TAG" > release-notes.md
 
       - name: Install dependencies
         if: steps.version.outputs.new == 'true'
@@ -71,9 +87,11 @@ jobs:
 
       - name: Package the build
         if: steps.version.outputs.new == 'true'
+        env:
+          TAG: ${{ steps.version.outputs.tag }}
         run: |
           cd dist
-          zip -qr "../scormite-${{ steps.version.outputs.tag }}-dist.zip" .
+          zip -qr "../scormite-$TAG-dist.zip" .
 
       - name: Tag the commit and create the release
         if: steps.version.outputs.new == 'true'

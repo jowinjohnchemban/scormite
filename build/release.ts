@@ -94,6 +94,23 @@ export function setPackageVersion(packageJson: string, version: string): string 
   return updated
 }
 
+/**
+ * The highest stable release tag (`vX.Y.Z`, no pre-release part) among
+ * `tags`, by version — the baseline for the next release.
+ */
+export function latestStableTag(tags: readonly string[]): string | null {
+  const compare = (a: number[], b: number[]) => a[0]! - b[0]! || a[1]! - b[1]! || a[2]! - b[2]!
+  let best: { tag: string; parts: number[] } | null = null
+  for (const raw of tags) {
+    const tag = raw.trim()
+    const match = /^v(\d+)\.(\d+)\.(\d+)$/.exec(tag)
+    if (!match) continue
+    const parts = match.slice(1).map(Number)
+    if (!best || compare(parts, best.parts) > 0) best = { tag, parts }
+  }
+  return best?.tag ?? null
+}
+
 function git(args: string[], cwd: string): string {
   return execFileSync('git', args, { cwd, encoding: 'utf8' }).trim()
 }
@@ -108,12 +125,8 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   const packageJson = readFileSync(packagePath, 'utf8')
   const pkg = JSON.parse(packageJson) as { version: string; repository?: { url?: string } }
 
-  let lastTag = ''
-  try {
-    lastTag = git(['describe', '--tags', '--abbrev=0', '--match', 'v[0-9]*'], root)
-  } catch {
-    // No release yet: every commit counts.
-  }
+  // No release yet: every commit counts.
+  const lastTag = latestStableTag(git(['tag', '--merged', 'HEAD', '--list', 'v*'], root).split('\n')) ?? ''
   const range = lastTag ? [`${lastTag}..HEAD`] : ['HEAD']
   const messages = git(['log', ...range, '--format=%B%x1e'], root)
     .split('\x1e')

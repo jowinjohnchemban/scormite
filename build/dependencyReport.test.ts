@@ -1,5 +1,14 @@
 import { describe, expect, it } from 'vitest'
-import { dependencyReport, updateType } from './dependencyReport.js'
+import { dependencyReport, parseReport, updateType } from './dependencyReport.js'
+
+describe('parseReport', () => {
+  it('accepts a JSON object report and nothing else', () => {
+    expect(parseReport('{"a":{"current":"1.0.0"}}')).toEqual({ a: { current: '1.0.0' } })
+    expect(parseReport('')).toBeNull()
+    expect(parseReport('ERR_PNPM_FETCH_FAILED')).toBeNull()
+    expect(parseReport('[]')).toBeNull()
+  })
+})
 
 describe('updateType', () => {
   it('names the part of the version that changes', () => {

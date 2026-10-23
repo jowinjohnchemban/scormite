@@ -55,9 +55,14 @@ jobs:
           branch="release/v$VERSION"
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          # Never replace a release branch: it may carry changes from its review.
+          if git ls-remote --exit-code --heads origin "$branch" > /dev/null; then
+            echo "::error::$branch already exists. Merge or close its pull request (and delete the branch) before preparing v$VERSION again."
+            exit 1
+          fi
           git switch -c "$branch"
           git commit -am "chore(release): v$VERSION"
-          git push --force origin "$branch"
+          git push origin "$branch"
           title="chore(release): v$VERSION"
           url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/compare/main...$branch?expand=1&title=$(node -p 'encodeURIComponent(process.argv[1])' "$title")"
           {
