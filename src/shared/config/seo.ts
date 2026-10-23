@@ -164,7 +164,7 @@ export const siteSeoConfig: SiteSeoConfig = {
     {
       question: 'Can an AI agent test a package in SCORMite?',
       answer:
-        'Yes, in browsers with WebMCP: an agent can follow a test plan for the package, take the course like a learner, check what it reports and its content, and summarise the findings. You open the package; nothing is uploaded by SCORMite.',
+        'Yes, in browsers with WebMCP: an agent can follow a test plan for the package, proofread its text, take the course like a learner, check its quiz logic and what it reports, scan it for security problems, and record its findings in the report. Nothing is uploaded by SCORMite.',
     },
     {
       question: 'Does it work with Storyline, Rise, Captivate, iSpring or Lectora?',

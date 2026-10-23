@@ -3,7 +3,7 @@
  * context, unregisters them on unmount, and does nothing without WebMCP.
  */
 
-import { renderHook } from '@testing-library/react'
+import { renderHook, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { PackageSession } from '@/app/hooks/usePackageSession'
 import type { ModelContextTool } from './modelContext'
@@ -16,7 +16,7 @@ afterEach(() => {
 })
 
 describe('useWebMcpTools', () => {
-  it('registers every tool and unregisters them on unmount', () => {
+  it('loads and registers every tool, and unregisters them on unmount', async () => {
     const registered: { tool: ModelContextTool; signal: AbortSignal }[] = []
     Object.defineProperty(document, 'modelContext', {
       configurable: true,
@@ -28,6 +28,7 @@ describe('useWebMcpTools', () => {
     })
 
     const { unmount } = renderHook(() => useWebMcpTools(session, true))
+    await waitFor(() => expect(registered.length).toBeGreaterThan(0))
     expect(registered.map((r) => r.tool.name)).toEqual([
       'get_session',
       'get_cmi',
@@ -50,6 +51,19 @@ describe('useWebMcpTools', () => {
       'get_cmi_changes',
       'manage_breakpoints',
       'set_learner',
+      'extract_course_text',
+      'search_package',
+      'check_references',
+      'get_assessment_data',
+      'add_review_finding',
+      'clear_review_findings',
+      'scan_package_security',
+      'get_file_hashes',
+      'call_scorm_api',
+      'run_script_in_sco',
+      'wait_for',
+      'open_package_from_url',
+      'close_package',
     ])
     expect(registered.every((r) => !r.signal.aborted)).toBe(true)
 

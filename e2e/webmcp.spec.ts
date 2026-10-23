@@ -13,7 +13,7 @@ import { test, expect, type Page } from '@playwright/test'
 
 const fixtures = path.join(path.dirname(fileURLToPath(import.meta.url)), 'fixtures')
 const fixture = path.join(fixtures, 'scorm12-multi-sco.zip')
-const TOOL_COUNT = 21
+const TOOL_COUNT = 34
 
 /** Call a registered tool as an agent would; the result comes back JSON-serialized. */
 async function callTool(
@@ -127,4 +127,51 @@ test('an agent plans, takes, and audits a sequenced course', async ({ page }) =>
     .toBe(1)
   const audit = await callTool(page, 'audit_session')
   expect(audit['summary']).toMatchObject({ error: 0 })
+})
+
+test('an agent reviews the content, scans the package, and scripts the course', async ({ page }) => {
+  await openWithModelContext(page)
+  await page.setInputFiles('input[type="file"]', fixture)
+  const player = page.frameLocator('iframe[title="SCORM Package"]').locator('body')
+  await expect(player).toContainText('lesson-one', { timeout: 15_000 })
+
+  // The whole package's text and references, without launching anything.
+  const text = await callTool(page, 'extract_course_text')
+  expect(text['files']).toContainEqual(expect.objectContaining({ path: 'lessons/two.html', title: 'lesson-two' }))
+  const references = await callTool(page, 'check_references')
+  expect(references).toMatchObject({ broken: [], external: [] })
+  const search = await callTool(page, 'search_package', { query: 'cmi.core.lesson_location' })
+  expect((search['matches'] as { file: string }[]).map((match) => match.file)).toContain('lessons/one.html')
+
+  // A clean package scans clean, and its files can be hashed.
+  const scan = await callTool(page, 'scan_package_security')
+  expect(scan).toMatchObject({ scannedFiles: 3, summary: { error: 0, warning: 0, info: 0 } })
+  const hashes = await callTool(page, 'get_file_hashes', { paths: ['imsmanifest.xml'] })
+  expect(hashes['files']).toEqual([expect.objectContaining({ sha256: expect.stringMatching(/^[0-9a-f]{64}$/) })])
+
+  // Script the running SCO and call its API directly.
+  expect(await callTool(page, 'run_script_in_sco', { script: 'return document.title' })).toEqual({
+    result: 'lesson-one',
+  })
+  expect(
+    await callTool(page, 'call_scorm_api', { method: 'SetValue', element: 'cmi.core.lesson_status', value: 'passed' }),
+  ).toMatchObject({ method: 'LMSSetValue', result: 'true', errorCode: '0' })
+  expect(
+    await callTool(page, 'wait_for', { element: 'cmi.core.lesson_status', value: 'passed', timeoutMs: 5000 }),
+  ).toMatchObject({ met: true })
+
+  // A finding the review records shows in the validation issues and the report.
+  expect(
+    await callTool(page, 'add_review_finding', {
+      severity: 'warning',
+      category: 'wording',
+      message: 'The page shows raw CMI values to the learner.',
+      location: 'lessons/one.html',
+    }),
+  ).toEqual({ recorded: true, reviewFindings: 1 })
+  const issues = await callTool(page, 'get_validation_issues')
+  expect(JSON.stringify(issues)).toContain('review.wording')
+  const report = await callTool(page, 'get_report')
+  expect(report['report']).toEqual(expect.stringContaining('The page shows raw CMI values to the learner.'))
+  expect(await callTool(page, 'clear_review_findings')).toEqual({ removed: 1 })
 })

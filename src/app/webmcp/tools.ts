@@ -23,6 +23,9 @@ import type { PackageSession } from '@/app/hooks/usePackageSession'
 import type { AppMode } from '@/app/state/appModeStore'
 import type { ModelContextTool } from './modelContext'
 import { createQaTools } from './qaTools'
+import { createContentTools } from './contentTools'
+import { createSecurityTools } from './securityTools'
+import { createAutomationTools } from './automationTools'
 
 /** What the tools need from the React side of the app. */
 export interface ToolHost {
@@ -314,5 +317,11 @@ export function createScormiteTools(host: ToolHost): ModelContextTool[] {
       },
     },
   ]
-  return [...sessionTools, ...createQaTools(host)]
+  return [
+    ...sessionTools,
+    ...createQaTools(host),
+    ...createContentTools(host),
+    ...createSecurityTools(host),
+    ...createAutomationTools(host),
+  ]
 }

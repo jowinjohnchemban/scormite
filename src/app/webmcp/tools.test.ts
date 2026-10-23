@@ -109,7 +109,7 @@ afterEach(() => {
 })
 
 describe('WebMCP tools', () => {
-  it('flags every tool that returns package content as untrusted, and only discarding data as consequential', () => {
+  it('flags every tool that returns package content as untrusted, and destructive or open-ended ones as consequential', () => {
     const untrusted = tools.filter((t) => t.annotations?.untrustedContentHint).map((t) => t.name)
     expect(untrusted).toEqual([
       'get_session',
@@ -125,9 +125,23 @@ describe('WebMCP tools', () => {
       'read_sco_page',
       'get_network',
       'get_cmi_changes',
+      'extract_course_text',
+      'search_package',
+      'check_references',
+      'get_assessment_data',
+      'scan_package_security',
+      'call_scorm_api',
+      'run_script_in_sco',
     ])
-    expect(tools.filter((t) => t.annotations?.consequentialHint).map((t) => t.name)).toEqual(['discard_and_restart'])
-    for (const name of untrusted) expect(tool(name).annotations?.readOnlyHint).toBe(true)
+    expect(tools.filter((t) => t.annotations?.consequentialHint).map((t) => t.name)).toEqual([
+      'discard_and_restart',
+      'run_script_in_sco',
+      'open_package_from_url',
+      'close_package',
+    ])
+    // Tools that act (record findings, call the API, run code) are not read-only.
+    const acting = ['scan_package_security', 'call_scorm_api', 'run_script_in_sco']
+    for (const name of untrusted) expect(tool(name).annotations?.readOnlyHint ?? false).toBe(!acting.includes(name))
   })
 
   it('describes the session as the outline shows it', async () => {

@@ -8,14 +8,26 @@ All notable changes to SCORMite are recorded here. The format follows
 
 ### Added
 
-- **AI agents in the browser (WebMCP).** SCORMite registers tools on
+- **AI agents in the browser (WebMCP).** SCORMite registers 34 tools on
   `document.modelContext` so an agent can test the open package: follow a
   test plan for it, audit everything in one call, review the manifest, the
   files, and each page's content and accessibility, take the course like a
   learner (clicking, typing, selecting on the page), read the CMI data, its
   history, the API log and network, set breakpoints and the learner, and get
-  the QA report. Package content is marked untrusted to
-  the agent; discarding saved data is marked consequential. Works where the
+  the QA report. For content review it can extract all the course's text
+  (pages, captions, titles, alt text) for grammar, spelling, and wording,
+  search every file, and find broken and external references; for logic, read
+  each question's answers and result, call the SCORM API directly, wait for a
+  state, and run a script in the course's page. It can open a package from a
+  link. Findings it records appear in the Validation panel and the report as
+  **review** issues.
+- **Package security scan.** An offline, rule-based scan (through WebMCP) for
+  programs and installers (also disguised as other files), macro documents,
+  crypto-miners, hidden or packed code, ActiveX scripting, hidden external
+  frames, credential forms, redirects, and service workers, plus SHA-256 hashes
+  to check files with an antivirus engine. Package content is marked untrusted
+  to the agent; discarding data, running scripts, and opening or closing a
+  package are marked consequential. Works where the
   browser supports WebMCP; deployments can enable the Chrome and Edge origin
   trials with `WEBMCP_ORIGIN_TRIAL_TOKENS`. The new [AI agents](docs/ai-agents.md)
   guide covers setup, the tools, a complete QA run, safety, and an FAQ.

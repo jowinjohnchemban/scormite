@@ -27,6 +27,7 @@ import type { ModelContextTool } from './modelContext'
 import type { ToolHost } from './tools'
 import { auditSession, buildTestPlan } from './audit'
 import { interactWithSco, readScoPage, scoDocument, type ScoAction } from './scoPage'
+import { TEXT_FILE } from './contentScan'
 
 const NO_PACKAGE = { error: 'No package is open. Ask the user to drop a SCORM .zip on the SCORMite page.' }
 const NO_PAGE = { error: 'No item is running. Use launch_item first.' }
@@ -37,8 +38,6 @@ const bounded = (value: unknown, fallback: number, max: number) =>
 
 /** The package path of a service-worker URL (`/scorm-files/{id}/a/b.js` → `a/b.js`). */
 const packagePath = (url: string) => decodeURIComponent(url.replace(/^.*?\/scorm-files\/[^/]+\//, ''))
-
-const TEXT_FILE = /\.(html?|xhtml|xml|xsd|js|mjs|cjs|json|css|txt|md|csv|svg|vtt|srt)$/i
 
 const untrustedRead = { readOnlyHint: true, untrustedContentHint: true }
 

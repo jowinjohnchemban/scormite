@@ -113,8 +113,10 @@ changes; the HTML report prints cleanly.
 ## 7. Work with an AI agent
 
 In browsers with [WebMCP](https://webmachinelearning.github.io/webmcp/), an AI
-agent can test the package with you: follow a test plan for it, take the
-course like a learner, check what it reports and its content, and summarise
-the findings — on the session you opened, with nothing uploaded by SCORMite.
+agent can test the package with you: follow a test plan for it, proofread
+every page, take the course like a learner, check its quiz logic and what it
+reports, scan it for security problems, and record its findings in the
+**Validation** panel and the report — on the session you opened, with nothing
+uploaded by SCORMite.
 The [AI agents](ai-agents.md) guide explains how to connect one, lists what it
 can do, and answers common questions.

@@ -42,9 +42,12 @@ export function auditSession(input: AuditInput): Audit {
   for (const issue of input.issues) {
     findings.push({
       severity: issue.severity === 'error' ? 'error' : issue.severity === 'warning' ? 'warning' : 'info',
-      area: issue.source === 'runtime' ? 'runtime' : 'package',
+      area: issue.source === 'runtime' ? 'runtime' : issue.source === 'review' ? 'content' : 'package',
       message: `${issue.message}${issue.location ? ` (${issue.location})` : ''}`,
-      suggestion: `Rule ${issue.ruleId} — see the SCORM support guide.`,
+      suggestion:
+        issue.source === 'review'
+          ? `Recorded by a review (${issue.ruleId}).`
+          : `Rule ${issue.ruleId} — see the SCORM support guide.`,
     })
   }
 
@@ -166,7 +169,7 @@ export function buildTestPlan(
     ].filter(Boolean)
     steps.push({
       goal: `Take ${name} to the end as a learner.`,
-      tools: ['launch_item', 'read_sco_page', 'interact_with_sco', 'get_cmi', 'get_api_log'],
+      tools: ['launch_item', 'read_sco_page', 'interact_with_sco', 'get_cmi', 'get_assessment_data', 'get_api_log'],
       check: `${status} end as expected; Commit and Terminate are called; no failed API calls${thresholds.length ? `; the result respects the ${thresholds.join(', ')}` : ''}.`,
     })
     steps.push({
@@ -200,10 +203,10 @@ export function buildTestPlan(
     })
   }
   steps.push({
-    goal: 'Review the content of each page.',
-    tools: ['read_sco_page', 'read_file'],
+    goal: 'Review the content.',
+    tools: ['extract_course_text', 'search_package', 'check_references', 'read_sco_page', 'add_review_finding'],
     check:
-      'Text is correct and consistent, images have alt text, controls have names, and nothing references missing media.',
+      'Grammar, spelling, wording, and terminology are correct and consistent; images have alt text and controls have names; no reference is broken. Record each problem with add_review_finding.',
   })
   steps.push({
     goal: 'Collect the findings.',
