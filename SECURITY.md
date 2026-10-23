@@ -34,10 +34,13 @@ Knowing this helps tell a vulnerability from the design:
   progress and layout preferences — just as content reaches the LMS page it
   runs in. **Only open packages you trust,** as you would on an LMS.
 - **AI agents (WebMCP).** In browsers with WebMCP, SCORMite offers tools that
-  read the open session and navigate or restart it. They act only on the
-  session already open in that tab; opening a package is not a tool. Package
-  content they return is marked untrusted to the agent, and discarding saved
-  data is marked consequential so the browser can ask the user first. A
+  read the open session and its package files, operate and script the
+  running course page, call its SCORM API, and navigate, restart, set
+  breakpoints, or open a package from a link. They act only in that tab, and a
+  script run in the course has only the course's own access. Package content
+  they return is marked untrusted to the agent; discarding saved data, setting it through the API, running
+  a script, and opening or closing a package are marked consequential so the
+  browser can ask the user first. A
   package runs with SCORMite's origin, so a malicious one could also register
   tools of its own on the page — one more reason to open only packages you
   trust.

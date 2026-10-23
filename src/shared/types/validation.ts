@@ -7,12 +7,13 @@
 
 export type ValidationSeverity = 'error' | 'warning' | 'suggestion'
 
-export type ValidationSource = 'manifest' | 'runtime'
+/** `review`: recorded by an AI agent's content or logic review (WebMCP). */
+export type ValidationSource = 'manifest' | 'runtime' | 'review'
 
 export interface ValidationIssue {
   id: string
   severity: ValidationSeverity
-  /** Whether this came from static manifest analysis or a live session. */
+  /** Static manifest analysis, a live session, or a recorded review. */
   source: ValidationSource
   message: string
   /**

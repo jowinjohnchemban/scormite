@@ -109,11 +109,42 @@ afterEach(() => {
 })
 
 describe('WebMCP tools', () => {
-  it('flags every tool that returns package content as untrusted, and only discarding data as consequential', () => {
+  it('flags every tool that returns package content as untrusted, and destructive or open-ended ones as consequential', () => {
     const untrusted = tools.filter((t) => t.annotations?.untrustedContentHint).map((t) => t.name)
-    expect(untrusted).toEqual(['get_session', 'get_cmi', 'get_api_log', 'get_validation_issues', 'get_report'])
-    expect(tools.filter((t) => t.annotations?.consequentialHint).map((t) => t.name)).toEqual(['discard_and_restart'])
-    for (const name of untrusted) expect(tool(name).annotations?.readOnlyHint).toBe(true)
+    expect(untrusted).toEqual([
+      'get_session',
+      'get_cmi',
+      'get_api_log',
+      'get_validation_issues',
+      'get_report',
+      'get_test_plan',
+      'audit_session',
+      'get_manifest',
+      'list_files',
+      'read_file',
+      'read_sco_page',
+      'get_network',
+      'get_cmi_changes',
+      'extract_course_text',
+      'search_package',
+      'check_references',
+      'get_assessment_data',
+      'scan_package_security',
+      'get_file_hashes',
+      'call_scorm_api',
+      'run_script_in_sco',
+      'wait_for',
+    ])
+    expect(tools.filter((t) => t.annotations?.consequentialHint).map((t) => t.name)).toEqual([
+      'discard_and_restart',
+      'call_scorm_api',
+      'run_script_in_sco',
+      'open_package_from_url',
+      'close_package',
+    ])
+    // Tools that act (record findings, call the API, run code) are not read-only.
+    const acting = ['scan_package_security', 'call_scorm_api', 'run_script_in_sco']
+    for (const name of untrusted) expect(tool(name).annotations?.readOnlyHint ?? false).toBe(!acting.includes(name))
   })
 
   it('describes the session as the outline shows it', async () => {
@@ -195,5 +226,12 @@ describe('WebMCP tools', () => {
     expect(mode).toBe('advanced')
     advanced = false
     expect((await run('set_view_mode', { mode: 'advanced' }))['error']).toMatch(/1024 px/)
+  })
+
+  it('refuses breakpoints of an unknown kind or method', async () => {
+    expect((await run('manage_breakpoints', { action: 'add', kind: 'nope' }))['error']).toMatch(/kind must be/)
+    expect((await run('manage_breakpoints', { action: 'add', kind: 'api-call', method: 'GetValue' }))['error']).toMatch(
+      /method must be/,
+    )
   })
 })

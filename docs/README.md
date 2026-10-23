@@ -14,6 +14,7 @@ code and a document disagree, the document is the bug.
 | Document                          | What it covers                                                                                                     |
 | --------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
 | [User guide](user-guide.md)       | Testing a package end to end: loading, playing, resume and attempts, reading the API log, validation, reports      |
+| [AI agents](ai-agents.md)         | Letting an AI agent test a package through WebMCP: connecting one, its tools, a complete QA run, safety, FAQ       |
 | [SCORM support](scorm-support.md) | Versions and editions, LMS behaviour SCORMite reproduces, sequencing coverage, validation rules, known limitations |
 
 ## Building SCORMite
@@ -47,11 +48,12 @@ are at the repository root: [CONTRIBUTING.md](../CONTRIBUTING.md),
 - **Same change.** A change that alters behaviour, a rule, or a workflow
   updates the affected documents in the same commit. A new document is
   added to the tables above.
-- **Published.** The [User guide](user-guide.md) and
-  [SCORM support](scorm-support.md) are also published on the site and in
-  `llms.txt`: write them for users. A relative link in either must point to
-  one of the two (the build fails otherwise); links to other websites are
-  fine. Their opening paragraph is their summary in `llms.txt`.
+- **Published.** The [User guide](user-guide.md),
+  [SCORM support](scorm-support.md), and [AI agents](ai-agents.md) are also
+  published on the site and in `llms.txt` (the `docs` list in
+  `src/shared/config/seo.ts`): write them for users. A relative link in one
+  must point to another published document (the build fails otherwise);
+  links to other websites are fine. Their opening paragraph is their summary in `llms.txt`.
 - **Where else.** Each feature's `src/features/<name>/README.md` says what
   that feature owns. Agent working notes go in `.agent-docs/`, which is
   git-ignored; superseded documents move to `archive/` with a note at the

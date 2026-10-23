@@ -316,25 +316,42 @@ from the start page and the no-JS fallback.
 
 `src/app/webmcp/` registers SCORMite's tools on `document.modelContext`
 ([WebMCP](https://webmachinelearning.github.io/webmcp/)) so agents in the
-user's browser can read and drive the open session — the tool list is in the
-[User guide](user-guide.md#7-work-with-an-ai-agent).
+user's browser can read and drive the open session — the tools are listed in the
+[AI agents](ai-agents.md) guide.
 
 - `modelContext.ts` types the slice of the API SCORMite uses (TypeScript's DOM
   library does not describe it yet) and feature-detects it; without WebMCP
   nothing is registered.
-- `tools.ts` defines the tools over the app's stores and a small `ToolHost`
+- `tools.ts` (session tools) and `qaTools.ts` (test plan, audit, manifest,
+  files, the running page, network, CMI history, breakpoints, learner) define
+  the tools over the app's stores and a small `ToolHost`
   (the session's actions and the mode switch). Results are JSON-serializable
   objects; preconditions are checked when a tool runs and reported as
   `{ error }` with what to do instead.
+- `contentTools.ts` reviews content (all the course's text, search,
+  reference checks, the assessment data) and records review findings as
+  validation issues with `source: 'review'`; `securityTools.ts` scans the
+  package and hashes files; `automationTools.ts` calls the SCORM API as the
+  SCO does, runs scripts in the SCO's page, waits for a state, and opens or
+  closes a package. The pure logic they use is in `contentScan.ts` (page and
+  caption text, references), `assessment.ts` (interactions and objectives
+  from the flat CMI), and `securityScan.ts` (the security rules).
+- `audit.ts` holds the pure logic behind `audit_session` and
+  `get_test_plan`; `scoPage.ts` reads the running SCO's page (text, headings,
+  images, controls, accessibility) and operates its controls by
+  `data-scormite-ref` — the SCO frame is same-origin, so its document is
+  reachable directly.
 - `useWebMcpTools` (called from `App`) registers them once, reads the latest
   session through a ref, and unregisters them on unmount through the
-  registration's `AbortSignal`.
+  registration's `AbortSignal`. The tools are their own chunk, imported only
+  when the browser has WebMCP, so the start page does not carry them.
 
 Two rules keep agents safe. Tools that return package content — titles, CMI
 values, API arguments, manifest text — carry `untrustedContentHint`, since a
 package could embed instructions aimed at an agent. Tools that discard
-tracking data carry `consequentialHint`, so the browser can confirm with the
-user. Opening a package is not a tool: the user chooses what runs. A package
+tracking data, call the SCORM API, run code in the SCO, or open or close a package carry
+`consequentialHint`, so the browser can confirm with the user.
+`run_script_in_sco` runs with the SCO's own access and no more. A package
 runs with SCORMite's origin (the SCORM API requires it), so its scripts can
 reach the page's `document.modelContext` too — the same trust boundary as the
 rest of the page, stated in [SECURITY.md](../SECURITY.md).

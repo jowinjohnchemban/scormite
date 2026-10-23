@@ -11,7 +11,9 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { test, expect, type Page } from '@playwright/test'
 
-const fixture = path.join(path.dirname(fileURLToPath(import.meta.url)), 'fixtures', 'scorm12-multi-sco.zip')
+const fixtures = path.join(path.dirname(fileURLToPath(import.meta.url)), 'fixtures')
+const fixture = path.join(fixtures, 'scorm12-multi-sco.zip')
+const TOOL_COUNT = 34
 
 /** Call a registered tool as an agent would; the result comes back JSON-serialized. */
 async function callTool(
@@ -32,7 +34,8 @@ async function callTool(
   return JSON.parse(json) as Record<string, unknown>
 }
 
-test('an agent reads and drives the session through WebMCP tools', async ({ page }) => {
+/** Install a stand-in model context, open SCORMite, and wait for its tools. */
+async function openWithModelContext(page: Page): Promise<void> {
   await page.addInitScript(() => {
     const tools = new Map<string, unknown>()
     ;(globalThis as unknown as { __webmcpTools: Map<string, unknown> }).__webmcpTools = tools
@@ -52,7 +55,11 @@ test('an agent reads and drives the session through WebMCP tools', async ({ page
     .poll(() =>
       page.evaluate(() => (globalThis as unknown as { __webmcpTools: Map<string, unknown> }).__webmcpTools.size),
     )
-    .toBe(10)
+    .toBe(TOOL_COUNT)
+}
+
+test('an agent reads and drives the session through WebMCP tools', async ({ page }) => {
+  await openWithModelContext(page)
 
   // Before a package is open the agent is told what to do.
   expect(await callTool(page, 'get_cmi')).toMatchObject({ error: expect.stringMatching(/No package is open/) })
@@ -85,4 +92,86 @@ test('an agent reads and drives the session through WebMCP tools', async ({ page
 
   const report = await callTool(page, 'get_report')
   expect(report).toMatchObject({ format: 'markdown', report: expect.stringContaining('scorm12-multi-sco') })
+})
+
+test('an agent plans, takes, and audits a sequenced course', async ({ page }) => {
+  await openWithModelContext(page)
+  await page.setInputFiles('input[type="file"]', path.join(fixtures, 'scorm2004-sequenced.zip'))
+  const player = page.frameLocator('iframe[title="SCORM Package"]').locator('body')
+  await expect(player.getByRole('button', { name: 'Pass and continue' })).toBeVisible({ timeout: 15_000 })
+
+  // A plan for this package, including its sequencing.
+  const plan = await callTool(page, 'get_test_plan')
+  const goals = (plan['steps'] as { goal: string }[]).map((step) => step.goal)
+  expect(goals).toContain('Check the sequencing rules.')
+
+  // The package's structure and files.
+  const files = await callTool(page, 'list_files')
+  expect(files['files']).toContainEqual({ path: 'imsmanifest.xml' })
+  const manifest = await callTool(page, 'read_file', { path: 'imsmanifest.xml' })
+  expect(manifest['text']).toEqual(expect.stringContaining('<manifest'))
+
+  // Read the running page and complete it like a learner.
+  const pageBefore = await callTool(page, 'read_sco_page')
+  const controls = pageBefore['controls'] as { ref: string; name: string }[]
+  const pass = controls.find((control) => control.name === 'Pass and continue')
+  expect(pass).toBeDefined()
+  expect(await callTool(page, 'interact_with_sco', { ref: pass?.ref, action: 'click' })).toMatchObject({ done: true })
+
+  // The sequencing engine delivers the gated quiz.
+  await expect(player).toContainText('gated quiz delivered', { timeout: 15_000 })
+
+  // The audit sees one item passed and nothing wrong.
+  await expect
+    .poll(async () => ((await callTool(page, 'audit_session'))['coverage'] as { passed: number }).passed)
+    .toBe(1)
+  const audit = await callTool(page, 'audit_session')
+  expect(audit['summary']).toMatchObject({ error: 0 })
+})
+
+test('an agent reviews the content, scans the package, and scripts the course', async ({ page }) => {
+  await openWithModelContext(page)
+  await page.setInputFiles('input[type="file"]', fixture)
+  const player = page.frameLocator('iframe[title="SCORM Package"]').locator('body')
+  await expect(player).toContainText('lesson-one', { timeout: 15_000 })
+
+  // The whole package's text and references, without launching anything.
+  const text = await callTool(page, 'extract_course_text')
+  expect(text['files']).toContainEqual(expect.objectContaining({ path: 'lessons/two.html', title: 'lesson-two' }))
+  const references = await callTool(page, 'check_references')
+  expect(references).toMatchObject({ broken: [], external: [] })
+  const search = await callTool(page, 'search_package', { query: 'cmi.core.lesson_location' })
+  expect((search['matches'] as { file: string }[]).map((match) => match.file)).toContain('lessons/one.html')
+
+  // A clean package scans clean, and its files can be hashed.
+  const scan = await callTool(page, 'scan_package_security')
+  expect(scan).toMatchObject({ scannedFiles: 3, summary: { error: 0, warning: 0, info: 0 } })
+  const hashes = await callTool(page, 'get_file_hashes', { paths: ['imsmanifest.xml'] })
+  expect(hashes['files']).toEqual([expect.objectContaining({ sha256: expect.stringMatching(/^[0-9a-f]{64}$/) })])
+
+  // Script the running SCO and call its API directly.
+  expect(await callTool(page, 'run_script_in_sco', { script: 'return document.title' })).toEqual({
+    result: 'lesson-one',
+  })
+  expect(
+    await callTool(page, 'call_scorm_api', { method: 'SetValue', element: 'cmi.core.lesson_status', value: 'passed' }),
+  ).toMatchObject({ method: 'LMSSetValue', result: 'true', errorCode: '0' })
+  expect(
+    await callTool(page, 'wait_for', { element: 'cmi.core.lesson_status', value: 'passed', timeoutMs: 5000 }),
+  ).toMatchObject({ met: true })
+
+  // A finding the review records shows in the validation issues and the report.
+  expect(
+    await callTool(page, 'add_review_finding', {
+      severity: 'warning',
+      category: 'wording',
+      message: 'The page shows raw CMI values to the learner.',
+      location: 'lessons/one.html',
+    }),
+  ).toEqual({ recorded: true, reviewFindings: 1 })
+  const issues = await callTool(page, 'get_validation_issues')
+  expect(JSON.stringify(issues)).toContain('review.wording')
+  const report = await callTool(page, 'get_report')
+  expect(report['report']).toEqual(expect.stringContaining('The page shows raw CMI values to the learner.'))
+  expect(await callTool(page, 'clear_review_findings')).toEqual({ removed: 1 })
 })
