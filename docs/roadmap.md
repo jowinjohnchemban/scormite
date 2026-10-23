@@ -163,8 +163,9 @@ removed and why. A milestone is finished only when it meets the
 
 ## Since Milestone 17
 
-- [x] **Saved progress.** Attempts, position, and sequencing state kept in
-      IndexedDB; reopening a package resumes it.
+- [x] **Saved progress.** Attempts, position, and sequencing state kept
+      while the page is open; reopening a package resumes it, and a reload
+      starts fresh.
 - [x] **Learner identity.** Set from the header, seeded into each launch;
       a sample learner until one is set.
 - [x] **Runtime and readability fixes.** Each SCO loads once per launch;

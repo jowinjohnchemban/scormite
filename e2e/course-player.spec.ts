@@ -104,7 +104,7 @@ test('enforces SCORM 2004 sequencing rules from the manifest', async ({ page }) 
   await expect(outline.getByRole('button', { name: /Gated Intro/ })).toBeEnabled()
 })
 
-test('resumes saved progress after a page reload', async ({ page }) => {
+test('resumes a reopened package, and starts fresh after a page reload', async ({ page }) => {
   await page.goto('/')
   await page.setInputFiles('input[type="file"]', fixture('scorm12-multi-sco.zip'))
   const outline = page.getByRole('region', { name: 'Course outline' })
@@ -115,9 +115,20 @@ test('resumes saved progress after a page reload', async ({ page }) => {
   // Commits are saved after a short coalescing window; no person reloads faster.
   await page.waitForTimeout(400)
 
-  await page.reload()
+  // Reopening the same package in this page resumes it.
   await page.setInputFiles('input[type="file"]', fixture('scorm12-multi-sco.zip'))
-  await expect(page.getByText(/Resumed the progress saved in this browser/)).toBeVisible({ timeout: 15_000 })
+  await expect(page.getByText(/Resumed the progress from/)).toBeVisible({ timeout: 15_000 })
   await expect(playerBody(page)).toContainText('lesson-two | entry=resume | suspend=lesson-two-state')
   await expect(outline.getByRole('button', { name: /Lesson Two/ })).toHaveAttribute('aria-current', 'step')
+
+  // The notice can discard the resumed progress instead.
+  await page.getByRole('button', { name: 'Start fresh' }).click()
+  await expect(playerBody(page)).toContainText('lesson-one | entry=ab-initio | suspend= |')
+  await expect(page.getByText(/Resumed the progress/)).toHaveCount(0)
+
+  // A reload is a clean slate.
+  await page.reload()
+  await page.setInputFiles('input[type="file"]', fixture('scorm12-multi-sco.zip'))
+  await expect(playerBody(page)).toContainText('lesson-one | entry=ab-initio', { timeout: 15_000 })
+  await expect(page.getByText(/Resumed the progress/)).toHaveCount(0)
 })

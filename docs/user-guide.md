@@ -59,9 +59,11 @@ course**.
 
 Leaving an item and coming back to it also resumes it, as on an LMS.
 
-Progress is also saved in this browser: reopen the same package later — even
-after reloading the page — and SCORMite resumes at the item you were on, with
-each item's saved data. **Restart whole course** forgets the saved progress.
+Progress is also kept while the page is open: close the package and open the
+same one again, and SCORMite resumes at the item you were on, with each item's
+saved data. **Start fresh** on the notice that says so, or **Restart whole
+course**, forgets it, and reloading the page always starts fresh — nothing is
+stored in the browser between visits.
 
 ## 4. Read what the course reports
 

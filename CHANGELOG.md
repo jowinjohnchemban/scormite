@@ -32,6 +32,14 @@ All notable changes to SCORMite are recorded here. The format follows
   trials with `WEBMCP_ORIGIN_TRIAL_TOKENS`. The new [AI agents](docs/ai-agents.md)
   guide covers setup, the tools, a complete QA run, safety, and an FAQ.
 
+### Changed
+
+- **Reloading the page starts fresh.** Progress is kept while the page is
+  open — closing a package and opening it again resumes it — but no longer
+  survives a reload, and nothing is stored in the browser between visits;
+  progress earlier versions saved is deleted. The resume notice has a
+  **Start fresh** button that discards the resumed progress.
+
 ### Fixed
 
 - **SCORM 2004 rollup rules** that negate a condition (`not`), combine

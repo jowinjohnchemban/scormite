@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useAppModeStore } from '@/app/state/appModeStore'
 import { useCourseStore } from '@/app/state/courseStore'
 import { BasicModeShell } from '@/app/modes/BasicModeShell'
@@ -54,6 +54,9 @@ export function App() {
   const noticeTone = useCourseStore((s) => s.noticeTone)
   const setNotice = useCourseStore((s) => s.setNotice)
   const dismissNotice = useCallback(() => setNotice(null), [setNotice])
+  const noticeAction = useCourseStore((s) => s.noticeAction)
+  const { restartCourse } = session
+  const startFresh = useMemo(() => ({ label: 'Start fresh', onClick: restartCourse }), [restartCourse])
   const draggingFile = useWindowFileDrop(true, (file) => void session.loadFile(file))
 
   const playerFrameStyle =
@@ -132,7 +135,12 @@ export function App() {
         </div>
       </header>
       <SessionAlert message={session.pkg ? session.error : null} onDismiss={session.dismissError} />
-      <SessionAlert message={notice} onDismiss={dismissNotice} tone={noticeTone} />
+      <SessionAlert
+        message={notice}
+        onDismiss={dismissNotice}
+        tone={noticeTone}
+        {...(noticeAction === 'start-fresh' ? { action: startFresh } : {})}
+      />
       <main ref={mainRef} className="relative min-h-0 flex-1 overflow-hidden">
         {/*
           Persistent player layer. The SCO iframe must never leave the DOM on

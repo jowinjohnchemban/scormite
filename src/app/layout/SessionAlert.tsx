@@ -11,16 +11,19 @@ const TONES = {
 /**
  * A dismissible strip under the header for something the open session
  * should know about — a failed load (the open package keeps running) or a
- * navigation the course's rules refused.
+ * navigation the course's rules refused — optionally with one action, such
+ * as starting fresh instead of resuming.
  */
 export function SessionAlert({
   message,
   onDismiss,
   tone = 'error',
+  action,
 }: {
   message: string | null
   onDismiss: () => void
   tone?: keyof typeof TONES
+  action?: { label: string; onClick: () => void }
 }) {
   if (!message) return null
   const style = TONES[tone]
@@ -30,6 +33,11 @@ export function SessionAlert({
       className={cn('flex shrink-0 items-start gap-2 border-b px-3 py-1.5 text-xs', style.className)}
     >
       <p className="min-w-0 flex-1 py-1">{message}</p>
+      {action && (
+        <Button variant="outline" size="sm" className="h-6 shrink-0 px-2 text-xs" onClick={action.onClick}>
+          {action.label}
+        </Button>
+      )}
       <Button variant="ghost" size="icon" className="size-6" aria-label="Dismiss message" onClick={onDismiss}>
         <X aria-hidden />
       </Button>

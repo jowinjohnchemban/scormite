@@ -82,8 +82,9 @@ export class CourseSession {
     const course = useCourseStore.getState()
     course.setCourse([...this.items], false)
 
-    // Saved progress from an earlier visit: restore the attempts and resume
-    // where the learner was, as an LMS does when a course is reopened.
+    // Progress from an earlier open of this package in this page: restore
+    // the attempts and resume where the learner was, as an LMS does when a
+    // course is reopened.
     const saved = this.saved
     this.saved = null
     if (saved) {
@@ -112,10 +113,7 @@ export class CourseSession {
     const when = new Date(saved.savedAt).toLocaleString()
     useCourseStore
       .getState()
-      .setNotice(
-        `Resumed the progress saved in this browser on ${when}. Restart › Restart whole course starts fresh.`,
-        'info',
-      )
+      .setNotice(`Resumed the progress from ${when}. Reloading the page also starts fresh.`, 'info', 'start-fresh')
   }
 
   /**
@@ -150,6 +148,7 @@ export class CourseSession {
   /** Discard every attempt and start over (a fresh engine for 2004). */
   restart(): void {
     void this.persistence?.clear()
+    useCourseStore.getState().setNotice(null)
     this.attempts.clear()
     this.engine = null
     useCourseStore.getState().clearProgress()

@@ -3,14 +3,20 @@
  * reload round trips through CourseSession with the real runtime / engine.
  */
 
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { getActivityTree, getLaunchableItems, parseManifest } from '@/features/manifest'
 import { useRuntimeStore, type Scorm2004Adapter } from '@/features/runtime'
 import { useValidationStore } from '@/features/validation'
 import type { Package } from '@/shared/types'
 import { useCourseStore } from '@/app/state/courseStore'
 import { CourseSession } from './CourseSession'
-import { MemoryStore, packageKey, SessionPersistence, type SessionSnapshot } from './SessionPersistence'
+import {
+  forgetProgressSavedAcrossReloads,
+  MemoryStore,
+  packageKey,
+  SessionPersistence,
+  type SessionSnapshot,
+} from './SessionPersistence'
 
 const snapshot = (savedAt: number): SessionSnapshot => ({
   version: 1,
@@ -95,7 +101,7 @@ afterEach(() => {
   for (const session of sessions.splice(0)) session.dispose()
 })
 
-describe('reloading a course', () => {
+describe('reopening a course', () => {
   it('resumes the item the learner was on, with its suspended data (SCORM 1.2)', async () => {
     const persistence = new SessionPersistence(new MemoryStore(), 'k')
     const first = newSession('1.2', persistence, null)
@@ -119,7 +125,10 @@ describe('reloading a course', () => {
     sessions.push(second)
     second.start()
     expect(useCourseStore.getState().pendingLaunch).toEqual({ itemId: 'b', mode: 'resume' })
-    expect(useCourseStore.getState().notice).toMatch(/Resumed the progress saved/)
+    expect(useCourseStore.getState()).toMatchObject({
+      notice: expect.stringMatching(/Resumed the progress from/),
+      noticeAction: 'start-fresh',
+    })
     settle(second)
     const resumed = useRuntimeStore.getState().adapter
     resumed?.initialize()
@@ -161,8 +170,32 @@ describe('reloading a course', () => {
     settle(session)
     await session.flushSaves()
     expect(await persistence.load()).not.toBeNull()
+    useCourseStore.getState().setNotice('Resumed the progress from earlier.', 'info', 'start-fresh')
     session.restart()
     await Promise.resolve()
     expect(await persistence.load()).toBeNull()
+    expect(useCourseStore.getState()).toMatchObject({ notice: null, noticeAction: null })
+  })
+})
+
+describe('forgetProgressSavedAcrossReloads', () => {
+  afterEach(() => vi.unstubAllGlobals())
+
+  it('deletes the database earlier versions saved progress in', () => {
+    const deleteDatabase = vi.fn()
+    vi.stubGlobal('indexedDB', { deleteDatabase })
+    forgetProgressSavedAcrossReloads()
+    expect(deleteDatabase).toHaveBeenCalledWith('scormite')
+  })
+
+  it('does nothing where IndexedDB is unavailable or blocked', () => {
+    vi.stubGlobal('indexedDB', undefined)
+    expect(() => forgetProgressSavedAcrossReloads()).not.toThrow()
+    vi.stubGlobal('indexedDB', {
+      deleteDatabase: () => {
+        throw new DOMException('blocked', 'SecurityError')
+      },
+    })
+    expect(() => forgetProgressSavedAcrossReloads()).not.toThrow()
   })
 })
