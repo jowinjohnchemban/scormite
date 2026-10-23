@@ -24,7 +24,7 @@ describe('dependencyReport', () => {
     const report = dependencyReport(
       {
         zustand: { current: '5.0.15', latest: '5.0.16', dependencyType: 'dependencies' },
-        typescript: { current: '6.0.3', latest: '7.0.2', dependencyType: 'devDependencies' },
+        vitest: { current: '5.1.0', latest: '6.0.0', dependencyType: 'devDependencies' },
         old: { current: '1.0.0', latest: '1.1.0', isDeprecated: true },
       },
       {
@@ -41,14 +41,14 @@ describe('dependencyReport', () => {
     expect(md.indexOf('## Vulnerabilities')).toBeLessThan(md.indexOf('## Newer releases'))
     expect(md.indexOf('`jszip`')).toBeLessThan(md.indexOf('`lodash`'))
     expect(md).toContain('[Path traversal](https://x/2)')
-    expect(md.indexOf('`typescript`')).toBeLessThan(md.indexOf('`old`'))
-    expect(md).toContain('| `typescript` | dev | 6.0.3 | 7.0.2 | major |')
+    expect(md.indexOf('`vitest`')).toBeLessThan(md.indexOf('`old`'))
+    expect(md).toContain('| `vitest` | dev | 5.1.0 | 6.0.0 | major |')
     expect(md).toContain('| `old` (deprecated) | runtime | 1.0.0 | 1.1.0 | minor |')
   })
 
   it('lists majors held back on purpose without counting them', () => {
     const report = dependencyReport(
-      { '@types/node': { current: '24.19.2', latest: '26.6.5' } },
+      { '@types/node': { current: '24.19.2', latest: '26.6.5' }, typescript: { current: '6.0.3', latest: '7.0.2' } },
       { advisories: {} },
       '2026-10-24',
     )

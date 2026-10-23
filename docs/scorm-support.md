@@ -2,7 +2,7 @@
 
 What SCORMite supports, what it reproduces of an LMS, what it checks, and
 where its limits are. Every runtime behaviour comes from
-[scorm-again](https://github.com/jcputney/scorm-again) 3.4.6, which SCORMite
+[scorm-again](https://github.com/jcputney/scorm-again) 3.4.7, which SCORMite
 configures and wraps but never modifies.
 
 ## Standards

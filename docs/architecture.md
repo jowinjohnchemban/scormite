@@ -143,8 +143,10 @@ manifest, runtime, player, session, and validation):
   `GetDiagnostic` on its `ApiCallRecord`; refused navigation requests
   become `sequencing.request-refused` warnings.
 
-**Runtime version.** scorm-again 3.4.6. Upstream fixes are adopted by
-upgrading, never by patching: 3.4.6 fixed a retried activity keeping its
+**Runtime version.** scorm-again 3.4.7. Upstream fixes are adopted by
+upgrading, never by patching: 3.4.7 accepts values the specification allows
+that earlier versions rejected (error 406), and fixes several sequencing
+checks; 3.4.6 fixed a retried activity keeping its
 previous primary-objective status (pinned by a test), and reports a
 course's refused navigation through `onSequencingError` (with the IMS
 exception code), which the adapter turns into a readable

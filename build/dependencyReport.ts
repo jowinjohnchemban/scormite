@@ -53,6 +53,8 @@ export function updateType(current: string, latest: string): 'major' | 'minor' |
 /** Major updates held back on purpose (as in .github/dependabot.yml), with why. */
 export const HELD_BACK: Record<string, string> = {
   '@types/node': 'tracks the Node version CI and the container run (24); bump it with them',
+  typescript:
+    'typescript-eslint supports TypeScript below 6.1, and TypeScript 7 (the native compiler) has no stable API for it yet; upgrade once typescript-eslint supports 7',
 }
 
 const SEVERITY_ORDER = ['critical', 'high', 'moderate', 'low', 'info']

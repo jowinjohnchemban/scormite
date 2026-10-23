@@ -26,6 +26,11 @@ updates:
       # Tracks the Node version CI and the container run (24); bump it with them.
       - dependency-name: '@types/node'
         update-types: ['version-update:semver-major']
+      # typescript-eslint supports TypeScript below 6.1; TypeScript 7 (the
+      # native compiler) has no stable API for it yet. Keep the HELD_BACK list
+      # in build/dependencyReport.ts in step.
+      - dependency-name: typescript
+        update-types: ['version-update:semver-major']
 
   - package-ecosystem: github-actions
     directory: /

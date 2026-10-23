@@ -34,6 +34,13 @@ All notable changes to SCORMite are recorded here. The format follows
 
 ### Changed
 
+- **Runtime updated to scorm-again 3.4.7.** Values the SCORM
+  specification allows are no longer rejected — interaction values,
+  timestamps, and language tags in SCORM 2004 (error 406), decimal,
+  weighting, and blank values in SCORM 1.2 — and an LMS-set
+  `adl.nav.request_valid` map can be read. Sequencing checks every rule
+  against one clock, applies disabled rules before delivering an activity,
+  and predicts jump validity from the rules.
 - **Saved progress expires after 24 hours.** Progress not saved again within
   24 hours is invalid: it no longer resumes, and it is deleted from the
   browser when SCORMite starts. The resume notice has a **Clear progress**
