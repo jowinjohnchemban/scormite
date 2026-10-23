@@ -39,6 +39,11 @@ Object.defineProperty(globalThis, 'localStorage', { value: memoryStorage, config
 
 // react-resizable-panels / DockLayout observe panel sizes on mount.
 class ResizeObserverMock {
+  /** Kept like the real observer's; jsdom never reports a resize, so it is never called. */
+  readonly callback: ResizeObserverCallback
+  constructor(callback: ResizeObserverCallback) {
+    this.callback = callback
+  }
   observe(): void {}
   unobserve(): void {}
   disconnect(): void {}
