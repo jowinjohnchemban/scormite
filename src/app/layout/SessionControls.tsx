@@ -70,15 +70,14 @@ function RestartMenu({ session }: { session: PackageSession }) {
         <RotateCcw aria-hidden />
         New attempt
       </MenuItem>
-      {itemCount > 1 && (
-        <>
-          <MenuSeparator />
-          <MenuItem onClick={session.restartCourse} title="Discard every item's data and start from the first item">
-            <ListRestart aria-hidden />
-            Restart whole course
-          </MenuItem>
-        </>
-      )}
+      <MenuSeparator />
+      <MenuItem
+        onClick={session.restartCourse}
+        title="Delete the progress saved for every item and start from the first item"
+      >
+        <ListRestart aria-hidden />
+        {itemCount > 1 ? 'Restart course and clear progress' : 'Restart and clear progress'}
+      </MenuItem>
     </Menu>
   )
 }

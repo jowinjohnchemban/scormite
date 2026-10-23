@@ -48,8 +48,8 @@ const OPEN_NAVIGATION: NavigationAvailability = {
   hiddenControls: [],
 }
 
-/** What a notice's button does: "start-fresh" discards the resumed progress and restarts the course. */
-export type NoticeAction = 'start-fresh'
+/** What a notice's button does: "clear-progress" discards the resumed progress and restarts the course. */
+export type NoticeAction = 'clear-progress'
 
 interface CourseState {
   items: LaunchableItem[]

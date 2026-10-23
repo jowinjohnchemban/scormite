@@ -1,9 +1,10 @@
 /**
- * Progress kept across reloads: the persistence store itself, and full
- * reload round trips through CourseSession with the real runtime / engine.
+ * Progress kept across reloads for 24 hours: the persistence store itself,
+ * its expiry, and full reload round trips through CourseSession with the real
+ * runtime / engine.
  */
 
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { getActivityTree, getLaunchableItems, parseManifest } from '@/features/manifest'
 import { useRuntimeStore, type Scorm2004Adapter } from '@/features/runtime'
 import { useValidationStore } from '@/features/validation'
@@ -11,9 +12,10 @@ import type { Package } from '@/shared/types'
 import { useCourseStore } from '@/app/state/courseStore'
 import { CourseSession } from './CourseSession'
 import {
-  forgetProgressSavedAcrossReloads,
+  deleteExpiredProgress,
   MemoryStore,
   packageKey,
+  PROGRESS_TTL_MS,
   SessionPersistence,
   type SessionSnapshot,
 } from './SessionPersistence'
@@ -29,7 +31,7 @@ const snapshot = (savedAt: number): SessionSnapshot => ({
 describe('SessionPersistence', () => {
   it('coalesces saves and writes the latest on flush', async () => {
     const store = new MemoryStore()
-    const persistence = new SessionPersistence(store, 'k')
+    const persistence = new SessionPersistence(store, 'k', () => 10)
     persistence.saveSoon(snapshot(1), 10_000)
     persistence.saveSoon(snapshot(2), 10_000)
     expect(await persistence.load()).toBeNull()
@@ -40,12 +42,30 @@ describe('SessionPersistence', () => {
   it('ignores stored values that are not a current snapshot, and clears', async () => {
     const store = new MemoryStore()
     await store.set('k', { version: 0, attempts: {} })
-    const persistence = new SessionPersistence(store, 'k')
+    const persistence = new SessionPersistence(store, 'k', () => 10)
     expect(await persistence.load()).toBeNull()
     persistence.saveSoon(snapshot(3), 10_000)
     await persistence.flush()
     await persistence.clear()
     expect(await persistence.load()).toBeNull()
+  })
+
+  it('treats progress not saved again within 24 hours as invalid, and deletes it', async () => {
+    const store = new MemoryStore()
+    await store.set('k', snapshot(0))
+    expect(await new SessionPersistence(store, 'k', () => PROGRESS_TTL_MS - 1).load()).not.toBeNull()
+    expect(await new SessionPersistence(store, 'k', () => PROGRESS_TTL_MS).load()).toBeNull()
+    expect(await store.keys()).toEqual([])
+  })
+
+  it('deletes every expired or unreadable progress at start-up, and keeps the rest', async () => {
+    const store = new MemoryStore()
+    const now = 3 * PROGRESS_TTL_MS
+    await store.set('old', snapshot(now - PROGRESS_TTL_MS - 1))
+    await store.set('broken', { version: 0 })
+    await store.set('recent', snapshot(now - 60_000))
+    expect(await deleteExpiredProgress(store, now)).toBe(2)
+    expect(await store.keys()).toEqual(['recent'])
   })
 
   it('keys a package by its manifest and archive size', async () => {
@@ -126,8 +146,8 @@ describe('reopening a course', () => {
     second.start()
     expect(useCourseStore.getState().pendingLaunch).toEqual({ itemId: 'b', mode: 'resume' })
     expect(useCourseStore.getState()).toMatchObject({
-      notice: expect.stringMatching(/Resumed the progress from/),
-      noticeAction: 'start-fresh',
+      notice: expect.stringMatching(/Resumed the progress saved on .* cleared 24 hours/),
+      noticeAction: 'clear-progress',
     })
     settle(second)
     const resumed = useRuntimeStore.getState().adapter
@@ -170,32 +190,10 @@ describe('reopening a course', () => {
     settle(session)
     await session.flushSaves()
     expect(await persistence.load()).not.toBeNull()
-    useCourseStore.getState().setNotice('Resumed the progress from earlier.', 'info', 'start-fresh')
+    useCourseStore.getState().setNotice('Resumed the progress saved earlier.', 'info', 'clear-progress')
     session.restart()
     await Promise.resolve()
     expect(await persistence.load()).toBeNull()
     expect(useCourseStore.getState()).toMatchObject({ notice: null, noticeAction: null })
-  })
-})
-
-describe('forgetProgressSavedAcrossReloads', () => {
-  afterEach(() => vi.unstubAllGlobals())
-
-  it('deletes the database earlier versions saved progress in', () => {
-    const deleteDatabase = vi.fn()
-    vi.stubGlobal('indexedDB', { deleteDatabase })
-    forgetProgressSavedAcrossReloads()
-    expect(deleteDatabase).toHaveBeenCalledWith('scormite')
-  })
-
-  it('does nothing where IndexedDB is unavailable or blocked', () => {
-    vi.stubGlobal('indexedDB', undefined)
-    expect(() => forgetProgressSavedAcrossReloads()).not.toThrow()
-    vi.stubGlobal('indexedDB', {
-      deleteDatabase: () => {
-        throw new DOMException('blocked', 'SecurityError')
-      },
-    })
-    expect(() => forgetProgressSavedAcrossReloads()).not.toThrow()
   })
 })
