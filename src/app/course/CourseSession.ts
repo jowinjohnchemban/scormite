@@ -281,8 +281,8 @@ export class CourseSession {
   }
 
   /** Write any pending save now (the page is being hidden). */
-  flushSaves(): Promise<void> {
-    return this.persistence?.flush() ?? Promise.resolve()
+  async flushSaves(): Promise<void> {
+    await this.persistence?.flush()
   }
 
   /** Stop listening to the runtime. The session is unusable afterwards. */

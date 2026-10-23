@@ -22,6 +22,10 @@ self.addEventListener('activate', (event) => {
 })
 
 self.addEventListener('message', (event) => {
+  // Only SCORMite's own pages may cache or clear package files. Browsers only
+  // let same-origin clients reach this worker; the check makes that explicit.
+  const sender = event.origin || (event.source && 'url' in event.source ? new URL(event.source.url).origin : '')
+  if (sender !== self.location.origin) return
   const data = event.data
   if (!data || typeof data.type !== 'string') return
 
