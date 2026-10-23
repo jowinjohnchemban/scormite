@@ -15,7 +15,8 @@ import { deleteExpiredProgress, IndexedDbStore, packageKey, SessionPersistence }
 
 /** Saved progress lives in this browser's IndexedDB for a day; older progress is deleted at start-up. */
 const progressStore = new IndexedDbStore()
-void deleteExpiredProgress(progressStore)
+// Awaited before any session reads or saves, so the cleanup never races a fresh save.
+const expiredDeleted = deleteExpiredProgress(progressStore)
 
 export interface ParsedPackage {
   name: string
@@ -98,6 +99,7 @@ export async function createCourseSession(
   items: LaunchableItem[],
   persistenceKey: string,
 ): Promise<CourseSession> {
+  await expiredDeleted
   const persistence = new SessionPersistence(progressStore, persistenceKey)
   const saved = await persistence.load()
   return new CourseSession(pkg, items, sequencingFor(pkg), persistence, saved)

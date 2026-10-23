@@ -67,11 +67,15 @@ export class IndexedDbStore implements KeyValueStore {
   ): Promise<T | undefined> {
     const db = await this.open()
     if (!db) return undefined
+    // Settles when the transaction commits, not when its request succeeds: a
+    // write is only done once it can no longer be rolled back.
     return new Promise((resolve) => {
       try {
-        const request = action(db.transaction(STORE, mode).objectStore(STORE))
-        request.onsuccess = () => resolve(request.result)
-        request.onerror = () => resolve(undefined)
+        const transaction = db.transaction(STORE, mode)
+        const request = action(transaction.objectStore(STORE))
+        transaction.oncomplete = () => resolve(request.result)
+        transaction.onabort = () => resolve(undefined)
+        transaction.onerror = () => resolve(undefined)
       } catch {
         resolve(undefined)
       }
@@ -125,9 +129,14 @@ function isSnapshot(value: unknown): value is SessionSnapshot {
   )
 }
 
-/** Whether a snapshot is still valid at `now`: saved less than PROGRESS_TTL_MS ago. */
+/**
+ * Whether a snapshot is still valid at `now`: saved less than PROGRESS_TTL_MS
+ * ago. A save time that is not a finite number, or later than now (the clock
+ * was moved back), is invalid — it could otherwise stay valid indefinitely.
+ */
 export function isFresh(snapshot: SessionSnapshot, now = Date.now()): boolean {
-  return now - snapshot.savedAt < PROGRESS_TTL_MS
+  const { savedAt } = snapshot
+  return Number.isFinite(savedAt) && savedAt <= now && now - savedAt < PROGRESS_TTL_MS
 }
 
 /**

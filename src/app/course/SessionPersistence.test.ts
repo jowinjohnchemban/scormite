@@ -13,6 +13,7 @@ import { useCourseStore } from '@/app/state/courseStore'
 import { CourseSession } from './CourseSession'
 import {
   deleteExpiredProgress,
+  isFresh,
   MemoryStore,
   packageKey,
   PROGRESS_TTL_MS,
@@ -56,6 +57,13 @@ describe('SessionPersistence', () => {
     expect(await new SessionPersistence(store, 'k', () => PROGRESS_TTL_MS - 1).load()).not.toBeNull()
     expect(await new SessionPersistence(store, 'k', () => PROGRESS_TTL_MS).load()).toBeNull()
     expect(await store.keys()).toEqual([])
+  })
+
+  it('treats a save time in the future or not finite as invalid', () => {
+    expect(isFresh(snapshot(1000), 999)).toBe(false)
+    expect(isFresh(snapshot(Infinity), 1000)).toBe(false)
+    expect(isFresh(snapshot(Number.NaN), 1000)).toBe(false)
+    expect(isFresh(snapshot(1000), 1000)).toBe(true)
   })
 
   it('deletes every expired or unreadable progress at start-up, and keeps the rest', async () => {
