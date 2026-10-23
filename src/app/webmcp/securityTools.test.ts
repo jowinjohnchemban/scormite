@@ -96,6 +96,11 @@ describe('security tools', () => {
         location: 'js/app.js:1',
       }),
     ])
+
+    // A scan that cannot read the file keeps what an earlier scan recorded for it.
+    vi.mocked(fetch).mockRejectedValue(new TypeError('network'))
+    await run('scan_package_security', { prefix: 'js/', record: true })
+    expect(useValidationStore.getState().issues.map((issue) => issue.location)).toEqual(['js/app.js:1'])
   })
 
   it('hashes the requested files', async () => {

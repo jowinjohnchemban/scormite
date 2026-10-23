@@ -92,9 +92,16 @@ export function createSecurityTools(host: ToolHost): ModelContextTool[] {
         }
         if (input['record'] === true) {
           const validation = useValidationStore.getState()
-          // A new scan replaces what an earlier one recorded for these files.
+          // A new scan replaces what an earlier one recorded for the files it
+          // read; findings for a file it could not read stay until one does.
+          const unread = new Set(unreadable)
           for (const issue of validation.issues) {
-            if (issue.ruleId.startsWith('review.security.') && (issue.location ?? '').startsWith(prefix)) {
+            const location = issue.location ?? ''
+            if (
+              issue.ruleId.startsWith('review.security.') &&
+              location.startsWith(prefix) &&
+              !unread.has(location.replace(/:\d+$/, ''))
+            ) {
               validation.removeIssue(issue.id)
             }
           }
