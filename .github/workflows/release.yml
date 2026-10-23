@@ -49,7 +49,10 @@ jobs:
           fi
           # A tag without a release (a run that failed after tagging) is
           # released from that tag — if it marks this commit.
-          tagged=$(git ls-remote --tags origin "refs/tags/$tag^{}" "refs/tags/$tag" | head -n 1 | cut -f1)
+          # An annotated tag lists its tag object first and the commit as "^{}".
+          refs=$(git ls-remote --tags origin "refs/tags/$tag" "refs/tags/$tag^{}")
+          tagged=$(awk -v ref="refs/tags/$tag^{}" '$2 == ref { print $1 }' <<< "$refs")
+          [ -n "$tagged" ] || tagged=$(awk -v ref="refs/tags/$tag" '$2 == ref { print $1 }' <<< "$refs")
           if [ -n "$tagged" ] && [ "$tagged" != "$GITHUB_SHA" ]; then
             echo "::error::$tag already exists on $tagged, not on this commit ($GITHUB_SHA). Release it by hand or bump the version."
             exit 1
