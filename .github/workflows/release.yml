@@ -1,18 +1,22 @@
 name: Release
 
-# Pushing a version tag (v1.2.3) publishes a GitHub release: notes from that
+# When main gets a package.json version that has no release yet — the merged
+# "chore(release): vX.Y.Z" pull request from the Prepare release workflow —
+# this tags that commit and publishes the GitHub release: notes from the
 # version's CHANGELOG.md section, and the built static site as a zip for
-# self-hosting. Deployment of the live site is separate (the hosting
-# platform builds main); see docs/deployment.md.
+# self-hosting. Deployment of the live site is separate (the hosting platform
+# builds main); see docs/deployment.md.
 on:
   push:
-    tags: ['v*.*.*']
+    branches: [main]
+    paths: [package.json]
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: release-${{ github.ref }}
+  group: release
 
 jobs:
   release:
@@ -24,46 +28,61 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      - name: Is this version released?
+        id: version
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="v$(node -p "require('./package.json').version")"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          if gh release view "$tag" > /dev/null 2>&1 || git ls-remote --exit-code --tags origin "refs/tags/$tag" > /dev/null; then
+            echo "$tag is already released; nothing to do."
+            echo "new=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "new=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - uses: pnpm/action-setup@v6
+        if: steps.version.outputs.new == 'true'
         with:
           version: 11.20.0
 
       - uses: actions/setup-node@v7
+        if: steps.version.outputs.new == 'true'
         with:
           node-version: 24
           cache: pnpm
 
-      - name: Check the tag matches package.json
-        run: |
-          expected="v$(node -p "require('./package.json').version")"
-          if [ "$GITHUB_REF_NAME" != "$expected" ]; then
-            echo "::error::Tag $GITHUB_REF_NAME does not match package.json version ($expected)."
-            exit 1
-          fi
-
       - name: Release notes from CHANGELOG.md
-        run: node build/releaseNotes.ts "$GITHUB_REF_NAME" > release-notes.md
+        if: steps.version.outputs.new == 'true'
+        run: node build/releaseNotes.ts "${{ steps.version.outputs.tag }}" > release-notes.md
 
       - name: Install dependencies
+        if: steps.version.outputs.new == 'true'
         run: pnpm install --frozen-lockfile
 
       - name: Test
+        if: steps.version.outputs.new == 'true'
         run: pnpm run test
 
       - name: Build the static site
+        if: steps.version.outputs.new == 'true'
         run: pnpm run build
 
       - name: Package the build
+        if: steps.version.outputs.new == 'true'
         run: |
           cd dist
-          zip -qr "../scormite-$GITHUB_REF_NAME-dist.zip" .
+          zip -qr "../scormite-${{ steps.version.outputs.tag }}-dist.zip" .
 
-      - name: Create the release
+      - name: Tag the commit and create the release
+        if: steps.version.outputs.new == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.version.outputs.tag }}
         run: |
-          gh release create "$GITHUB_REF_NAME" \
-            --title "SCORMite $GITHUB_REF_NAME" \
+          gh release create "$TAG" \
+            --target "$GITHUB_SHA" \
+            --title "SCORMite $TAG" \
             --notes-file release-notes.md \
-            --verify-tag \
-            "scormite-$GITHUB_REF_NAME-dist.zip"
+            "scormite-$TAG-dist.zip"
