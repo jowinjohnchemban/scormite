@@ -11,10 +11,11 @@ import { cachePackageFiles } from '@/features/player'
 import type { SequencingOptions } from '@/features/runtime'
 import type { LaunchableItem, Manifest, Package, ScormEdition, ScormVersion } from '@/shared/types'
 import { CourseSession } from './CourseSession'
-import { IndexedDbStore, packageKey, SessionPersistence } from './SessionPersistence'
+import { forgetProgressSavedAcrossReloads, MemoryStore, packageKey, SessionPersistence } from './SessionPersistence'
 
-/** Saved progress lives in this browser's IndexedDB. */
-const progressStore = new IndexedDbStore()
+/** Progress lasts as long as the page: reopening a package resumes it; a reload starts fresh. */
+const progressStore = new MemoryStore()
+forgetProgressSavedAcrossReloads()
 
 export interface ParsedPackage {
   name: string
@@ -89,8 +90,8 @@ function sequencingFor(pkg: Package): SequencingOptions | null {
 }
 
 /**
- * The course session for an opened package, resuming progress saved in this
- * browser by an earlier visit, if any.
+ * The course session for an opened package, resuming the progress it made
+ * earlier in this page, if any.
  */
 export async function createCourseSession(
   pkg: Package,

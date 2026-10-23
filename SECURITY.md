@@ -30,8 +30,8 @@ Knowing this helps tell a vulnerability from the design:
 - **A package runs with SCORMite's origin.** SCORM content finds the LMS API
   through `window.parent`, which only works same-origin, so the player's
   iframe is sandboxed with `allow-scripts allow-same-origin`. A package's
-  scripts can therefore reach what SCORMite stores in that browser — saved
-  progress and layout preferences — just as content reaches the LMS page it
+  scripts can therefore reach what SCORMite keeps in that page and browser —
+  the session’s progress and layout preferences — just as content reaches the LMS page it
   runs in. **Only open packages you trust,** as you would on an LMS.
 - **AI agents (WebMCP).** In browsers with WebMCP, SCORMite offers tools that
   read the open session and its package files, operate and script the

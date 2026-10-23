@@ -48,6 +48,9 @@ const OPEN_NAVIGATION: NavigationAvailability = {
   hiddenControls: [],
 }
 
+/** What a notice's button does: "start-fresh" discards the resumed progress and restarts the course. */
+export type NoticeAction = 'start-fresh'
+
 interface CourseState {
   items: LaunchableItem[]
   /** True when scorm-again's SCORM 2004 sequencing engine drives navigation. */
@@ -66,6 +69,8 @@ interface CourseState {
   /** A short, dismissible message (e.g. a refused navigation, a resumed session). */
   notice: string | null
   noticeTone: 'info' | 'warning'
+  /** A button the notice offers, if any. */
+  noticeAction: NoticeAction | null
 
   setCourse: (items: LaunchableItem[], sequenced: boolean) => void
   setSequenced: (sequenced: boolean) => void
@@ -79,7 +84,7 @@ interface CourseState {
   clearProgress: () => void
   setNavigation: (navigation: NavigationAvailability) => void
   setEnded: (reason: string | null) => void
-  setNotice: (notice: string | null, tone?: 'info' | 'warning') => void
+  setNotice: (notice: string | null, tone?: 'info' | 'warning', action?: NoticeAction | null) => void
   reset: () => void
 }
 
@@ -95,6 +100,7 @@ const INITIAL = {
   endedReason: null,
   notice: null,
   noticeTone: 'warning',
+  noticeAction: null,
 } satisfies Partial<CourseState>
 
 /** What flow mode allows from `currentItemId`: anything, in manifest order. */
@@ -130,10 +136,10 @@ export const useCourseStore = create<CourseState>((set, get) => ({
             ? nav.canPrevious
             : nav.choices === null || (intent.targetId !== undefined && nav.choices.includes(intent.targetId))
       if (!allowed) {
-        set({ notice: "The course's sequencing rules do not allow that right now." })
+        set({ notice: "The course's sequencing rules do not allow that right now.", noticeAction: null })
         return
       }
-      set({ pendingNavigation: intent, notice: null })
+      set({ pendingNavigation: intent, notice: null, noticeAction: null })
       return
     }
     const navigator = new CourseNavigator(state.items)
@@ -143,7 +149,8 @@ export const useCourseStore = create<CourseState>((set, get) => ({
         : intent.request === 'previous'
           ? navigator.previous(state.currentItemId)
           : navigator.find(intent.targetId)
-    if (target) set({ pendingLaunch: { itemId: target.identifier, mode: intent.mode }, notice: null })
+    if (target)
+      set({ pendingLaunch: { itemId: target.identifier, mode: intent.mode }, notice: null, noticeAction: null })
   },
 
   requestLaunch: (itemId, mode = 'resume') =>
@@ -173,7 +180,7 @@ export const useCourseStore = create<CourseState>((set, get) => ({
 
   setEnded: (endedReason) => set({ endedReason }),
 
-  setNotice: (notice, tone = 'warning') => set({ notice, noticeTone: tone }),
+  setNotice: (notice, tone = 'warning', action = null) => set({ notice, noticeTone: tone, noticeAction: action }),
 
   reset: () => set(INITIAL),
 }))

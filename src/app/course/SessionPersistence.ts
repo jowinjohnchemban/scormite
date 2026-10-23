@@ -1,11 +1,11 @@
 /**
- * Keeps a course's progress across page reloads, the way an LMS keeps a
+ * Keeps a course's progress while the page is open, the way an LMS keeps a
  * learner's record: every SCO's stored attempt, per-item progress, the
- * current item, and (SCORM 2004) the sequencing engine's state.
+ * current item, and (SCORM 2004) the sequencing engine's state. Closing a
+ * package and opening it again resumes it; reloading the page starts fresh,
+ * so a reload is always a clean slate for testing.
  *
- * Saved in this browser only (IndexedDB) — nothing leaves the machine. When
- * IndexedDB is unavailable (private browsing, blocked storage), saving
- * quietly does nothing and every open starts fresh.
+ * Kept in memory only — nothing is written to disk or leaves the machine.
  */
 
 import type { AttemptRecord } from '@/features/runtime'
@@ -22,70 +22,29 @@ export interface SessionSnapshot {
   sequencingState?: string
 }
 
-/** Minimal async key-value storage, so persistence can be tested without IndexedDB. */
+/** Minimal async key-value storage behind the persistence. */
 export interface KeyValueStore {
   get(key: string): Promise<unknown>
   set(key: string, value: unknown): Promise<void>
   delete(key: string): Promise<void>
 }
 
-const DB_NAME = 'scormite'
-const STORE = 'course-sessions'
+/** The IndexedDB database where earlier versions saved progress across reloads. */
+const LEGACY_DB_NAME = 'scormite'
 
-/** IndexedDB-backed store; every method degrades to a no-op when IndexedDB is unavailable. */
-export class IndexedDbStore implements KeyValueStore {
-  private db: Promise<IDBDatabase | null> | null = null
-
-  private open(): Promise<IDBDatabase | null> {
-    this.db ??= new Promise((resolve) => {
-      if (typeof indexedDB === 'undefined') {
-        resolve(null)
-        return
-      }
-      try {
-        const request = indexedDB.open(DB_NAME, 1)
-        request.onupgradeneeded = () => request.result.createObjectStore(STORE)
-        request.onsuccess = () => resolve(request.result)
-        request.onerror = () => resolve(null)
-        request.onblocked = () => resolve(null)
-      } catch {
-        resolve(null)
-      }
-    })
-    return this.db
-  }
-
-  private async run<T>(
-    mode: IDBTransactionMode,
-    action: (store: IDBObjectStore) => IDBRequest<T>,
-  ): Promise<T | undefined> {
-    const db = await this.open()
-    if (!db) return undefined
-    return new Promise((resolve) => {
-      try {
-        const request = action(db.transaction(STORE, mode).objectStore(STORE))
-        request.onsuccess = () => resolve(request.result)
-        request.onerror = () => resolve(undefined)
-      } catch {
-        resolve(undefined)
-      }
-    })
-  }
-
-  async get(key: string): Promise<unknown> {
-    return this.run('readonly', (store) => store.get(key))
-  }
-
-  async set(key: string, value: unknown): Promise<void> {
-    await this.run('readwrite', (store) => store.put(value, key))
-  }
-
-  async delete(key: string): Promise<void> {
-    await this.run('readwrite', (store) => store.delete(key))
+/**
+ * Delete progress that earlier versions saved across reloads, so none lingers
+ * in this browser. Best effort: does nothing where IndexedDB is unavailable.
+ */
+export function forgetProgressSavedAcrossReloads(): void {
+  try {
+    globalThis.indexedDB?.deleteDatabase(LEGACY_DB_NAME)
+  } catch {
+    // Blocked storage: there is nothing saved to forget.
   }
 }
 
-/** In-memory store, for tests and as an explicit "do not persist" choice. */
+/** In-memory store: what it holds lasts as long as the page. */
 export class MemoryStore implements KeyValueStore {
   private readonly values = new Map<string, unknown>()
   get(key: string): Promise<unknown> {
