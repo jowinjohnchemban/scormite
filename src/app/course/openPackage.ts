@@ -11,11 +11,12 @@ import { cachePackageFiles } from '@/features/player'
 import type { SequencingOptions } from '@/features/runtime'
 import type { LaunchableItem, Manifest, Package, ScormEdition, ScormVersion } from '@/shared/types'
 import { CourseSession } from './CourseSession'
-import { forgetProgressSavedAcrossReloads, MemoryStore, packageKey, SessionPersistence } from './SessionPersistence'
+import { deleteExpiredProgress, IndexedDbStore, packageKey, SessionPersistence } from './SessionPersistence'
 
-/** Progress lasts as long as the page: reopening a package resumes it; a reload starts fresh. */
-const progressStore = new MemoryStore()
-forgetProgressSavedAcrossReloads()
+/** Saved progress lives in this browser's IndexedDB for a day; older progress is deleted at start-up. */
+const progressStore = new IndexedDbStore()
+// Awaited before any session reads or saves, so the cleanup never races a fresh save.
+const expiredDeleted = deleteExpiredProgress(progressStore)
 
 export interface ParsedPackage {
   name: string
@@ -90,14 +91,15 @@ function sequencingFor(pkg: Package): SequencingOptions | null {
 }
 
 /**
- * The course session for an opened package, resuming the progress it made
- * earlier in this page, if any.
+ * The course session for an opened package, resuming progress saved in this
+ * browser in the last 24 hours, if any.
  */
 export async function createCourseSession(
   pkg: Package,
   items: LaunchableItem[],
   persistenceKey: string,
 ): Promise<CourseSession> {
+  await expiredDeleted
   const persistence = new SessionPersistence(progressStore, persistenceKey)
   const saved = await persistence.load()
   return new CourseSession(pkg, items, sequencingFor(pkg), persistence, saved)

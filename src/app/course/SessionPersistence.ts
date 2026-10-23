@@ -1,15 +1,20 @@
 /**
- * Keeps a course's progress while the page is open, the way an LMS keeps a
+ * Keeps a course's progress across page reloads, the way an LMS keeps a
  * learner's record: every SCO's stored attempt, per-item progress, the
- * current item, and (SCORM 2004) the sequencing engine's state. Closing a
- * package and opening it again resumes it; reloading the page starts fresh,
- * so a reload is always a clean slate for testing.
+ * current item, and (SCORM 2004) the sequencing engine's state.
  *
- * Kept in memory only — nothing is written to disk or leaves the machine.
+ * Saved in this browser only (IndexedDB) — nothing leaves the machine — and
+ * only for a day: progress not saved again within PROGRESS_TTL_MS of its last
+ * save is invalid, and is deleted when it is read and on every start-up.
+ * When IndexedDB is unavailable (private browsing, blocked storage), saving
+ * quietly does nothing and every open starts fresh.
  */
 
 import type { AttemptRecord } from '@/features/runtime'
 import type { CmiSummary } from './summarizeCmi'
+
+/** How long saved progress stays valid after its last save: 24 hours. */
+export const PROGRESS_TTL_MS = 24 * 60 * 60 * 1000
 
 export interface SessionSnapshot {
   /** Bumped when the shape changes; older snapshots are ignored. */
@@ -22,29 +27,80 @@ export interface SessionSnapshot {
   sequencingState?: string
 }
 
-/** Minimal async key-value storage behind the persistence. */
+/** Minimal async key-value storage, so persistence can be tested without IndexedDB. */
 export interface KeyValueStore {
   get(key: string): Promise<unknown>
   set(key: string, value: unknown): Promise<void>
   delete(key: string): Promise<void>
+  keys(): Promise<string[]>
 }
 
-/** The IndexedDB database where earlier versions saved progress across reloads. */
-const LEGACY_DB_NAME = 'scormite'
+const DB_NAME = 'scormite'
+const STORE = 'course-sessions'
 
-/**
- * Delete progress that earlier versions saved across reloads, so none lingers
- * in this browser. Best effort: does nothing where IndexedDB is unavailable.
- */
-export function forgetProgressSavedAcrossReloads(): void {
-  try {
-    globalThis.indexedDB?.deleteDatabase(LEGACY_DB_NAME)
-  } catch {
-    // Blocked storage: there is nothing saved to forget.
+/** IndexedDB-backed store; every method degrades to a no-op when IndexedDB is unavailable. */
+export class IndexedDbStore implements KeyValueStore {
+  private db: Promise<IDBDatabase | null> | null = null
+
+  private open(): Promise<IDBDatabase | null> {
+    this.db ??= new Promise((resolve) => {
+      if (typeof indexedDB === 'undefined') {
+        resolve(null)
+        return
+      }
+      try {
+        const request = indexedDB.open(DB_NAME, 1)
+        request.onupgradeneeded = () => request.result.createObjectStore(STORE)
+        request.onsuccess = () => resolve(request.result)
+        request.onerror = () => resolve(null)
+        request.onblocked = () => resolve(null)
+      } catch {
+        resolve(null)
+      }
+    })
+    return this.db
+  }
+
+  private async run<T>(
+    mode: IDBTransactionMode,
+    action: (store: IDBObjectStore) => IDBRequest<T>,
+  ): Promise<T | undefined> {
+    const db = await this.open()
+    if (!db) return undefined
+    // Settles when the transaction commits, not when its request succeeds: a
+    // write is only done once it can no longer be rolled back.
+    return new Promise((resolve) => {
+      try {
+        const transaction = db.transaction(STORE, mode)
+        const request = action(transaction.objectStore(STORE))
+        transaction.oncomplete = () => resolve(request.result)
+        transaction.onabort = () => resolve(undefined)
+        transaction.onerror = () => resolve(undefined)
+      } catch {
+        resolve(undefined)
+      }
+    })
+  }
+
+  async get(key: string): Promise<unknown> {
+    return this.run('readonly', (store) => store.get(key))
+  }
+
+  async set(key: string, value: unknown): Promise<void> {
+    await this.run('readwrite', (store) => store.put(value, key))
+  }
+
+  async delete(key: string): Promise<void> {
+    await this.run('readwrite', (store) => store.delete(key))
+  }
+
+  async keys(): Promise<string[]> {
+    const keys = await this.run('readonly', (store) => store.getAllKeys())
+    return (keys ?? []).filter((key): key is string => typeof key === 'string')
   }
 }
 
-/** In-memory store: what it holds lasts as long as the page. */
+/** In-memory store, for tests and as an explicit "do not persist" choice. */
 export class MemoryStore implements KeyValueStore {
   private readonly values = new Map<string, unknown>()
   get(key: string): Promise<unknown> {
@@ -58,6 +114,9 @@ export class MemoryStore implements KeyValueStore {
     this.values.delete(key)
     return Promise.resolve()
   }
+  keys(): Promise<string[]> {
+    return Promise.resolve([...this.values.keys()])
+  }
 }
 
 function isSnapshot(value: unknown): value is SessionSnapshot {
@@ -65,8 +124,39 @@ function isSnapshot(value: unknown): value is SessionSnapshot {
     typeof value === 'object' &&
     value !== null &&
     (value as { version?: unknown }).version === 1 &&
-    typeof (value as { attempts?: unknown }).attempts === 'object'
+    typeof (value as { attempts?: unknown }).attempts === 'object' &&
+    typeof (value as { savedAt?: unknown }).savedAt === 'number'
   )
+}
+
+/**
+ * Whether a snapshot is still valid at `now`: saved less than PROGRESS_TTL_MS
+ * ago. A save time that is not a finite number, or later than now (the clock
+ * was moved back), is invalid — it could otherwise stay valid indefinitely.
+ */
+export function isFresh(snapshot: SessionSnapshot, now = Date.now()): boolean {
+  const { savedAt } = snapshot
+  return Number.isFinite(savedAt) && savedAt <= now && now - savedAt < PROGRESS_TTL_MS
+}
+
+/**
+ * Delete every saved progress that has expired (or is unreadable), for all
+ * packages — so no progress older than a day stays in this browser.
+ */
+export async function deleteExpiredProgress(store: KeyValueStore, now = Date.now()): Promise<number> {
+  let deleted = 0
+  try {
+    for (const key of await store.keys()) {
+      const value = await store.get(key)
+      if (!isSnapshot(value) || !isFresh(value, now)) {
+        await store.delete(key)
+        deleted++
+      }
+    }
+  } catch {
+    // Blocked storage: there is nothing saved to delete.
+  }
+  return deleted
 }
 
 /**
@@ -83,18 +173,24 @@ export async function packageKey(manifestXml: string, archiveSize: number): Prom
 export class SessionPersistence {
   private readonly store: KeyValueStore
   private readonly key: string
+  private readonly now: () => number
   private timer: ReturnType<typeof setTimeout> | null = null
   private pending: SessionSnapshot | null = null
 
-  constructor(store: KeyValueStore, key: string) {
+  constructor(store: KeyValueStore, key: string, now: () => number = Date.now) {
     this.store = store
     this.key = key
+    this.now = now
   }
 
+  /** The saved progress, or null — expired progress is deleted, not returned. */
   async load(): Promise<SessionSnapshot | null> {
     try {
       const value = await this.store.get(this.key)
-      return isSnapshot(value) ? value : null
+      if (!isSnapshot(value)) return null
+      if (isFresh(value, this.now())) return value
+      await this.store.delete(this.key)
+      return null
     } catch {
       return null
     }
@@ -121,7 +217,7 @@ export class SessionPersistence {
     }
   }
 
-  /** Forget the saved progress (Restart whole course). */
+  /** Forget the saved progress (Clear progress, Restart whole course). */
   async clear(): Promise<void> {
     if (this.timer !== null) clearTimeout(this.timer)
     this.timer = null

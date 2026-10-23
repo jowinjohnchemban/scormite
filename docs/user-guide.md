@@ -54,16 +54,16 @@ course**.
   continues the same attempt with its data (see
   [SCORM support](scorm-support.md#lms-behaviour-scormite-reproduces)).
 - **New attempt** — discard its saved data and start it fresh.
-- **Restart whole course** — discard all saved data and start from the
-  beginning.
+- **Restart course and clear progress** — delete all saved data and start
+  from the beginning.
 
 Leaving an item and coming back to it also resumes it, as on an LMS.
 
-Progress is also kept while the page is open: close the package and open the
-same one again, and SCORMite resumes at the item you were on, with each item's
-saved data. **Start fresh** on the notice that says so, or **Restart whole
-course**, forgets it, and reloading the page always starts fresh — nothing is
-stored in the browser between visits.
+Progress is also saved in this browser for 24 hours: reopen the same package
+— even after reloading the page — and SCORMite resumes at the item you were
+on, with each item's saved data, and says so. **Clear progress** on that notice,
+or **Restart course and clear progress**, deletes it. Progress not saved again
+within 24 hours is invalid and is deleted.
 
 ## 4. Read what the course reports
 

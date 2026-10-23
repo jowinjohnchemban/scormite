@@ -82,9 +82,9 @@ export class CourseSession {
     const course = useCourseStore.getState()
     course.setCourse([...this.items], false)
 
-    // Progress from an earlier open of this package in this page: restore
-    // the attempts and resume where the learner was, as an LMS does when a
-    // course is reopened.
+    // Progress saved by an earlier open of this package (within the last
+    // 24 hours): restore the attempts and resume where the learner was, as
+    // an LMS does when a course is reopened.
     const saved = this.saved
     this.saved = null
     if (saved) {
@@ -113,7 +113,11 @@ export class CourseSession {
     const when = new Date(saved.savedAt).toLocaleString()
     useCourseStore
       .getState()
-      .setNotice(`Resumed the progress from ${when}. Reloading the page also starts fresh.`, 'info', 'start-fresh')
+      .setNotice(
+        `Resumed the progress saved on ${when}. Saved progress is cleared 24 hours after it was last saved.`,
+        'info',
+        'clear-progress',
+      )
   }
 
   /**

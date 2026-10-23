@@ -56,7 +56,7 @@ export function App() {
   const dismissNotice = useCallback(() => setNotice(null), [setNotice])
   const noticeAction = useCourseStore((s) => s.noticeAction)
   const { restartCourse } = session
-  const startFresh = useMemo(() => ({ label: 'Start fresh', onClick: restartCourse }), [restartCourse])
+  const clearProgress = useMemo(() => ({ label: 'Clear progress', onClick: restartCourse }), [restartCourse])
   const draggingFile = useWindowFileDrop(true, (file) => void session.loadFile(file))
 
   const playerFrameStyle =
@@ -139,7 +139,7 @@ export function App() {
         message={notice}
         onDismiss={dismissNotice}
         tone={noticeTone}
-        {...(noticeAction === 'start-fresh' ? { action: startFresh } : {})}
+        {...(noticeAction === 'clear-progress' ? { action: clearProgress } : {})}
       />
       <main ref={mainRef} className="relative min-h-0 flex-1 overflow-hidden">
         {/*

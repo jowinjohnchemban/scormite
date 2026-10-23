@@ -34,11 +34,11 @@ All notable changes to SCORMite are recorded here. The format follows
 
 ### Changed
 
-- **Reloading the page starts fresh.** Progress is kept while the page is
-  open — closing a package and opening it again resumes it — but no longer
-  survives a reload, and nothing is stored in the browser between visits;
-  progress earlier versions saved is deleted. The resume notice has a
-  **Start fresh** button that discards the resumed progress.
+- **Saved progress expires after 24 hours.** Progress not saved again within
+  24 hours is invalid: it no longer resumes, and it is deleted from the
+  browser when SCORMite starts. The resume notice has a **Clear progress**
+  button, and the Restart menu's **Restart course and clear progress** (now
+  also offered for single-item packages) deletes it too.
 
 ### Fixed
 

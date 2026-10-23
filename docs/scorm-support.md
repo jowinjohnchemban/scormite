@@ -69,14 +69,15 @@ starts from follows each version's rules:
 _New attempt_ discards one SCO's data; _Restart whole course_ discards all
 of it.
 
-**Saved progress.** Like an LMS keeping a learner record, SCORMite keeps
+**Saved progress.** Like an LMS keeping a learner record, SCORMite saves
 each SCO's attempt, per-item progress, the current item, and — for SCORM
-2004 — the sequencing engine's state on every Commit, Terminate, and SCO
-change, for as long as the page is open. Reopening the same package (same
-manifest and zip size) resumes where you were, with a notice; its _Start
-fresh_ button or _Restart whole course_ forgets it, and reloading the page
-starts fresh. It is kept in
-memory only: nothing is uploaded or stored in the browser.
+2004 — the sequencing engine's state in this browser (IndexedDB) on every
+Commit, Terminate, and SCO change. Reopening the same package (same
+manifest and zip size) within 24 hours of the last save resumes where you
+were, with a notice; its _Clear progress_ button or _Restart course and
+clear progress_ deletes it. Progress older than 24 hours is invalid and is
+deleted when SCORMite starts. Nothing is uploaded, and private browsing
+modes that block IndexedDB simply start fresh each time.
 
 **Breakpoints** hold `SetValue` / `Commit` calls (the SCO is answered
 `true` immediately; the SCORM API cannot wait). Held calls are applied in

@@ -17,13 +17,13 @@ describe('SessionAlert', () => {
     const onClick = vi.fn()
     render(
       <SessionAlert
-        message="Resumed the progress from today."
+        message="Resumed the progress saved today."
         tone="info"
         onDismiss={onDismiss}
-        action={{ label: 'Start fresh', onClick }}
+        action={{ label: 'Clear progress', onClick }}
       />,
     )
-    fireEvent.click(screen.getByRole('button', { name: 'Start fresh' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Clear progress' }))
     expect(onClick).toHaveBeenCalledOnce()
     fireEvent.click(screen.getByRole('button', { name: 'Dismiss message' }))
     expect(onDismiss).toHaveBeenCalledOnce()
