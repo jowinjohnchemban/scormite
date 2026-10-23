@@ -37,7 +37,14 @@ const bounded = (value: unknown, fallback: number, max: number) =>
   Math.min(Math.max(Math.trunc(Number(value)) || fallback, 1), max)
 
 /** The package path of a service-worker URL (`/scorm-files/{id}/a/b.js` → `a/b.js`). */
-const packagePath = (url: string) => decodeURIComponent(url.replace(/^.*?\/scorm-files\/[^/]+\//, ''))
+function packagePath(url: string): string {
+  const path = url.replace(/^.*?\/scorm-files\/[^/]+\//, '')
+  try {
+    return decodeURIComponent(path)
+  } catch {
+    return path // a course can request a path that is not valid percent-encoding
+  }
+}
 
 const untrustedRead = { readOnlyHint: true, untrustedContentHint: true }
 
@@ -175,7 +182,7 @@ export function createQaTools(host: ToolHost): ModelContextTool[] {
         const response = await fetch(packageLaunchUrl(session.pkg.id, path), { signal })
         if (!response.ok) return { error: `The file could not be read (HTTP ${response.status}).` }
         const type = response.headers.get('content-type') ?? ''
-        if (!TEXT_FILE.test(path) && !/^text\/|json|xml|javascript|svg/.test(type)) {
+        if (!TEXT_FILE.test(path) && !/^(text\/.*|.*(json|xml|javascript|svg).*)$/.test(type)) {
           const size = (await response.blob()).size
           return { path, binary: true, contentType: type, bytes: size }
         }
@@ -329,8 +336,20 @@ export function createQaTools(host: ToolHost): ModelContextTool[] {
           case 'list':
             return list()
           case 'add': {
-            const draft: BreakpointDraft = { kind: input['kind'] as BreakpointDraft['kind'] }
+            const kind = input['kind']
+            if (
+              kind !== 'api-call' &&
+              kind !== 'cmi-set' &&
+              kind !== 'score-threshold' &&
+              kind !== 'objective-update'
+            ) {
+              return { error: 'kind must be api-call, cmi-set, score-threshold, or objective-update.' }
+            }
+            const draft: BreakpointDraft = { kind }
             const method = string(input['method'])
+            if (method !== undefined && method !== 'SetValue' && method !== 'Commit') {
+              return { error: 'method must be SetValue or Commit.' }
+            }
             const element = string(input['element'])
             const value = string(input['value'])
             if (method) draft.method = method as ScormApiMethod

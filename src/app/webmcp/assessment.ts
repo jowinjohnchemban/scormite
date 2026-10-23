@@ -35,7 +35,7 @@ export interface AssessmentData {
 /** `{prefix}.{n}.{rest}` entries grouped by n, e.g. cmi.interactions.0.id → {0: {id}}. */
 function grouped(cmi: Record<string, string>, prefix: string): Map<number, Record<string, string>> {
   const groups = new Map<number, Record<string, string>>()
-  const pattern = new RegExp(`^${prefix.replace(/\./g, '\\.')}\\.(\\d+)\\.(.+)$`)
+  const pattern = new RegExp(`^${prefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\.(\\d+)\\.(.+)$`)
   for (const [key, value] of Object.entries(cmi)) {
     const match = pattern.exec(key)
     if (!match) continue

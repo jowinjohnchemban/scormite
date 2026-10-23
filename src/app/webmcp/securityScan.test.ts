@@ -67,6 +67,19 @@ describe('scanText', () => {
     ])
   })
 
+  it('follows submit-button formaction and an external base URL', () => {
+    const button = `<form action="done.html"><button formaction="https://collect.example/">Send</button></form>`
+    expect(scanText('a.html', button)[0]).toMatchObject({
+      rule: 'external-form',
+      message: expect.stringContaining('submit button'),
+    })
+    const based = `<html><head><base href="https://collect.example/"></head><body>
+      <form action="submit"></form><a href="#top">Top</a></body></html>`
+    expect(scanText('b.html', based)).toEqual([
+      expect.objectContaining({ rule: 'external-form', message: expect.stringContaining("the page's base") }),
+    ])
+  })
+
   it('finds script in SVG images only', () => {
     expect(rules(scanText('img/a.svg', '<svg onload="alert(1)"></svg>'))).toEqual(['svg-script'])
     expect(rules(scanText('index.html', '<script>var a = 1</script>'))).toEqual([])

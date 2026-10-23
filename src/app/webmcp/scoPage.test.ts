@@ -102,3 +102,34 @@ describe('interactWithSco', () => {
     expect(interactWithSco(doc, refOf('capital'), 'select', 'Rome')).toMatch(/no option "Rome"/)
   })
 })
+
+describe('a page in a real iframe', () => {
+  it('reads and operates fields that belong to the frame’s window', () => {
+    const frame = document.createElement('iframe')
+    document.body.append(frame)
+    const inner = frame.contentDocument!
+    inner.body.innerHTML = `<label for="n">Name</label><input id="n" type="text" value="Ann">
+      <select id="c" aria-label="Capital"><option value="">Choose</option><option value="paris">Paris</option></select>
+      <label><input id="a" type="checkbox"> Agree</label>`
+    // The frame's elements are not instances of this window's constructors.
+    expect(inner.getElementById('n') instanceof HTMLInputElement).toBe(false)
+
+    const page = readScoPage(inner)
+    expect(page.controls).toEqual([
+      expect.objectContaining({ tag: 'input', name: 'Name', type: 'text', value: 'Ann' }),
+      expect.objectContaining({ tag: 'select', name: 'Capital', options: ['Choose', 'Paris'] }),
+      expect.objectContaining({ tag: 'input', name: 'Agree', type: 'checkbox', checked: false }),
+    ])
+    const [name, capital, agree] = page.controls.map((control) => control.ref)
+    expect(interactWithSco(inner, name!, 'type', 'Bea')).toBeNull()
+    expect(interactWithSco(inner, capital!, 'select', 'Paris')).toBeNull()
+    expect(interactWithSco(inner, agree!, 'check')).toBeNull()
+    expect(interactWithSco(inner, agree!, 'check')).toBeNull() // already checked: no toggle
+    expect(readScoPage(inner).controls.map((control) => control.value ?? control.checked)).toEqual([
+      'Bea',
+      'paris',
+      true,
+    ])
+    frame.remove()
+  })
+})

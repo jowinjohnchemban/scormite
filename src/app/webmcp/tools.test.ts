@@ -130,11 +130,14 @@ describe('WebMCP tools', () => {
       'check_references',
       'get_assessment_data',
       'scan_package_security',
+      'get_file_hashes',
       'call_scorm_api',
       'run_script_in_sco',
+      'wait_for',
     ])
     expect(tools.filter((t) => t.annotations?.consequentialHint).map((t) => t.name)).toEqual([
       'discard_and_restart',
+      'call_scorm_api',
       'run_script_in_sco',
       'open_package_from_url',
       'close_package',
@@ -223,5 +226,12 @@ describe('WebMCP tools', () => {
     expect(mode).toBe('advanced')
     advanced = false
     expect((await run('set_view_mode', { mode: 'advanced' }))['error']).toMatch(/1024 px/)
+  })
+
+  it('refuses breakpoints of an unknown kind or method', async () => {
+    expect((await run('manage_breakpoints', { action: 'add', kind: 'nope' }))['error']).toMatch(/kind must be/)
+    expect((await run('manage_breakpoints', { action: 'add', kind: 'api-call', method: 'GetValue' }))['error']).toMatch(
+      /method must be/,
+    )
   })
 })

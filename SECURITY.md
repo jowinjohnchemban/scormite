@@ -38,7 +38,7 @@ Knowing this helps tell a vulnerability from the design:
   running course page, call its SCORM API, and navigate, restart, set
   breakpoints, or open a package from a link. They act only in that tab, and a
   script run in the course has only the course's own access. Package content
-  they return is marked untrusted to the agent; discarding saved data, running
+  they return is marked untrusted to the agent; discarding saved data, setting it through the API, running
   a script, and opening or closing a package are marked consequential so the
   browser can ask the user first. A
   package runs with SCORMite's origin, so a malicious one could also register

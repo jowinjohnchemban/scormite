@@ -349,7 +349,7 @@ user's browser can read and drive the open session — the tools are listed in t
 Two rules keep agents safe. Tools that return package content — titles, CMI
 values, API arguments, manifest text — carry `untrustedContentHint`, since a
 package could embed instructions aimed at an agent. Tools that discard
-tracking data, run code in the SCO, or open or close a package carry
+tracking data, call the SCORM API, run code in the SCO, or open or close a package carry
 `consequentialHint`, so the browser can confirm with the user.
 `run_script_in_sco` runs with the SCO's own access and no more. A package
 runs with SCORMite's origin (the SCORM API requires it), so its scripts can

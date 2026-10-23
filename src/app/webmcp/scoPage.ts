@@ -26,6 +26,18 @@ export function scoDocument(doc: Document = document): Document | null {
 
 const clean = (text: string | null | undefined) => (text ?? '').replace(/\s+/g, ' ').trim()
 
+/**
+ * Whether an element is a given HTML element. `instanceof HTMLInputElement`
+ * is false for the SCO's elements: they belong to the iframe's window, whose
+ * constructors are not SCORMite's.
+ */
+function isElement<K extends keyof HTMLElementTagNameMap>(
+  element: Element,
+  tag: K,
+): element is HTMLElementTagNameMap[K] {
+  return element.localName === tag && element.namespaceURI === 'http://www.w3.org/1999/xhtml'
+}
+
 function isHidden(element: Element): boolean {
   for (let node: Element | null = element; node; node = node.parentElement) {
     if (node.hasAttribute('hidden') || node.getAttribute('aria-hidden') === 'true') return true
@@ -56,15 +68,12 @@ export function accessibleName(element: Element): string {
   }
   const wrapping = clean(element.closest('label')?.textContent)
   if (wrapping) return wrapping
-  if (element instanceof HTMLImageElement) return clean(element.alt)
-  if (element instanceof HTMLInputElement && ['button', 'submit', 'reset'].includes(element.type)) {
+  if (isElement(element, 'img')) return clean(element.alt)
+  if (isElement(element, 'input') && ['button', 'submit', 'reset'].includes(element.type)) {
     return clean(element.value)
   }
   // A form field's content (a select's options, a field's value) is not its name.
-  const isField =
-    element instanceof HTMLSelectElement ||
-    element instanceof HTMLTextAreaElement ||
-    element instanceof HTMLInputElement
+  const isField = isElement(element, 'select') || isElement(element, 'textarea') || isElement(element, 'input')
   return (
     (isField ? '' : clean(element.textContent)) ||
     clean(element.getAttribute('title')) ||
@@ -130,13 +139,13 @@ export function readScoPage(doc: Document, maxChars = 8000): ScoPage {
     const control: ScoControl = { ref, tag: element.tagName.toLowerCase(), name: accessibleName(element) }
     const role = element.getAttribute('role')
     if (role) control.role = role
-    if (element instanceof HTMLInputElement) {
+    if (isElement(element, 'input')) {
       control.type = element.type
       if (element.type === 'checkbox' || element.type === 'radio') control.checked = element.checked
       else control.value = element.value
-    } else if (element instanceof HTMLTextAreaElement) {
+    } else if (isElement(element, 'textarea')) {
       control.value = element.value
-    } else if (element instanceof HTMLSelectElement) {
+    } else if (isElement(element, 'select')) {
       control.value = element.value
       control.options = [...element.options].map((option) => clean(option.textContent) || option.value)
     } else if (element.getAttribute('aria-checked') !== null) {
@@ -196,14 +205,16 @@ export function interactWithSco(doc: Document, ref: string, action: ScoAction, v
   const element = doc.querySelector<HTMLElement>(`[${REF}="${CSS.escape(ref)}"]`)
   if (!element) return `No control "${ref}" on the current page. Call read_sco_page again — the page may have changed.`
   if ((element as HTMLButtonElement).disabled) return `Control "${ref}" is disabled.`
-  const fire = (type: string) => element.dispatchEvent(new Event(type, { bubbles: true }))
+  // An event from the SCO's own window, as its scripts expect.
+  const EventType = element.ownerDocument.defaultView?.Event ?? Event
+  const fire = (type: string) => element.dispatchEvent(new EventType(type, { bubbles: true }))
 
   switch (action) {
     case 'click':
       element.click()
       return null
     case 'type':
-      if (!(element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement)) {
+      if (!(isElement(element, 'input') || isElement(element, 'textarea'))) {
         return `Control "${ref}" is not a text field.`
       }
       element.focus()
@@ -212,7 +223,7 @@ export function interactWithSco(doc: Document, ref: string, action: ScoAction, v
       fire('change')
       return null
     case 'select': {
-      if (!(element instanceof HTMLSelectElement)) return `Control "${ref}" is not a select list.`
+      if (!isElement(element, 'select')) return `Control "${ref}" is not a select list.`
       const option = [...element.options].find((o) => o.value === value || clean(o.textContent) === clean(value))
       if (!option) return `Control "${ref}" has no option "${value}".`
       element.value = option.value
@@ -223,8 +234,7 @@ export function interactWithSco(doc: Document, ref: string, action: ScoAction, v
     case 'check':
     case 'uncheck': {
       const want = action === 'check'
-      const current =
-        element instanceof HTMLInputElement ? element.checked : element.getAttribute('aria-checked') === 'true'
+      const current = isElement(element, 'input') ? element.checked : element.getAttribute('aria-checked') === 'true'
       if (current !== want) element.click()
       return null
     }

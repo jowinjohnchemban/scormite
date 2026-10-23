@@ -44,13 +44,13 @@ export function pageText(html: string): PageText {
 
 /** The spoken text of a WebVTT or SRT caption file, without cue numbers or timings. */
 export function captionText(text: string): string {
-  return clean(
-    text
-      .split(/\r?\n/)
-      .filter((line) => !/^(WEBVTT|NOTE\b|STYLE\b|REGION\b)|-->|^\d+$/.test(line.trim()))
-      .map((line) => line.replace(/<[^>]+>/g, ''))
-      .join(' '),
-  )
+  const cues = text.split(/\r?\n/).filter((line) => {
+    const trimmed = line.trim()
+    const timing = trimmed.includes(' --> ')
+    return !(timing || /^\d+$/.test(trimmed) || /^(WEBVTT|NOTE|STYLE|REGION)\b/.test(trimmed))
+  })
+  // Cue text can carry markup (<v Narrator>, <i>); keep only its text.
+  return clean(new DOMParser().parseFromString(cues.join('\n'), 'text/html').body.textContent)
 }
 
 const URL_IN_CSS = /url\(\s*(['"]?)([^'")]+)\1\s*\)|@import\s+(['"])([^'"]+)\3/g

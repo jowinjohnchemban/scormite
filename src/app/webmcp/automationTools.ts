@@ -7,6 +7,7 @@
 import { usePackageStore } from '@/features/package-loader'
 import { useRuntimeStore } from '@/features/runtime'
 import type { ModelContextTool } from './modelContext'
+import { readBounded } from './readBounded'
 import { scoDocument } from './scoPage'
 import type { ToolHost } from './tools'
 
@@ -62,6 +63,15 @@ export function toJsonResult(value: unknown): unknown {
     : (JSON.parse(json) as unknown)
 }
 
+/** The text the running SCO's page shows: rendered text, without hidden elements or scripts. */
+function shownText(): string {
+  const body = scoDocument()?.body
+  if (!body) return ''
+  // innerText is the rendered text; environments without layout lack it.
+  const rendered = (body as { innerText?: string }).innerText
+  return typeof rendered === 'string' ? rendered : (body.textContent ?? '')
+}
+
 const delay = (ms: number, signal: AbortSignal) =>
   new Promise<void>((resolve, reject) => {
     const timer = setTimeout(resolve, ms)
@@ -92,7 +102,7 @@ export function createAutomationTools(host: ToolHost): ModelContextTool[] {
         },
         required: ['method'],
       },
-      annotations: { untrustedContentHint: true },
+      annotations: { untrustedContentHint: true, consequentialHint: true },
       execute: async (input) => {
         if (!host.session().pkg) return NO_PACKAGE
         const found = scormApi()
@@ -126,7 +136,7 @@ export function createAutomationTools(host: ToolHost): ModelContextTool[] {
       name: 'run_script_in_sco',
       title: "Run a script in the course's page",
       description:
-        "Run JavaScript in the running SCO's page and return its result (as JSON; elements as their HTML). The script is the body of an async function: use `return`, and `await` if needed; `document` and `window` are the SCO's. Use it for anything the other tools do not cover — inspect state the course keeps in its own variables, trigger its functions, drag and drop, fill a canvas, skip a video, or check layout. It runs with the same access the course's own scripts have.",
+        "Run JavaScript in the running SCO's page and return its result (as JSON; elements as their HTML). The script is the body of an async function: use `return`, and `await` if needed; `document` and `window` are the SCO's. Use it for anything the other tools do not cover — inspect state the course keeps in its own variables, trigger its functions, drag and drop, fill a canvas, skip a video, or check layout. It runs with the same access the course's own scripts have. timeoutMs only limits how long the tool waits for the result: a script still running after it keeps running, and one that never yields blocks the page.",
       inputSchema: {
         type: 'object',
         properties: {
@@ -151,7 +161,7 @@ export function createAutomationTools(host: ToolHost): ModelContextTool[] {
           const result = await Promise.race([
             run(),
             delay(timeout, signal).then(() => {
-              throw new Error(`The script did not finish within ${timeout} ms.`)
+              throw new Error(`No result within ${timeout} ms; the script may still be running.`)
             }),
           ])
           return { result: toJsonResult(result) }
@@ -174,7 +184,7 @@ export function createAutomationTools(host: ToolHost): ModelContextTool[] {
           timeoutMs: { type: 'integer', minimum: 100, maximum: 60000, description: 'Default 10000' },
         },
       },
-      annotations: { readOnlyHint: true },
+      annotations: { readOnlyHint: true, untrustedContentHint: true },
       execute: async (input, { signal }) => {
         if (!host.session().pkg) return NO_PACKAGE
         const text = string(input['text'])?.toLowerCase()
@@ -184,7 +194,7 @@ export function createAutomationTools(host: ToolHost): ModelContextTool[] {
         const timeout = Math.min(Math.max(Math.trunc(Number(input['timeoutMs'])) || 10000, 100), 60000)
         const started = Date.now()
         const met = () => {
-          if (text && !(scoDocument()?.body?.textContent ?? '').toLowerCase().includes(text)) return false
+          if (text && !shownText().toLowerCase().includes(text)) return false
           if (element) {
             const current = useRuntimeStore.getState().adapter?.getFlattenedCmi()[element] ?? ''
             if (value === undefined ? !current : current !== value) return false
@@ -236,14 +246,18 @@ export function createAutomationTools(host: ToolHost): ModelContextTool[] {
           }
         }
         if (!response.ok) return { error: `The server answered ${response.status}.` }
-        if (Number(response.headers.get('content-length')) > MAX_PACKAGE_BYTES) {
-          void response.body?.cancel()
-          return { error: 'The package is too large to open from a URL.' }
+        const bytes = await readBounded(response, MAX_PACKAGE_BYTES)
+        if (!bytes) return { error: 'The package is too large to open from a URL.' }
+        let name = url.pathname.split('/').pop() || 'package.zip'
+        try {
+          name = decodeURIComponent(name)
+        } catch {
+          // Keep the name as it is in the URL.
         }
-        const blob = await response.blob()
-        const name = decodeURIComponent(url.pathname.split('/').pop() || 'package.zip')
         const before = usePackageStore.getState().package?.id
-        await session.loadFile(new File([blob], /\.zip$/i.test(name) ? name : `${name}.zip`, { type: blob.type }))
+        await session.loadFile(
+          new File([bytes], /\.zip$/i.test(name) ? name : `${name}.zip`, { type: 'application/zip' }),
+        )
         const opened = usePackageStore.getState().package
         if (!opened || opened.id === before) {
           return { error: 'The file could not be opened as a SCORM package. Call get_session to see why.' }

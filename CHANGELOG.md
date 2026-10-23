@@ -26,7 +26,7 @@ All notable changes to SCORMite are recorded here. The format follows
   crypto-miners, hidden or packed code, ActiveX scripting, hidden external
   frames, credential forms, redirects, and service workers, plus SHA-256 hashes
   to check files with an antivirus engine. Package content is marked untrusted
-  to the agent; discarding data, running scripts, and opening or closing a
+  to the agent; discarding data, setting it through the API, running scripts, and opening or closing a
   package are marked consequential. Works where the
   browser supports WebMCP; deployments can enable the Chrome and Edge origin
   trials with `WEBMCP_ORIGIN_TRIAL_TOKENS`. The new [AI agents](docs/ai-agents.md)

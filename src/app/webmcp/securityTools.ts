@@ -8,6 +8,7 @@ import { usePackageStore } from '@/features/package-loader'
 import { packageLaunchUrl } from '@/features/player'
 import { useValidationStore } from '@/features/validation'
 import type { ModelContextTool } from './modelContext'
+import { readBounded } from './readBounded'
 import { SCANNED_TEXT, scanHead, scanPath, scanText, sha256, type SecurityFinding } from './securityScan'
 import type { ToolHost } from './tools'
 
@@ -38,7 +39,7 @@ export function createSecurityTools(host: ToolHost): ModelContextTool[] {
       name: 'scan_package_security',
       title: 'Scan the package for malware and abuse',
       description:
-        "An offline, rule-based security scan of every file in the package: programs and installers (also disguised as other files), macro documents, crypto-miners, obfuscated or packed scripts, ActiveX scripting, hidden external frames, password fields and forms that send data elsewhere, redirects and breaking out of the LMS window, and service workers that would run on the LMS's origin. It is not an antivirus engine: for a malware verdict, check the files' get_file_hashes against one. With record: true, the findings are also added to the Validation panel and the QA report.",
+        "An offline, rule-based security scan of every file in the package: programs and installers (also disguised as other files), macro documents, crypto-miners, obfuscated or packed scripts, ActiveX scripting, hidden external frames, password fields and forms that send data elsewhere, redirects and breaking out of the LMS window, and service workers that would run on the LMS's origin. It reviews a package already open (opening one starts its first item), so it is not a gate before running one. It is not an antivirus engine: for a malware verdict, check the files' get_file_hashes against one. With record: true, the findings are also added to the Validation panel and the QA report.",
       inputSchema: {
         type: 'object',
         properties: {
@@ -56,20 +57,27 @@ export function createSecurityTools(host: ToolHost): ModelContextTool[] {
         for (const path of usePackageStore.getState().filePaths) {
           if (!path.startsWith(prefix)) continue
           findings.push(...scanPath(path))
-          const response = await fetch(packageLaunchUrl(session.pkg.id, path), { signal })
+          const url = packageLaunchUrl(session.pkg.id, path)
+          const response = await fetch(url, { signal })
           if (!response.ok) continue
           scanned++
-          const length = Number(response.headers.get('content-length'))
-          if (SCANNED_TEXT.test(path) && !(length > MAX_TEXT_BYTES)) {
-            const bytes = new Uint8Array(await response.arrayBuffer())
-            findings.push(...scanHead(path, bytes))
-            if (bytes.length <= MAX_TEXT_BYTES) findings.push(...scanText(path, new TextDecoder().decode(bytes)))
+          const bytes = SCANNED_TEXT.test(path) ? await readBounded(response, MAX_TEXT_BYTES) : null
+          if (bytes) {
+            findings.push(...scanHead(path, bytes), ...scanText(path, new TextDecoder().decode(bytes)))
           } else {
-            findings.push(...scanHead(path, await head(response)))
+            // Not text, or too large to read whole: check its first bytes only.
+            const first = SCANNED_TEXT.test(path) ? await fetch(url, { signal }) : response
+            findings.push(...scanHead(path, await head(first)))
           }
         }
         if (input['record'] === true) {
           const validation = useValidationStore.getState()
+          // A new scan replaces what an earlier one recorded for these files.
+          for (const issue of validation.issues) {
+            if (issue.ruleId.startsWith('review.security.') && (issue.location ?? '').startsWith(prefix)) {
+              validation.removeIssue(issue.id)
+            }
+          }
           for (const finding of findings) {
             validation.addIssue({
               id: `review-${crypto.randomUUID()}`,
@@ -106,7 +114,7 @@ export function createSecurityTools(host: ToolHost): ModelContextTool[] {
           maxFiles: { type: 'integer', minimum: 1, maximum: 2000, description: 'Default 200' },
         },
       },
-      annotations: { readOnlyHint: true },
+      annotations: { readOnlyHint: true, untrustedContentHint: true },
       execute: async (input, { signal }) => {
         const session = host.session()
         if (!session.pkg) return NO_PACKAGE
@@ -128,12 +136,11 @@ export function createSecurityTools(host: ToolHost): ModelContextTool[] {
             files.push({ path, error: `Could not be read (${response.status}).` })
             continue
           }
-          if (Number(response.headers.get('content-length')) > MAX_HASH_BYTES) {
-            void response.body?.cancel()
+          const bytes = await readBounded(response, MAX_HASH_BYTES)
+          if (!bytes) {
             files.push({ path, error: 'Too large to hash here.' })
             continue
           }
-          const bytes = await response.arrayBuffer()
           files.push({ path, size: bytes.byteLength, sha256: await sha256(bytes) })
         }
         return { files, ...(selected.length > max ? { truncated: true, totalFiles: selected.length } : {}) }

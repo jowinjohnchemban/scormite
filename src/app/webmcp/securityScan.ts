@@ -197,10 +197,16 @@ function scanMarkup(path: string, html: string): SecurityFinding[] {
   const findings: SecurityFinding[] = []
   const add = (severity: SecuritySeverity, rule: string, message: string) =>
     findings.push({ severity, rule, file: path, message })
+  // A <base href> on another site sends every relative URL there too.
+  const base = doc.querySelector('base[href]')?.getAttribute('href') ?? null
+  const leaves = (url: string | null): url is string =>
+    url !== null &&
+    (isExternal(url) || (isExternal(base) && url.trim() !== '' && !/^(#|[a-z][a-z0-9+.-]*:)/i.test(url.trim())))
+  const where = (url: string) => (isExternal(url) ? url : `${url} (on ${base ?? ''}, the page's base)`)
 
   for (const frame of doc.querySelectorAll('iframe, frame, object, embed')) {
     const source = frame.getAttribute('src') ?? frame.getAttribute('data')
-    if (!isExternal(source)) continue
+    if (!leaves(source)) continue
     const style = (frame.getAttribute('style') ?? '').replace(/\s+/g, '').toLowerCase()
     const tiny = ['width', 'height'].some((size) => /^[01](px)?$/.test(frame.getAttribute(size)?.trim() ?? ''))
     if (
@@ -208,7 +214,11 @@ function scanMarkup(path: string, html: string): SecurityFinding[] {
       frame.hasAttribute('hidden') ||
       /display:none|visibility:hidden|width:[01]px|height:[01]px/.test(style)
     ) {
-      add('error', 'hidden-external-frame', `A hidden frame loads ${source} — a common sign of injected content.`)
+      add(
+        'error',
+        'hidden-external-frame',
+        `A hidden frame loads ${where(source)} — a common sign of injected content.`,
+      )
     }
   }
   if (doc.querySelector('input[type="password" i]')) {
@@ -220,7 +230,14 @@ function scanMarkup(path: string, html: string): SecurityFinding[] {
   }
   for (const form of doc.querySelectorAll('form')) {
     const action = form.getAttribute('action')
-    if (isExternal(action)) add('warning', 'external-form', `A form sends what the learner types to ${action}.`)
+    if (leaves(action)) add('warning', 'external-form', `A form sends what the learner types to ${where(action)}.`)
+  }
+  // A submit button's formaction overrides its form's action.
+  for (const button of doc.querySelectorAll('[formaction]')) {
+    const action = button.getAttribute('formaction')
+    if (leaves(action)) {
+      add('warning', 'external-form', `A submit button sends what the learner types to ${where(action)}.`)
+    }
   }
   for (const meta of doc.querySelectorAll('meta[http-equiv="refresh" i]')) {
     const target = /url\s*=\s*['"]?([^'";]+)/i.exec(meta.getAttribute('content') ?? '')?.[1] ?? null

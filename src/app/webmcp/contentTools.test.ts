@@ -77,6 +77,14 @@ describe('content tools', () => {
     ])
   })
 
+  it('marks text cut by the budget and lists files left out', async () => {
+    const result = await run('extract_course_text', { maxChars: 10 })
+    expect(result['files']).toEqual([
+      expect.objectContaining({ path: 'index.html', text: 'Teh course', truncated: true }),
+    ])
+    expect(result['notIncluded']).toEqual(['captions/intro.vtt'])
+  })
+
   it('searches every text file and rejects an invalid regular expression', async () => {
     const result = await run('search_package', { query: 'teh course' })
     expect(result['matches']).toEqual([

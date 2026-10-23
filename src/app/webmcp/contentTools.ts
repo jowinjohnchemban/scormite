@@ -27,6 +27,7 @@ import {
   type SearchMatch,
 } from './contentScan'
 import type { ModelContextTool } from './modelContext'
+import { readBounded } from './readBounded'
 import type { ToolHost } from './tools'
 
 const NO_PACKAGE = { error: 'No package is open. Ask the user to drop a SCORM .zip on the SCORMite page.' }
@@ -41,10 +42,8 @@ const bounded = (value: unknown, fallback: number, max: number) =>
 async function readText(packageId: string, path: string, signal: AbortSignal): Promise<string | null> {
   const response = await fetch(packageLaunchUrl(packageId, path), { signal })
   if (!response.ok) return null
-  const length = Number(response.headers.get('content-length'))
-  if (length > MAX_SCAN_BYTES) return null
-  const text = await response.text()
-  return text.length > MAX_SCAN_BYTES ? null : text
+  const bytes = await readBounded(response, MAX_SCAN_BYTES)
+  return bytes && new TextDecoder().decode(bytes)
 }
 
 export function createContentTools(host: ToolHost): ModelContextTool[] {
@@ -53,7 +52,7 @@ export function createContentTools(host: ToolHost): ModelContextTool[] {
       name: 'extract_course_text',
       title: 'Extract all the course text',
       description:
-        "The readable text of the whole package for content review — every HTML page (title, language, text, image alt text) and every caption file, plus the manifest's titles — without launching anything. Use it to review grammar, spelling, tone, terminology, and consistency; record problems with add_review_finding. Text built by scripts at run time is not included: use read_sco_page for the running page.",
+        "The readable text of the whole package for content review — every HTML page (title, language, text, image alt text) and every caption file, plus the manifest's titles — without launching anything. Use it to review grammar, spelling, tone, terminology, and consistency; record problems with add_review_finding. Text built by scripts at run time is not included: use read_sco_page for the running page. The text has a budget: files cut short are marked truncated and files left out are listed in notIncluded — review those with prefix before reporting a complete review.",
       inputSchema: {
         type: 'object',
         properties: {
@@ -87,9 +86,12 @@ export function createContentTools(host: ToolHost): ModelContextTool[] {
             continue
           }
           if (CAPTION_FILE.test(path)) {
-            const text = captionText(raw).slice(0, budget)
+            const full = captionText(raw)
+            const text = full.slice(0, budget)
             budget -= text.length
-            if (text) files.push({ path, kind: 'captions', text })
+            if (text) {
+              files.push({ path, kind: 'captions', text, ...(text.length < full.length ? { truncated: true } : {}) })
+            }
           } else {
             const page = pageText(raw)
             const text = page.text.slice(0, budget)
@@ -100,6 +102,7 @@ export function createContentTools(host: ToolHost): ModelContextTool[] {
               ...(page.title ? { title: page.title } : {}),
               ...(page.lang ? { lang: page.lang } : {}),
               text,
+              ...(text.length < page.text.length ? { truncated: true } : {}),
               ...(page.imageAlts.length ? { imageAlts: page.imageAlts } : {}),
             })
           }

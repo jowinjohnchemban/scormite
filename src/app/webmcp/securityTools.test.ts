@@ -64,6 +64,7 @@ describe('security tools', () => {
 
   it('records the findings as review issues when asked', async () => {
     await run('scan_package_security', { prefix: 'js/', record: true })
+    await run('scan_package_security', { prefix: 'js/', record: true }) // replaces, not duplicates
     expect(useValidationStore.getState().issues).toEqual([
       expect.objectContaining({
         source: 'review',

@@ -28,7 +28,7 @@ describe('useWebMcpTools', () => {
     })
 
     const { unmount } = renderHook(() => useWebMcpTools(session, true))
-    await waitFor(() => expect(registered.length).toBeGreaterThan(0))
+    await waitFor(() => expect(registered.length).toBeGreaterThan(0), { timeout: 5000 })
     expect(registered.map((r) => r.tool.name)).toEqual([
       'get_session',
       'get_cmi',

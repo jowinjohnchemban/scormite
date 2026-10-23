@@ -128,8 +128,9 @@ example:
   and tracking values come from the package, which could contain text written
   to steer an agent. Tools that return them say so to the agent.
 - **Consequential tools ask first.** Discarding saved progress
-  (`discard_and_restart`), running a script in the course
-  (`run_script_in_sco`), and opening or closing a package
+  (`discard_and_restart`), changing tracking data through the API
+  (`call_scorm_api`), running a script in the course (`run_script_in_sco`), and
+  opening or closing a package
   (`open_package_from_url`, `close_package`) are marked consequential, so your
   browser can ask you before they run.
 - **Scripts run with the course's own access.** `run_script_in_sco` runs in the
@@ -137,7 +138,9 @@ example:
   agent no more access than the package has.
 - **Only open packages you trust.** A package runs with SCORMite's origin (the
   SCORM API requires it), so a malicious one could reach the page — including
-  WebMCP. Scan unfamiliar packages first (`scan_package_security`).
+  WebMCP. Opening a package starts its first item, so check an unfamiliar zip
+  with an antivirus engine before you open it; `scan_package_security` reviews
+  a package once it is open, it does not guard opening it.
 
 ## FAQ
 
@@ -153,8 +156,11 @@ the SCORMite tab — it uses your existing account.
 **Can an agent check grammar and spelling?**
 Yes. SCORMite gives the agent the text; the agent's own model reviews it.
 `extract_course_text` returns the text of every page and caption file and the
-manifest's titles at once, and `read_sco_page` the text of the running page,
-including text the course builds with scripts. Ask the agent to record each
+manifest's titles, and `read_sco_page` the text of the running page, including
+text the course builds with scripts. A large course can exceed the text budget
+of one call: files cut short are marked `truncated` and files left out are
+listed in `notIncluded`, so ask the agent to review those too (with `prefix`)
+before it calls the review complete. Ask the agent to record each
 mistake with `add_review_finding` so you get a list in the Validation panel and
 the report.
 
@@ -189,7 +195,8 @@ like images or scripts), Office documents with macros, browser crypto-miners,
 code hidden by encoding or packing, ActiveX scripting, hidden frames that load
 other sites, password fields and forms that send data elsewhere, redirects and
 breaking out of the LMS window, and service workers. It runs in your browser,
-offline. It is not an antivirus engine: for a malware verdict, get the files'
+offline, on a package you have opened — so it is a review check, not a gate:
+opening a package starts its first item. It is not an antivirus engine: for a malware verdict, get the files'
 SHA-256 hashes with `get_file_hashes` and check them with one (such as ClamAV),
 or a malware database such as VirusTotal.
 
