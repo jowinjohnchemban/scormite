@@ -100,6 +100,8 @@ describe('interactWithSco', () => {
     expect(interactWithSco(doc, 'e999', 'click')).toMatch(/read_sco_page again/)
     expect(interactWithSco(doc, refOf('submit'), 'type', 'x')).toMatch(/not a text field/)
     expect(interactWithSco(doc, refOf('capital'), 'select', 'Rome')).toMatch(/no option "Rome"/)
+    expect(interactWithSco(doc, refOf('agree'), 'type', 'x')).toMatch(/not a text field/)
+    expect(interactWithSco(doc, refOf('name'), 'check')).toMatch(/cannot be checked/)
   })
 })
 

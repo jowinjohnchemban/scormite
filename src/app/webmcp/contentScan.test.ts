@@ -25,6 +25,23 @@ describe('captionText', () => {
       captionText('1\n00:00:00,000 --> 00:00:02,000\nFirst line\n\n2\n00:00:02,000 --> 00:00:03,000\nSecond'),
     ).toBe('First line Second')
   })
+
+  it('skips the header and whole NOTE, STYLE, and REGION blocks', () => {
+    const vtt = [
+      'WEBVTT - Lesson 1',
+      'Kind: captions',
+      '',
+      'STYLE',
+      '::cue { color: yellow }',
+      '',
+      'NOTE reviewed',
+      'by the author',
+      '',
+      '00:00.000 --> 00:02.000',
+      'Only this.',
+    ].join('\n')
+    expect(captionText(vtt)).toBe('Only this.')
+  })
 })
 
 describe('references', () => {

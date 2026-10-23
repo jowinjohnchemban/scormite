@@ -8,7 +8,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { PackageSession } from '@/app/hooks/usePackageSession'
 import { usePackageStore } from '@/features/package-loader'
 import { useValidationStore } from '@/features/validation'
-import { createSecurityTools } from './securityTools'
+import { createSecurityTools, head } from './securityTools'
 import type { ToolHost } from './tools'
 
 const FILES: Record<string, string | Uint8Array<ArrayBuffer>> = {
@@ -60,6 +60,29 @@ describe('security tools', () => {
       'password-field index.html',
     ])
     expect(useValidationStore.getState().issues).toEqual([])
+  })
+
+  it('reports a file it cannot read and scans the rest', async () => {
+    usePackageStore.setState({ filePaths: ['broken.js', 'js/app.js'] })
+    const fetchMock = vi.mocked(fetch)
+    const original = fetchMock.getMockImplementation()!
+    fetchMock.mockImplementation(async (url) =>
+      String(url).endsWith('broken.js') ? Promise.reject(new TypeError('network')) : original(url),
+    )
+    const result = await run('scan_package_security')
+    expect(result).toMatchObject({ scannedFiles: 1, unreadable: ['broken.js'], summary: { warning: 1 } })
+  })
+
+  it('reads at least four bytes for signatures that span chunks', async () => {
+    const chunks = [new Uint8Array([0x7f, 0x45]), new Uint8Array([0x4c, 0x46, 0x02])]
+    const body = new ReadableStream<Uint8Array>({
+      pull(controller) {
+        const chunk = chunks.shift()
+        if (chunk) controller.enqueue(chunk)
+        else controller.close()
+      },
+    })
+    expect([...(await head(new Response(body)))]).toEqual([0x7f, 0x45, 0x4c, 0x46, 0x02])
   })
 
   it('records the findings as review issues when asked', async () => {

@@ -40,10 +40,15 @@ const bounded = (value: unknown, fallback: number, max: number) =>
   Math.min(Math.max(Math.trunc(Number(value)) || fallback, 1), max)
 
 async function readText(packageId: string, path: string, signal: AbortSignal): Promise<string | null> {
-  const response = await fetch(packageLaunchUrl(packageId, path), { signal })
-  if (!response.ok) return null
-  const bytes = await readBounded(response, MAX_SCAN_BYTES)
-  return bytes && new TextDecoder().decode(bytes)
+  try {
+    const response = await fetch(packageLaunchUrl(packageId, path), { signal })
+    if (!response.ok) return null
+    const bytes = await readBounded(response, MAX_SCAN_BYTES)
+    return bytes && new TextDecoder().decode(bytes)
+  } catch (error) {
+    if (signal.aborted) throw error
+    return null // an unreadable file is skipped, not the whole scan
+  }
 }
 
 export function createContentTools(host: ToolHost): ModelContextTool[] {

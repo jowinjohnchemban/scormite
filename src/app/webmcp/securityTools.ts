@@ -21,13 +21,21 @@ const MAX_FINDINGS = 500
 
 const string = (value: unknown): string | undefined => (typeof value === 'string' ? value : undefined)
 
-/** The first bytes of a response, without reading the rest. */
-async function head(response: Response): Promise<Uint8Array> {
+/** Bytes an executable signature needs. */
+const HEAD_BYTES = 4
+
+/** The first bytes of a response (at least HEAD_BYTES, unless it is shorter), without reading the rest. */
+export async function head(response: Response): Promise<Uint8Array> {
   const reader = response.body?.getReader()
   if (!reader) return new Uint8Array(await response.arrayBuffer()).subarray(0, 16)
+  const bytes: number[] = []
   try {
-    const { value } = await reader.read()
-    return value ?? new Uint8Array()
+    while (bytes.length < HEAD_BYTES) {
+      const { done, value } = await reader.read()
+      if (done) break
+      bytes.push(...value.subarray(0, 16 - bytes.length))
+    }
+    return new Uint8Array(bytes)
   } finally {
     void reader.cancel().catch(() => undefined)
   }
@@ -54,20 +62,32 @@ export function createSecurityTools(host: ToolHost): ModelContextTool[] {
         const prefix = string(input['prefix']) ?? ''
         const findings: SecurityFinding[] = []
         let scanned = 0
+        const unreadable: string[] = []
+        /** Text files too large to read whole: only their names and first bytes were checked. */
+        const headOnly: string[] = []
         for (const path of usePackageStore.getState().filePaths) {
           if (!path.startsWith(prefix)) continue
           findings.push(...scanPath(path))
           const url = packageLaunchUrl(session.pkg.id, path)
-          const response = await fetch(url, { signal })
-          if (!response.ok) continue
-          scanned++
-          const bytes = SCANNED_TEXT.test(path) ? await readBounded(response, MAX_TEXT_BYTES) : null
-          if (bytes) {
-            findings.push(...scanHead(path, bytes), ...scanText(path, new TextDecoder().decode(bytes)))
-          } else {
-            // Not text, or too large to read whole: check its first bytes only.
-            const first = SCANNED_TEXT.test(path) ? await fetch(url, { signal }) : response
-            findings.push(...scanHead(path, await head(first)))
+          try {
+            const response = await fetch(url, { signal })
+            if (!response.ok) {
+              unreadable.push(path)
+              continue
+            }
+            const text = SCANNED_TEXT.test(path)
+            const bytes = text ? await readBounded(response, MAX_TEXT_BYTES) : null
+            if (bytes) {
+              findings.push(...scanHead(path, bytes), ...scanText(path, new TextDecoder().decode(bytes)))
+            } else {
+              // Not text, or too large to read whole: check its first bytes only.
+              if (text) headOnly.push(path)
+              findings.push(...scanHead(path, await head(text ? await fetch(url, { signal }) : response)))
+            }
+            scanned++
+          } catch (error) {
+            if (signal.aborted) throw error
+            unreadable.push(path) // one unreadable file does not stop the scan
           }
         }
         if (input['record'] === true) {
@@ -93,6 +113,10 @@ export function createSecurityTools(host: ToolHost): ModelContextTool[] {
         for (const finding of findings) summary[finding.severity]++
         return {
           scannedFiles: scanned,
+          ...(headOnly.length
+            ? { headOnly, headOnlyNote: 'Too large to read whole; only name and first bytes checked.' }
+            : {}),
+          ...(unreadable.length ? { unreadable } : {}),
           summary,
           findings: findings.slice(0, MAX_FINDINGS),
           ...(findings.length > MAX_FINDINGS ? { truncated: true } : {}),

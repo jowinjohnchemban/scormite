@@ -246,7 +246,13 @@ export function createAutomationTools(host: ToolHost): ModelContextTool[] {
           }
         }
         if (!response.ok) return { error: `The server answered ${response.status}.` }
-        const bytes = await readBounded(response, MAX_PACKAGE_BYTES)
+        let bytes: Uint8Array<ArrayBuffer> | null
+        try {
+          bytes = await readBounded(response, MAX_PACKAGE_BYTES)
+        } catch (error) {
+          if (signal.aborted) throw error
+          return { error: 'The download was interrupted. Try again, or ask the user to drop the .zip on the page.' }
+        }
         if (!bytes) return { error: 'The package is too large to open from a URL.' }
         let name = url.pathname.split('/').pop() || 'package.zip'
         try {

@@ -44,11 +44,19 @@ export function pageText(html: string): PageText {
 
 /** The spoken text of a WebVTT or SRT caption file, without cue numbers or timings. */
 export function captionText(text: string): string {
-  const cues = text.split(/\r?\n/).filter((line) => {
+  const cues: string[] = []
+  // The WEBVTT header and NOTE, STYLE, and REGION blocks run to the next blank line.
+  let inMetadata = false
+  for (const line of text.split(/\r?\n/)) {
     const trimmed = line.trim()
-    const timing = trimmed.includes(' --> ')
-    return !(timing || /^\d+$/.test(trimmed) || /^(WEBVTT|NOTE|STYLE|REGION)\b/.test(trimmed))
-  })
+    if (!trimmed) {
+      inMetadata = false
+      continue
+    }
+    if (/^(WEBVTT|NOTE|STYLE|REGION)\b/.test(trimmed)) inMetadata = true
+    if (inMetadata || trimmed.includes(' --> ') || /^\d+$/.test(trimmed)) continue
+    cues.push(line)
+  }
   // Cue text can carry markup (<v Narrator>, <i>); keep only its text.
   return clean(new DOMParser().parseFromString(cues.join('\n'), 'text/html').body.textContent)
 }

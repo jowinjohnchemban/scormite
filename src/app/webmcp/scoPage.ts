@@ -200,6 +200,21 @@ function setNativeValue(element: HTMLInputElement | HTMLTextAreaElement, value: 
   else element.value = value
 }
 
+/** Input types that do not take typed text. */
+const NOT_TEXT = new Set([
+  'checkbox',
+  'radio',
+  'button',
+  'submit',
+  'reset',
+  'image',
+  'file',
+  'hidden',
+  'range',
+  'color',
+])
+const CHECKABLE_ROLES = new Set(['checkbox', 'radio', 'switch', 'menuitemcheckbox', 'menuitemradio'])
+
 /** Operate a control found by `readScoPage`. Returns an error message, or null when done. */
 export function interactWithSco(doc: Document, ref: string, action: ScoAction, value = ''): string | null {
   const element = doc.querySelector<HTMLElement>(`[${REF}="${CSS.escape(ref)}"]`)
@@ -214,7 +229,7 @@ export function interactWithSco(doc: Document, ref: string, action: ScoAction, v
       element.click()
       return null
     case 'type':
-      if (!(isElement(element, 'input') || isElement(element, 'textarea'))) {
+      if (!(isElement(element, 'textarea') || (isElement(element, 'input') && !NOT_TEXT.has(element.type)))) {
         return `Control "${ref}" is not a text field.`
       }
       element.focus()
@@ -234,6 +249,17 @@ export function interactWithSco(doc: Document, ref: string, action: ScoAction, v
     case 'check':
     case 'uncheck': {
       const want = action === 'check'
+      const native = isElement(element, 'input') && (element.type === 'checkbox' || element.type === 'radio')
+      if (
+        !native &&
+        !CHECKABLE_ROLES.has(element.getAttribute('role') ?? '') &&
+        !element.hasAttribute('aria-checked')
+      ) {
+        return `Control "${ref}" cannot be checked.`
+      }
+      if (!want && isElement(element, 'input') && element.type === 'radio') {
+        return `Control "${ref}" is a radio button; check another option instead.`
+      }
       const current = isElement(element, 'input') ? element.checked : element.getAttribute('aria-checked') === 'true'
       if (current !== want) element.click()
       return null
