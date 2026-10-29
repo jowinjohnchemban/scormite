@@ -9,7 +9,7 @@
  *     still live, crawl it (the "before"), then wait until /build.json
  *     reports the new commit, so engines never fetch the old version.
  *  2. Crawl every page in the live sitemap and fingerprint what a crawler
- *     reads. Hashed asset links and the About page's commit and build time
+ *     reads. Hashed asset file names and the About page's commit and build time
  *     change with every build, so they are left out.
  *  3. Submit the pages that differ from the "before" crawl or from the last
  *     successful run's crawl (SNAPSHOT, kept in the Actions cache while it
@@ -23,7 +23,7 @@
  */
 
 import { createHash } from 'node:crypto'
-import { existsSync, readFileSync, writeFileSync } from 'node:fs'
+import { readFileSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { siteSeoConfig } from '../src/shared/config/seo.ts'
@@ -51,15 +51,12 @@ export function sitemapUrls(xml: string): string[] {
 }
 
 /**
- * A fingerprint of what a crawler reads on a page. Script and stylesheet
- * links to /assets/ are dropped (their hashed names change with every build
- * even when the words do not), and so are the build's commit and time, which
- * the About page shows.
+ * A fingerprint of what a crawler reads on a page. The hashed file names of
+ * /assets/ are masked (they change with every build even when the words do
+ * not), and the build's commit and time, which the About page shows, dropped.
  */
 export function fingerprint(html: string, build: LiveBuild | null): string {
-  let content = html
-    .replace(/<script\b[^>]*\bsrc="\/assets\/[^"]*"[^>]*>\s*<\/script>/g, '')
-    .replace(/<link\b[^>]*\bhref="\/assets\/[^"]*"[^>]*>/g, '')
+  let content = html.replace(/"\/assets\/[^"]*"/g, '"/assets/"')
   for (const value of [build?.commit, build?.builtAt]) {
     if (value) content = content.replaceAll(value, '')
   }
@@ -149,6 +146,16 @@ async function submit(origin: string, key: string, urlList: readonly string[]): 
 // CLI
 // ---------------------------------------------------------------------------
 
+/** The last successful run's crawl, or null when there is none. */
+function readSnapshot(file: string): Fingerprints | null {
+  try {
+    return JSON.parse(readFileSync(file, 'utf8')) as Fingerprints
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') return null
+    throw error
+  }
+}
+
 async function main(env: NodeJS.ProcessEnv): Promise<void> {
   const key = siteSeoConfig.indexNowKey
   if (!key) {
@@ -180,7 +187,7 @@ async function main(env: NodeJS.ProcessEnv): Promise<void> {
   const { urls, prints: current } = await crawl(origin, await liveBuild(origin))
   // The last successful run's crawl, while the Actions cache keeps it (7 days
   // unused). It also retries a submission that failed.
-  const saved = existsSync(snapshotFile) ? (JSON.parse(readFileSync(snapshotFile, 'utf8')) as Fingerprints) : null
+  const saved = readSnapshot(snapshotFile)
   const references = [before, saved].filter((reference) => reference !== null)
   const changed = pagesToSubmit(urls, current, references, submitAll)
 

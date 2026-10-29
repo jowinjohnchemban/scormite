@@ -56,8 +56,8 @@ After each push to `main` that changes what the pages are built from,
 Yep, and the engines built on Bing) which pages changed, so they re-crawl
 them within minutes. It crawls the old version while the host is still
 building, waits until `/build.json` reports the pushed commit, crawls the
-live sitemap again, and submits only the pages whose content differs. Asset
-links and the About page's commit and build time are ignored. The last crawl
+live sitemap again, and submits only the pages whose content differs. Hashed
+asset file names and the About page's commit and build time are ignored. The last crawl
 is kept in the Actions cache, so a failed submission is retried on the next
 run. Run it by hand from **Actions → IndexNow** (tick _Submit every page_ to
 resubmit everything), or locally with `DRY_RUN=1 pnpm run indexnow` to see
