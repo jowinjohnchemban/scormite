@@ -65,12 +65,15 @@ every page is submitted.
 
 A page that leaves the sitemap is submitted only if it answers 404, 410, or a
 redirect, which tells engines to drop it. The SPA fallback answers any other
-path with the app and a 200, so the run warns instead: to retire a page,
-redirect it (or serve a 404) on the host before removing it.
+path with the app and a 200, so the run warns instead, and keeps checking the
+page on later runs until it does: to retire a page, redirect it (or serve a 404) on the host.
 
 Run it by hand from **Actions → IndexNow** (tick _Submit every page_ to
-resubmit everything), or locally with `DRY_RUN=1 pnpm run indexnow` to see
-what it would submit.
+resubmit everything). Locally, `DRY_RUN=1 pnpm run indexnow` shows what it
+would submit and sends and saves nothing. A fresh checkout has no saved
+crawl, so it lists every page; to see only the pages changed since a crawl,
+point `SNAPSHOT` at that crawl's JSON file (the workflow's is
+`.indexnow-snapshot.json`).
 
 The key is `indexNowKey` in `src/shared/config/seo.ts`, and
 `public/<key>.txt` holds exactly the key (no trailing newline) to prove the

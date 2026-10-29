@@ -16,7 +16,8 @@
  *     lasts; until one succeeds, the "before" crawl stands in). Pages they
  *     had that the sitemap no longer lists are submitted only when they
  *     answer 404, 410, or a redirect: the SPA fallback's 200 would not make
- *     engines drop them. With neither to compare against, or with
+ *     engines drop them, so until then they stay in the saved crawl to be
+ *     checked again. With neither to compare against, or with
  *     SUBMIT_ALL, submit every page.
  *
  * Node built-ins only:
@@ -215,12 +216,16 @@ async function main(env: NodeJS.ProcessEnv): Promise<void> {
   const { urls, prints: current } = await crawl(origin, await liveBuild(origin))
   const references = [before, saved].filter((reference) => reference !== null)
   const changed = changedPages(urls, current, references, submitAll)
+  // Removed pages not yet answering a removal stay in the saved crawl, so
+  // each run checks them again until they do.
+  const stillServed: Fingerprints = {}
   for (const url of removedPages(urls, references)) {
     const { status } = await fetch(url, { cache: 'no-store', redirect: 'manual' })
     if (signalsRemoval(status)) changed.push(url)
     else {
+      stillServed[url] = references.find((reference) => url in reference)![url]!
       console.log(
-        `::warning::${url} left the sitemap but still answers ${status}, so it is not submitted. Serve 404 or 410, or redirect it, for engines to drop it.`,
+        `::warning::${url} left the sitemap but still answers ${status}, so it is not submitted yet. Serve 404 or 410, or redirect it, for engines to drop it.`,
       )
     }
   }
@@ -237,7 +242,7 @@ async function main(env: NodeJS.ProcessEnv): Promise<void> {
     await submit(origin, key, changed)
   }
   // Saved only after a successful submission, so a failed one is retried next time.
-  if (!dryRun) writeSnapshot(snapshotFile, current)
+  if (!dryRun) writeSnapshot(snapshotFile, { ...current, ...stillServed })
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
