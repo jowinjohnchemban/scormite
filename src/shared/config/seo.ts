@@ -51,6 +51,14 @@ export interface SiteSeoConfig {
   locale: string
   siteUrl: string
   /**
+   * IndexNow key (https://www.indexnow.org): after a deploy,
+   * `build/indexnow.ts` tells Bing, Yandex, and the other participating
+   * engines which pages changed. Public by design: `public/<key>.txt`, holding
+   * exactly the key, proves the site owns it (a unit test keeps the two in
+   * step). 8–128 characters of a–z, A–Z, 0–9, and "-"; null turns IndexNow off.
+   */
+  indexNowKey: string | null
+  /**
    * User documents published as Markdown at the same path and listed in
    * llms.txt (full text in llms-full.txt). Their relative links may only
    * point at each other — the build fails otherwise.
@@ -107,6 +115,7 @@ export const siteSeoConfig: SiteSeoConfig = {
   ogImageAlt: 'SCORMite — test, debug and validate SCORM 1.2 and 2004 packages in your browser',
   locale: 'en_US',
   siteUrl: 'https://scormite.jowinjc.in',
+  indexNowKey: '13e4808173d7404f5730a08dce132afc',
   docs: ['docs/user-guide.md', 'docs/scorm-support.md', 'docs/ai-agents.md'],
   features: [
     {

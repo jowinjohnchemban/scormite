@@ -35,7 +35,8 @@ branch), Vercel (`VERCEL_ENV` other than `production`), and Netlify
 
 ## Search engines and AI assistants
 
-The build generates these files; nothing in `public/` needs editing:
+The build generates these files; nothing in `public/` needs editing except
+the [IndexNow](#indexnow) key file:
 
 | File                                                               | Contents                                                                                                                                                                                                              |
 | ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -45,6 +46,29 @@ The build generates these files; nothing in `public/` needs editing:
 | `about/index.html`, `licenses.txt`                                 | The About page (developer credit, build, architecture, open-source packages) and the full licence texts of the packages the build ships. Listed in the sitemap like any other page.                                   |
 | `llms-full.txt`                                                    | The same summary followed by the full text of every published document.                                                                                                                                               |
 | `docs/user-guide.md`, `docs/scorm-support.md`, `docs/ai-agents.md` | The published documents (the `docs` list in the SEO config), served as Markdown. Their relative links may only point at each other; the build fails otherwise.                                                        |
+| `build.json`                                                       | The build the About page shows (version, commit, build time), for machines: [IndexNow](#indexnow) reads which commit is live.                                                                                         |
+
+### IndexNow
+
+After each push to `main` that changes what the pages are built from,
+`.github/workflows/indexnow.yml` runs `build/indexnow.ts` to tell
+[IndexNow](https://www.indexnow.org) engines (Bing, Yandex, Naver, Seznam,
+Yep, and the engines built on Bing) which pages changed, so they re-crawl
+them within minutes. It crawls the old version while the host is still
+building, waits until `/build.json` reports the pushed commit, crawls the
+live sitemap again, and submits only the pages whose content differs. Asset
+links and the About page's commit and build time are ignored. The last crawl
+is kept in the Actions cache, so a failed submission is retried on the next
+run. Run it by hand from **Actions → IndexNow** (tick _Submit every page_ to
+resubmit everything), or locally with `DRY_RUN=1 pnpm run indexnow` to see
+what it would submit.
+
+The key is `indexNowKey` in `src/shared/config/seo.ts`, and
+`public/<key>.txt` holds exactly the key (no trailing newline) to prove the
+site owns it; a unit test keeps the two in step. The key is public by design.
+To replace it, change both; set `indexNowKey` to `null` and delete the file
+to turn IndexNow off. A fork deployed under another domain should do one or
+the other, because the script submits for the origin in the SEO config.
 
 ## Hosts
 

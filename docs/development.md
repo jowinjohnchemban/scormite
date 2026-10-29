@@ -25,18 +25,19 @@ pnpm install            # pnpm only — the version is pinned in package.json
 pnpm run dev            # Vite dev server on http://localhost:5173
 ```
 
-| Command                              | Purpose                                                                                                                                                                 |
-| ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `pnpm run lint`                      | ESLint, including the architecture boundary rules                                                                                                                       |
-| `pnpm run format` / `format:check`   | Prettier (`.prettierrc.json`: no semicolons, single quotes, 120 columns); CI runs the check                                                                             |
-| `pnpm run typecheck`                 | `tsc -b --noEmit` across app, Node, and e2e configs                                                                                                                     |
-| `pnpm run build`                     | Production build into `dist/` (also emits robots.txt, sitemap.xml, llms.txt, llms-full.txt, manifest.webmanifest, the published docs, the About page, and licenses.txt) |
-| `pnpm run test`                      | Vitest unit tests, including axe-core accessibility audits                                                                                                              |
-| `pnpm run test:coverage`             | Unit tests with enforced coverage thresholds                                                                                                                            |
-| `pnpm run test:e2e`                  | Playwright end-to-end suite in Chromium against committed fixture packages                                                                                              |
-| `node scripts/make-fixtures.mjs`     | Regenerate the e2e fixture packages (byte-stable)                                                                                                                       |
-| `pnpm run diagram`                   | Regenerate `docs/architecture.svg` from the code (a unit test fails while it is stale)                                                                                  |
-| `node scripts/make-brand-assets.mjs` | Regenerate the logo SVGs, app icons, and social preview image from the mark's geometry                                                                                  |
+| Command                              | Purpose                                                                                                                                                                             |
+| ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm run lint`                      | ESLint, including the architecture boundary rules                                                                                                                                   |
+| `pnpm run format` / `format:check`   | Prettier (`.prettierrc.json`: no semicolons, single quotes, 120 columns); CI runs the check                                                                                         |
+| `pnpm run typecheck`                 | `tsc -b --noEmit` across app, Node, and e2e configs                                                                                                                                 |
+| `pnpm run build`                     | Production build into `dist/` (also emits robots.txt, sitemap.xml, llms.txt, llms-full.txt, manifest.webmanifest, the published docs, the About page, licenses.txt, and build.json) |
+| `pnpm run test`                      | Vitest unit tests, including axe-core accessibility audits                                                                                                                          |
+| `pnpm run test:coverage`             | Unit tests with enforced coverage thresholds                                                                                                                                        |
+| `pnpm run test:e2e`                  | Playwright end-to-end suite in Chromium against committed fixture packages                                                                                                          |
+| `node scripts/make-fixtures.mjs`     | Regenerate the e2e fixture packages (byte-stable)                                                                                                                                   |
+| `pnpm run diagram`                   | Regenerate `docs/architecture.svg` from the code (a unit test fails while it is stale)                                                                                              |
+| `DRY_RUN=1 pnpm run indexnow`        | Show which pages of the live site IndexNow would be told about, sending nothing (CI runs it after each deploy)                                                                      |
+| `node scripts/make-brand-assets.mjs` | Regenerate the logo SVGs, app icons, and social preview image from the mark's geometry                                                                                              |
 
 Use `pnpm add` / `pnpm add -D` for dependencies; never commit a
 `package-lock.json` or `yarn.lock`.
@@ -204,6 +205,7 @@ updated in the same change. Debatable architectural choices get a
 | `dependency-review.yml` | Pull requests                                | Fails on a newly added dependency with a high-severity advisory (public repository only)                                                                                |
 | `prepare-release.yml`   | Run by hand (Actions tab)                    | Works out the next version from the Conventional Commits, bumps `package.json` and the CHANGELOG on a `release/vX.Y.Z` branch, and links the pull request to open       |
 | `release.yml`           | `package.json` changes on `main`             | When the version has no release yet: tests, builds, tags the commit, and publishes a GitHub release with the CHANGELOG notes and the built site as a zip                |
+| `indexnow.yml`          | Pushes to `main` that change the site        | Waits for the deploy, then tells IndexNow search engines which pages changed (see [Deployment](deployment.md#indexnow))                                                 |
 | `dependency-check.yml`  | Daily                                        | Newer releases (`pnpm outdated`) and vulnerabilities (`pnpm audit`) in one "Dependency updates available" issue, updated each day and closed when everything is current |
 | Dependabot              | Mondays                                      | Grouped dependency and Actions updates (see [Setup](#setup))                                                                                                            |
 

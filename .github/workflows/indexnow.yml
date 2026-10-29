@@ -1,0 +1,70 @@
+name: IndexNow
+
+# After a push to main, the hosting platform builds and deploys the site. This
+# crawls the old version while it is still live, waits for the new one, crawls
+# again, and tells IndexNow-participating search engines about the pages whose
+# content changed (see build/indexnow.ts). The last successful crawl is kept in
+# the Actions cache, so a failed submission is retried on the next run.
+on:
+  push:
+    branches: [main]
+    # What the pages are built from; other pushes change nothing a crawler reads.
+    paths:
+      - index.html
+      - about/**
+      - src/**
+      - public/**
+      - build/**
+      - vite.config.ts
+      - package.json
+      - pnpm-lock.yaml
+  workflow_dispatch:
+    inputs:
+      submit_all:
+        description: Submit every page, changed or not
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: indexnow
+  cancel-in-progress: false # each run compares against the one before it
+
+jobs:
+  submit:
+    name: Submit changed pages
+    # Only main is live; a manual run from another branch must not submit.
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      # build/indexnow.ts uses Node built-ins only: no install needed.
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - name: Restore the last crawl
+        uses: actions/cache/restore@v6
+        with:
+          path: .indexnow-snapshot.json
+          key: indexnow-snapshot-${{ github.run_id }}
+          restore-keys: indexnow-snapshot-
+
+      - name: Wait for the deploy, crawl, submit what changed
+        run: node build/indexnow.ts
+        env:
+          # Pushes wait for their own commit to go live; manual runs use what is live now.
+          COMMIT: ${{ github.event_name == 'push' && github.sha || '' }}
+          SUBMIT_ALL: ${{ inputs.submit_all || false }}
+
+      - name: Save this crawl
+        uses: actions/cache/save@v6
+        with:
+          path: .indexnow-snapshot.json
+          key: indexnow-snapshot-${{ github.run_id }}

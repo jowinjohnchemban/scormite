@@ -48,6 +48,9 @@ test-results/
 playwright-report/
 blob-report/
 
+# Last IndexNow crawl (build/indexnow.ts); CI keeps it in the Actions cache
+.indexnow-snapshot.json
+
 
 # Agent-only working notes (progress logs, research scratch). Formal,
 # shared documentation lives in docs/.

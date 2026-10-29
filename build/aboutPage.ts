@@ -6,7 +6,8 @@
  * Everything is generated: the licences from the npm packages whose modules
  * are actually in the production bundle (plus Tailwind's CSS), with their full
  * texts in /licenses.txt; the diagram from the source; the build details from
- * the environment. The page cannot drift from the product it describes.
+ * the environment (also emitted as /build.json). The page cannot drift from
+ * the product it describes.
  */
 
 import { execFileSync } from 'node:child_process'
@@ -293,6 +294,9 @@ export function createAboutPlugin(config: SiteSeoConfig, root: string, build: Bu
       handler(_options, bundle) {
         const credits = creditsFromBundle(bundle as Parameters<typeof creditsFromBundle>[0], root)
         this.emitFile({ type: 'asset', fileName: 'licenses.txt', source: renderLicensesTxt(config, credits) })
+        // The same build details for machines: build/indexnow.ts reads which
+        // commit is live to know when a deploy has finished.
+        this.emitFile({ type: 'asset', fileName: 'build.json', source: `${JSON.stringify(build)}\n` })
       },
     },
   }

@@ -3,6 +3,9 @@
  * at, structured data shape, and the generated text files.
  */
 
+import { readdirSync, readFileSync } from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import { siteSeoConfig } from '../src/shared/config/seo.js'
 import { parseDoc } from './seoContext.js'
@@ -19,6 +22,7 @@ import {
 } from './seoPlugin.js'
 
 const ORIGIN = 'https://example.test'
+const PUBLIC_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'public')
 const DOCS = [
   parseDoc(
     'docs/guide.md',
@@ -36,6 +40,21 @@ describe('siteSeoConfig', () => {
   it('has features and FAQs to index', () => {
     expect(siteSeoConfig.features.length).toBeGreaterThan(3)
     expect(siteSeoConfig.faqs.length).toBeGreaterThan(3)
+  })
+
+  it('serves the IndexNow key at /<key>.txt, and no key file for an old key', () => {
+    const key = siteSeoConfig.indexNowKey
+    const keyFiles = readdirSync(PUBLIC_DIR).filter((name) => {
+      if (!name.endsWith('.txt')) return false
+      return readFileSync(path.join(PUBLIC_DIR, name), 'utf8') === name.slice(0, -'.txt'.length)
+    })
+    if (key === null) {
+      expect(keyFiles).toEqual([])
+      return
+    }
+    expect(key).toMatch(/^[a-zA-Z0-9-]{8,128}$/)
+    // Exactly the key, without a trailing newline.
+    expect(keyFiles).toEqual([`${key}.txt`])
   })
 })
 
