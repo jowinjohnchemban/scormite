@@ -41,6 +41,7 @@
     "format:check": "prettier --check .",
     "diagram": "node build/architecture.ts",
     "release:prepare": "node build/release.ts",
+    "indexnow": "node build/indexnow.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",

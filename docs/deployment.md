@@ -35,7 +35,8 @@ branch), Vercel (`VERCEL_ENV` other than `production`), and Netlify
 
 ## Search engines and AI assistants
 
-The build generates these files; nothing in `public/` needs editing:
+The build generates these files; nothing in `public/` needs editing except
+the [IndexNow](#indexnow) key file:
 
 | File                                                               | Contents                                                                                                                                                                                                              |
 | ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -45,6 +46,41 @@ The build generates these files; nothing in `public/` needs editing:
 | `about/index.html`, `licenses.txt`                                 | The About page (developer credit, build, architecture, open-source packages) and the full licence texts of the packages the build ships. Listed in the sitemap like any other page.                                   |
 | `llms-full.txt`                                                    | The same summary followed by the full text of every published document.                                                                                                                                               |
 | `docs/user-guide.md`, `docs/scorm-support.md`, `docs/ai-agents.md` | The published documents (the `docs` list in the SEO config), served as Markdown. Their relative links may only point at each other; the build fails otherwise.                                                        |
+| `build.json`                                                       | The build the About page shows (commit and date), for machines: [IndexNow](#indexnow) reads which commit is live.                                                                                                     |
+
+### IndexNow
+
+After each push to `main` that changes what the pages are built from,
+`.github/workflows/indexnow.yml` runs `build/indexnow.ts` to tell
+[IndexNow](https://www.indexnow.org) engines (Bing, Yandex, Naver, Seznam,
+Yep, and the engines built on Bing) which pages changed, so they re-crawl
+them within minutes. It crawls the old version while the host is still
+building, waits until `/build.json` reports the pushed commit, crawls the
+live sitemap again, and submits only the pages whose content differs. Hashed
+asset file names and the About page's build commit and date are ignored. The
+crawl to compare against is kept in the Actions cache, also when a run fails,
+so the next run submits what a failed one did not; with nothing to compare
+against (an empty cache, and a deploy that finished before the run started),
+every page is submitted.
+
+A page that leaves the sitemap is submitted only if it answers 404, 410, or a
+redirect, which tells engines to drop it. The SPA fallback answers any other
+path with the app and a 200, so the run warns instead, and keeps checking the
+page on later runs until it does: to retire a page, redirect it (or serve a 404) on the host.
+
+Run it by hand from **Actions → IndexNow** (tick _Submit every page_ to
+resubmit everything). Locally, `DRY_RUN=1 pnpm run indexnow` shows what it
+would submit and sends and saves nothing. A fresh checkout has no saved
+crawl, so it lists every page; to see only the pages changed since a crawl,
+point `SNAPSHOT` at that crawl's JSON file (the workflow's is
+`.indexnow-snapshot.json`).
+
+The key is `indexNowKey` in `src/shared/config/seo.ts`, and
+`public/<key>.txt` holds exactly the key (no trailing newline) to prove the
+site owns it; a unit test keeps the two in step. The key is public by design.
+To replace it, change both; set `indexNowKey` to `null` and delete the file
+to turn IndexNow off. A fork deployed under another domain should do one or
+the other, because the script submits for the origin in the SEO config.
 
 ## Hosts
 

@@ -8,6 +8,10 @@ All notable changes to SCORMite are recorded here. The format follows
 
 ### Added
 
+- **IndexNow.** After each deploy of `main`, a workflow tells Bing, Yandex,
+  and the other IndexNow search engines which pages changed, so they re-crawl
+  them within minutes. The site serves its key at `/<key>.txt` and its build
+  details at `/build.json`. See [Deployment](docs/deployment.md#indexnow).
 - **AI agents in the browser (WebMCP).** SCORMite registers 34 tools on
   `document.modelContext` so an agent can test the open package: follow a
   test plan for it, audit everything in one call, review the manifest, the
@@ -34,6 +38,9 @@ All notable changes to SCORMite are recorded here. The format follows
 
 ### Changed
 
+- **The About page shows the build as its commit and date**, for example
+  `Build: 1a2b3c4 (2026-10-30)`, without the version number, build time, or a
+  separate runtime line (scorm-again stays in the open-source packages list).
 - **Runtime updated to scorm-again 3.4.7.** Values the SCORM
   specification allows are no longer rejected — interaction values,
   timestamps, and language tags in SCORM 2004 (error 406), decimal,
