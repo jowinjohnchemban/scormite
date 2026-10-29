@@ -68,6 +68,15 @@ describe('pagesToSubmit', () => {
     expect(pagesToSubmit(urls, current, [{ [urls[1]!]: 'about-1' }], false)).toEqual([urls[0]])
   })
 
+  it('submits a page the sitemap no longer lists, so engines drop it', () => {
+    const gone = 'https://example.test/old/'
+    expect(pagesToSubmit(urls, current, [{ ...current, [gone]: 'old-1' }], false)).toEqual([gone])
+    expect(pagesToSubmit(urls, current, [{ ...current, [gone]: 'old-1' }, { [gone]: 'old-1' }], true)).toEqual([
+      ...urls,
+      gone,
+    ])
+  })
+
   it('submits nothing without a reference, and everything when asked', () => {
     expect(pagesToSubmit(urls, current, [], false)).toEqual([])
     expect(pagesToSubmit(urls, current, [current], true)).toEqual(urls)

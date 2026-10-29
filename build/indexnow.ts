@@ -13,8 +13,9 @@
  *     change with every build, so they are left out.
  *  3. Submit the pages that differ from the "before" crawl or from the last
  *     successful run's crawl (SNAPSHOT, kept in the Actions cache while it
- *     lasts). With neither to compare against, record a baseline and submit
- *     nothing, unless SUBMIT_ALL.
+ *     lasts), and the pages they had that the sitemap no longer lists. With
+ *     neither to compare against, record a baseline and submit nothing,
+ *     unless SUBMIT_ALL.
  *
  * Node built-ins only:
  *   COMMIT=abc1234 node build/indexnow.ts   after a deploy (pnpm run indexnow)
@@ -66,7 +67,9 @@ export function fingerprint(html: string, build: LiveBuild | null): string {
 /**
  * The pages to submit: every page with SUBMIT_ALL, otherwise those that
  * differ from any reference crawl (a page missing from one counts as
- * changed). No references means nothing to compare with: none.
+ * changed). No references means nothing to compare with: none. Pages a
+ * reference had that the sitemap no longer lists are submitted too, so
+ * engines re-crawl and drop them.
  */
 export function pagesToSubmit(
   urls: readonly string[],
@@ -74,8 +77,14 @@ export function pagesToSubmit(
   references: readonly Fingerprints[],
   submitAll: boolean,
 ): string[] {
-  if (submitAll) return [...urls]
-  return urls.filter((url) => references.some((reference) => reference[url] !== current[url]))
+  const listed = new Set(urls)
+  const removed = [...new Set(references.flatMap((reference) => Object.keys(reference)))].filter(
+    (url) => !listed.has(url),
+  )
+  const changed = submitAll
+    ? urls
+    : urls.filter((url) => references.some((reference) => reference[url] !== current[url]))
+  return [...changed, ...removed]
 }
 
 // ---------------------------------------------------------------------------
