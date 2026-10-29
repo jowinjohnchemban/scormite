@@ -68,9 +68,10 @@ describe('changedPages', () => {
     expect(changedPages(urls, current, [{ [urls[1]!]: 'about-1' }], false)).toEqual([urls[0]])
   })
 
-  it('submits nothing without a reference, and everything when asked', () => {
-    expect(changedPages(urls, current, [], false)).toEqual([])
+  it('submits every page when asked, or with nothing to compare against', () => {
     expect(changedPages(urls, current, [current], true)).toEqual(urls)
+    // E.g. the deploy finished before the run started, and the cache is empty.
+    expect(changedPages(urls, current, [], false)).toEqual(urls)
   })
 })
 

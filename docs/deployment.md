@@ -59,7 +59,9 @@ building, waits until `/build.json` reports the pushed commit, crawls the
 live sitemap again, and submits only the pages whose content differs. Hashed
 asset file names and the About page's build commit and date are ignored. The
 crawl to compare against is kept in the Actions cache, also when a run fails,
-so the next run submits what a failed one did not.
+so the next run submits what a failed one did not; with nothing to compare
+against (an empty cache, and a deploy that finished before the run started),
+every page is submitted.
 
 A page that leaves the sitemap is submitted only if it answers 404, 410, or a
 redirect, which tells engines to drop it. The SPA fallback answers any other

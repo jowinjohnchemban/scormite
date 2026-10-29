@@ -38,7 +38,7 @@ jobs:
     # Only main is live; a manual run from another branch must not submit.
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v7
         with:
@@ -57,6 +57,9 @@ jobs:
           restore-keys: indexnow-snapshot-
 
       - name: Wait for the deploy, crawl, submit what changed
+        # Up to 15 minutes waiting for the deploy, then the crawl; shorter
+        # than the job, so the cache save below still runs after a timeout.
+        timeout-minutes: 18
         run: node build/indexnow.ts
         env:
           # Pushes wait for their own commit to go live; manual runs use what is live now.

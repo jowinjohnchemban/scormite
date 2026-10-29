@@ -16,8 +16,8 @@
  *     lasts; until one succeeds, the "before" crawl stands in). Pages they
  *     had that the sitemap no longer lists are submitted only when they
  *     answer 404, 410, or a redirect: the SPA fallback's 200 would not make
- *     engines drop them. With neither to compare against, record a baseline
- *     and submit nothing, unless SUBMIT_ALL.
+ *     engines drop them. With neither to compare against, or with
+ *     SUBMIT_ALL, submit every page.
  *
  * Node built-ins only:
  *   COMMIT=abc1234 node build/indexnow.ts   after a deploy (pnpm run indexnow)
@@ -67,9 +67,9 @@ export function fingerprint(html: string, build: LiveBuild | null): string {
 }
 
 /**
- * The listed pages to submit: every page with SUBMIT_ALL, otherwise those
- * that differ from any reference crawl (a page missing from one counts as
- * changed). No references means nothing to compare with: none.
+ * The listed pages to submit: those that differ from any reference crawl (a
+ * page missing from one counts as changed). Every page with SUBMIT_ALL, or
+ * with nothing to compare against, so a change is never missed.
  */
 export function changedPages(
   urls: readonly string[],
@@ -77,7 +77,7 @@ export function changedPages(
   references: readonly Fingerprints[],
   submitAll: boolean,
 ): string[] {
-  if (submitAll) return [...urls]
+  if (submitAll || references.length === 0) return [...urls]
   return urls.filter((url) => references.some((reference) => reference[url] !== current[url]))
 }
 
@@ -225,12 +225,11 @@ async function main(env: NodeJS.ProcessEnv): Promise<void> {
     }
   }
 
-  if (references.length === 0 && !submitAll) {
-    console.log(`Nothing to compare with: crawled ${urls.length} pages as the baseline, submitted none.`)
-  } else if (changed.length === 0) {
+  if (changed.length === 0) {
     console.log(`Crawled ${urls.length} pages: none changed, nothing to submit.`)
   } else {
-    console.log(`Crawled ${urls.length} pages; submitting ${changed.length}:\n  ${changed.join('\n  ')}`)
+    const why = references.length === 0 && !submitAll ? ' (nothing to compare with, so every page)' : ''
+    console.log(`Crawled ${urls.length} pages; submitting ${changed.length}${why}:\n  ${changed.join('\n  ')}`)
     if (dryRun) {
       console.log('Dry run: nothing sent, nothing saved.')
       return
