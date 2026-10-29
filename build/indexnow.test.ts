@@ -15,7 +15,7 @@ const page = (assets: string, body: string) =>
     <link rel="icon" href="/logo.svg">
   </head><body>${body}</body></html>`
 
-const BUILD = { commit: 'abcdef1', builtAt: '2026-10-30 09:30 UTC' }
+const BUILD = { commit: 'abcdef1', date: '2026-10-30' }
 
 describe('sitemapUrls', () => {
   it('reads every page of the sitemap the build emits', () => {
@@ -37,9 +37,9 @@ describe('fingerprint', () => {
     expect(fingerprint(page('aaa111', '<p>Hi</p>'), null)).toBe(fingerprint(page('bbb222', '<p>Hi</p>'), null))
   })
 
-  it("ignores the build's commit and time on the About page", () => {
-    const about = (build: typeof BUILD) => page('a', `<dd>${build.commit}</dd><dd>${build.builtAt}</dd><p>Credits</p>`)
-    const next = { commit: '1234567', builtAt: '2026-10-31 10:00 UTC' }
+  it("ignores the build's commit and date on the About page", () => {
+    const about = (build: typeof BUILD) => page('a', `<dd>${build.commit} (${build.date})</dd><p>Credits</p>`)
+    const next = { commit: '1234567', date: '2026-10-31' }
     expect(fingerprint(about(BUILD), BUILD)).toBe(fingerprint(about(next), next))
   })
 

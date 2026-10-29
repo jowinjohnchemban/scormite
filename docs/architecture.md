@@ -307,7 +307,7 @@ the CLI could not reach `ui.shadcn.com`) match the CLI's output shape.
 `about/index.html` (served at `/about/`) is a second page of the build,
 rendered at build time by `build/aboutPage.ts`: the developer credit (from
 `author` in `src/shared/config/seo.ts`), the build (commit from the host or
-git, build time, scorm-again version), the architecture diagram with live
+git, and the build date), the architecture diagram with live
 counts, and the open-source packages the build ships. That list comes from the
 npm packages whose modules are in the production bundle (plus Tailwind, whose
 CSS ships without a JavaScript module), and their full licence texts are

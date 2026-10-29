@@ -46,7 +46,7 @@ the [IndexNow](#indexnow) key file:
 | `about/index.html`, `licenses.txt`                                 | The About page (developer credit, build, architecture, open-source packages) and the full licence texts of the packages the build ships. Listed in the sitemap like any other page.                                   |
 | `llms-full.txt`                                                    | The same summary followed by the full text of every published document.                                                                                                                                               |
 | `docs/user-guide.md`, `docs/scorm-support.md`, `docs/ai-agents.md` | The published documents (the `docs` list in the SEO config), served as Markdown. Their relative links may only point at each other; the build fails otherwise.                                                        |
-| `build.json`                                                       | The build the About page shows (version, commit, build time), for machines: [IndexNow](#indexnow) reads which commit is live.                                                                                         |
+| `build.json`                                                       | The build the About page shows (commit and date), for machines: [IndexNow](#indexnow) reads which commit is live.                                                                                                     |
 
 ### IndexNow
 
@@ -58,7 +58,7 @@ them within minutes. It crawls the old version while the host is still
 building, waits until `/build.json` reports the pushed commit, crawls the
 live sitemap again, and submits only the pages whose content differs, plus
 any page the sitemap no longer lists, so engines drop it. Hashed asset file
-names and the About page's commit and build time are ignored. The crawl to
+names and the About page's build commit and date are ignored. The crawl to
 compare against is kept in the Actions cache, also when a run fails, so the
 next run submits what a failed one did not. Run it by hand from **Actions → IndexNow** (tick _Submit every page_ to
 resubmit everything), or locally with `DRY_RUN=1 pnpm run indexnow` to see

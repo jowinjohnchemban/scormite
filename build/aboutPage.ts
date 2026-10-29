@@ -29,10 +29,9 @@ export interface PackageCredit {
 }
 
 export interface BuildInfo {
-  /** From package.json; null while it is the 0.0.0 placeholder. */
-  version: string | null
   commit: string | null
-  builtAt: string
+  /** YYYY-MM-DD (UTC) the build ran. */
+  date: string
 }
 
 const escapeHtml = (value: string) =>
@@ -119,7 +118,6 @@ export function resolveBuildInfo(
   root: string,
   now = new Date(),
 ): BuildInfo {
-  const pkg = JSON.parse(readFileSync(path.join(root, 'package.json'), 'utf8')) as { version?: string }
   let commit =
     env['WORKERS_CI_COMMIT_SHA'] ||
     env['CF_PAGES_COMMIT_SHA'] ||
@@ -138,11 +136,7 @@ export function resolveBuildInfo(
       commit = null
     }
   }
-  return {
-    version: pkg.version && pkg.version !== '0.0.0' ? pkg.version : null,
-    commit: commit ? commit.slice(0, 7) : null,
-    builtAt: `${now.toISOString().slice(0, 16).replace('T', ' ')} UTC`,
-  }
+  return { commit: commit ? commit.slice(0, 7) : null, date: now.toISOString().slice(0, 10) }
 }
 
 // ---------------------------------------------------------------------------
@@ -172,13 +166,6 @@ export interface AboutContent {
 
 export function renderAboutBody({ config, build, credits, diagramSvg, preview }: AboutContent): string {
   const { author } = config
-  const runtime = credits.find((credit) => credit.name === 'scorm-again')
-  const buildRows: [string, string][] = [
-    ...(build.version ? ([['Version', build.version]] as [string, string][]) : []),
-    ['Commit', build.commit ?? 'unknown'],
-    ['Built', build.builtAt],
-    ...(runtime ? ([['SCORM runtime', `scorm-again ${runtime.version}`]] as [string, string][]) : []),
-  ]
   const profileLinks = author.profiles.map((url) => link(url, profileLabel(url))).join(' · ')
   const creditRows = credits
     .map(
@@ -215,7 +202,7 @@ export function renderAboutBody({ config, build, credits, diagramSvg, preview }:
         <section aria-labelledby="about-build">
           ${heading('about-build', 'This build')}
           <dl class="grid grid-cols-[max-content_1fr] gap-x-6 gap-y-1 text-xs">
-            ${buildRows.map(([term, value]) => `<dt class="text-slate-500">${escapeHtml(term)}</dt><dd class="font-mono text-slate-300">${escapeHtml(value)}</dd>`).join('\n            ')}
+            <dt class="text-slate-500">Build</dt><dd class="font-mono text-slate-300">${escapeHtml(`${build.commit ?? 'unknown'} (${build.date})`)}</dd>
           </dl>
         </section>
 

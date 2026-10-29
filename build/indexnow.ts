@@ -9,7 +9,7 @@
  *     still live, crawl it (the "before"), then wait until /build.json
  *     reports the new commit, so engines never fetch the old version.
  *  2. Crawl every page in the live sitemap and fingerprint what a crawler
- *     reads. Hashed asset file names and the About page's commit and build time
+ *     reads. Hashed asset file names and the About page's build commit and date
  *     change with every build, so they are left out.
  *  3. Submit the pages that differ from the "before" crawl or from the last
  *     successful run's crawl (SNAPSHOT, kept in the Actions cache while it
@@ -36,7 +36,7 @@ const CRAWLERS = 4
 /** The volatile part of /build.json (`BuildInfo` in build/aboutPage.ts). */
 export interface LiveBuild {
   commit: string | null
-  builtAt: string | null
+  date: string | null
 }
 
 /** Page URL → fingerprint of its content. */
@@ -54,11 +54,11 @@ export function sitemapUrls(xml: string): string[] {
 /**
  * A fingerprint of what a crawler reads on a page. The hashed file names of
  * /assets/ are masked (they change with every build even when the words do
- * not), and the build's commit and time, which the About page shows, dropped.
+ * not), and the build's commit and date, which the About page shows, dropped.
  */
 export function fingerprint(html: string, build: LiveBuild | null): string {
   let content = html.replace(/"\/assets\/[^"]*"/g, '"/assets/"')
-  for (const value of [build?.commit, build?.builtAt]) {
+  for (const value of [build?.commit, build?.date]) {
     if (value) content = content.replaceAll(value, '')
   }
   return createHash('sha256').update(content).digest('hex')
@@ -104,7 +104,7 @@ async function liveBuild(origin: string): Promise<LiveBuild | null> {
   try {
     const body = JSON.parse(await fetchText(`${origin}/build.json`)) as Record<string, unknown>
     const text = (value: unknown) => (typeof value === 'string' ? value : null)
-    return { commit: text(body['commit']), builtAt: text(body['builtAt']) }
+    return { commit: text(body['commit']), date: text(body['date']) }
   } catch {
     return null
   }

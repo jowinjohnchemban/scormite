@@ -3,7 +3,6 @@
  * build details say, and that every value is escaped.
  */
 
-import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
@@ -73,10 +72,9 @@ describe('creditsFromBundle', () => {
 describe('resolveBuildInfo', () => {
   const now = new Date('2026-10-22T09:30:00Z')
 
-  it('takes the version from package.json and the commit from the host', () => {
-    const { version } = JSON.parse(readFileSync(path.join(root, 'package.json'), 'utf8')) as { version: string }
+  it('takes the commit from the host and the date of the build', () => {
     const info = resolveBuildInfo({ WORKERS_CI_COMMIT_SHA: 'abcdef1234567' }, root, now)
-    expect(info).toEqual({ version, commit: 'abcdef1', builtAt: '2026-10-22 09:30 UTC' })
+    expect(info).toEqual({ commit: 'abcdef1', date: '2026-10-22' })
   })
 
   it('falls back to git for the commit', () => {
@@ -87,7 +85,7 @@ describe('resolveBuildInfo', () => {
 describe('renderAboutBody', () => {
   const body = renderAboutBody({
     config: siteSeoConfig,
-    build: { version: '1.2.0', commit: 'abcdef1', builtAt: '2026-10-22 09:30 UTC' },
+    build: { commit: 'abcdef1', date: '2026-10-22' },
     credits: [CREDIT, { ...CREDIT, name: 'x<y>', url: null }],
     diagramSvg: '<svg role="img"></svg>',
     preview: false,
@@ -99,10 +97,10 @@ describe('renderAboutBody', () => {
     expect(body).toContain('>GitHub</a>')
   })
 
-  it('shows the build, the runtime version, the diagram, and every package (escaped)', () => {
-    expect(body).toContain('>1.2.0</dd>')
-    expect(body).toContain('>abcdef1</dd>')
-    expect(body).toContain('>scorm-again 3.4.6</dd>')
+  it('shows the build as its commit and date, the diagram, and every package (escaped)', () => {
+    expect(body).toContain('>Build</dt><dd class="font-mono text-slate-300">abcdef1 (2026-10-22)</dd>')
+    // Only that line: no version number, build time, or runtime row.
+    expect(body.match(/<dt/g)).toHaveLength(1)
     expect(body).toContain('<svg role="img"></svg>')
     expect(body).toContain('ships with 2 open-source packages')
     expect(body).toContain('x&lt;y&gt;')
