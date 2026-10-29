@@ -3,8 +3,8 @@ name: IndexNow
 # After a push to main, the hosting platform builds and deploys the site. This
 # crawls the old version while it is still live, waits for the new one, crawls
 # again, and tells IndexNow-participating search engines about the pages whose
-# content changed (see build/indexnow.ts). The last successful crawl is kept in
-# the Actions cache, so a failed submission is retried on the next run.
+# content changed (see build/indexnow.ts). The crawl to compare against is
+# kept in the Actions cache, so a failed run is made up for by the next one.
 on:
   push:
     branches: [main]
@@ -53,7 +53,7 @@ jobs:
         uses: actions/cache/restore@v6
         with:
           path: .indexnow-snapshot.json
-          key: indexnow-snapshot-${{ github.run_id }}
+          key: indexnow-snapshot-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: indexnow-snapshot-
 
       - name: Wait for the deploy, crawl, submit what changed
@@ -63,8 +63,12 @@ jobs:
           COMMIT: ${{ github.event_name == 'push' && github.sha || '' }}
           SUBMIT_ALL: ${{ inputs.submit_all || false }}
 
-      - name: Save this crawl
+      # Also after a failure: the file then still holds what the next run
+      # must compare against (see build/indexnow.ts). Rerun attempts save
+      # under their own key.
+      - name: Save the crawl to compare against next
+        if: always()
         uses: actions/cache/save@v6
         with:
           path: .indexnow-snapshot.json
-          key: indexnow-snapshot-${{ github.run_id }}
+          key: indexnow-snapshot-${{ github.run_id }}-${{ github.run_attempt }}

@@ -58,9 +58,9 @@ them within minutes. It crawls the old version while the host is still
 building, waits until `/build.json` reports the pushed commit, crawls the
 live sitemap again, and submits only the pages whose content differs, plus
 any page the sitemap no longer lists, so engines drop it. Hashed asset file
-names and the About page's commit and build time are ignored. The last crawl
-is kept in the Actions cache, so a failed submission is retried on the next
-run. Run it by hand from **Actions → IndexNow** (tick _Submit every page_ to
+names and the About page's commit and build time are ignored. The crawl to
+compare against is kept in the Actions cache, also when a run fails, so the
+next run submits what a failed one did not. Run it by hand from **Actions → IndexNow** (tick _Submit every page_ to
 resubmit everything), or locally with `DRY_RUN=1 pnpm run indexnow` to see
 what it would submit.
 

@@ -13,7 +13,7 @@
  *     change with every build, so they are left out.
  *  3. Submit the pages that differ from the "before" crawl or from the last
  *     successful run's crawl (SNAPSHOT, kept in the Actions cache while it
- *     lasts), and the pages they had that the sitemap no longer lists. With
+ *     lasts; until one succeeds, the "before" crawl stands in), and the pages they had that the sitemap no longer lists. With
  *     neither to compare against, record a baseline and submit nothing,
  *     unless SUBMIT_ALL.
  *
@@ -155,7 +155,7 @@ async function submit(origin: string, key: string, urlList: readonly string[]): 
 // CLI
 // ---------------------------------------------------------------------------
 
-/** The last successful run's crawl, or null when there is none. */
+/** The saved crawl to compare against, or null when there is none. */
 function readSnapshot(file: string): Fingerprints | null {
   try {
     return JSON.parse(readFileSync(file, 'utf8')) as Fingerprints
@@ -164,6 +164,9 @@ function readSnapshot(file: string): Fingerprints | null {
     throw error
   }
 }
+
+const writeSnapshot = (file: string, prints: Fingerprints) =>
+  writeFileSync(file, `${JSON.stringify(prints, null, 2)}\n`)
 
 async function main(env: NodeJS.ProcessEnv): Promise<void> {
   const key = siteSeoConfig.indexNowKey
@@ -176,6 +179,9 @@ async function main(env: NodeJS.ProcessEnv): Promise<void> {
   const submitAll = flag('SUBMIT_ALL')
   const dryRun = flag('DRY_RUN')
   const snapshotFile = path.resolve(env['SNAPSHOT'] || '.indexnow-snapshot.json')
+  // The last successful run's crawl, while the Actions cache keeps it (7 days
+  // unused). It also retries a submission that failed.
+  const saved = readSnapshot(snapshotFile)
 
   // The "before" picture, needing no storage: a run starts seconds after the
   // push, while the host is still building, so the previous version is live.
@@ -186,6 +192,10 @@ async function main(env: NodeJS.ProcessEnv): Promise<void> {
     before = (await crawl(origin, previous)).prints
     // A deploy that went live mid-crawl leaves a mix of both versions.
     if ((await liveBuild(origin))?.commit !== previous?.commit) before = null
+    // With no earlier crawl, keep this one in its place, so that if this run
+    // fails (the cache is saved either way), the next one still compares
+    // against the old version.
+    if (before && saved === null && !dryRun) writeSnapshot(snapshotFile, before)
     await waitForDeploy(origin, commit, Number(env['WAIT_MINUTES'] || 15) * 60_000)
   }
 
@@ -194,9 +204,6 @@ async function main(env: NodeJS.ProcessEnv): Promise<void> {
     throw new Error(`${keyFile} does not serve the key; engines would reject it.`)
 
   const { urls, prints: current } = await crawl(origin, await liveBuild(origin))
-  // The last successful run's crawl, while the Actions cache keeps it (7 days
-  // unused). It also retries a submission that failed.
-  const saved = readSnapshot(snapshotFile)
   const references = [before, saved].filter((reference) => reference !== null)
   const changed = pagesToSubmit(urls, current, references, submitAll)
 
@@ -213,7 +220,7 @@ async function main(env: NodeJS.ProcessEnv): Promise<void> {
     await submit(origin, key, changed)
   }
   // Saved only after a successful submission, so a failed one is retried next time.
-  if (!dryRun) writeFileSync(snapshotFile, `${JSON.stringify(current, null, 2)}\n`)
+  if (!dryRun) writeSnapshot(snapshotFile, current)
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
