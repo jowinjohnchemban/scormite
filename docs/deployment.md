@@ -56,11 +56,17 @@ After each push to `main` that changes what the pages are built from,
 Yep, and the engines built on Bing) which pages changed, so they re-crawl
 them within minutes. It crawls the old version while the host is still
 building, waits until `/build.json` reports the pushed commit, crawls the
-live sitemap again, and submits only the pages whose content differs, plus
-any page the sitemap no longer lists, so engines drop it. Hashed asset file
-names and the About page's build commit and date are ignored. The crawl to
-compare against is kept in the Actions cache, also when a run fails, so the
-next run submits what a failed one did not. Run it by hand from **Actions → IndexNow** (tick _Submit every page_ to
+live sitemap again, and submits only the pages whose content differs. Hashed
+asset file names and the About page's build commit and date are ignored. The
+crawl to compare against is kept in the Actions cache, also when a run fails,
+so the next run submits what a failed one did not.
+
+A page that leaves the sitemap is submitted only if it answers 404, 410, or a
+redirect, which tells engines to drop it. The SPA fallback answers any other
+path with the app and a 200, so the run warns instead: to retire a page,
+redirect it (or serve a 404) on the host before removing it.
+
+Run it by hand from **Actions → IndexNow** (tick _Submit every page_ to
 resubmit everything), or locally with `DRY_RUN=1 pnpm run indexnow` to see
 what it would submit.
 

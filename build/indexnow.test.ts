@@ -4,7 +4,7 @@
  */
 
 import { describe, expect, it } from 'vitest'
-import { fingerprint, pagesToSubmit, sitemapUrls } from './indexnow.js'
+import { changedPages, fingerprint, removedPages, signalsRemoval, sitemapUrls } from './indexnow.js'
 import { renderSitemapXml } from './seoPlugin.js'
 
 const page = (assets: string, body: string) =>
@@ -53,32 +53,39 @@ describe('fingerprint', () => {
   })
 })
 
-describe('pagesToSubmit', () => {
+describe('changedPages', () => {
   const urls = ['https://example.test/', 'https://example.test/about/']
   const current = { [urls[0]!]: 'home-2', [urls[1]!]: 'about-1' }
 
   it('submits the pages that differ from any reference', () => {
     const before = { [urls[0]!]: 'home-1', [urls[1]!]: 'about-1' }
-    expect(pagesToSubmit(urls, current, [before], false)).toEqual([urls[0]])
+    expect(changedPages(urls, current, [before], false)).toEqual([urls[0]])
     // The last run's crawl still differs, e.g. its submission failed.
-    expect(pagesToSubmit(urls, current, [current, { ...current, [urls[1]!]: 'about-0' }], false)).toEqual([urls[1]])
+    expect(changedPages(urls, current, [current, { ...current, [urls[1]!]: 'about-0' }], false)).toEqual([urls[1]])
   })
 
   it('submits a page the reference did not have', () => {
-    expect(pagesToSubmit(urls, current, [{ [urls[1]!]: 'about-1' }], false)).toEqual([urls[0]])
-  })
-
-  it('submits a page the sitemap no longer lists, so engines drop it', () => {
-    const gone = 'https://example.test/old/'
-    expect(pagesToSubmit(urls, current, [{ ...current, [gone]: 'old-1' }], false)).toEqual([gone])
-    expect(pagesToSubmit(urls, current, [{ ...current, [gone]: 'old-1' }, { [gone]: 'old-1' }], true)).toEqual([
-      ...urls,
-      gone,
-    ])
+    expect(changedPages(urls, current, [{ [urls[1]!]: 'about-1' }], false)).toEqual([urls[0]])
   })
 
   it('submits nothing without a reference, and everything when asked', () => {
-    expect(pagesToSubmit(urls, current, [], false)).toEqual([])
-    expect(pagesToSubmit(urls, current, [current], true)).toEqual(urls)
+    expect(changedPages(urls, current, [], false)).toEqual([])
+    expect(changedPages(urls, current, [current], true)).toEqual(urls)
+  })
+})
+
+describe('removed pages', () => {
+  const urls = ['https://example.test/']
+  const gone = 'https://example.test/old/'
+
+  it('finds the pages a reference had that the sitemap no longer lists, once each', () => {
+    expect(removedPages(urls, [{ [urls[0]!]: 'a', [gone]: 'b' }, { [gone]: 'b' }])).toEqual([gone])
+    expect(removedPages(urls, [{ [urls[0]!]: 'a' }])).toEqual([])
+  })
+
+  it('submits them only when their status makes engines drop them', () => {
+    for (const status of [404, 410, 301, 308]) expect(signalsRemoval(status)).toBe(true)
+    // 200 is the SPA fallback serving the app shell.
+    for (const status of [200, 500, 503]) expect(signalsRemoval(status)).toBe(false)
   })
 })

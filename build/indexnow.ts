@@ -13,9 +13,11 @@
  *     change with every build, so they are left out.
  *  3. Submit the pages that differ from the "before" crawl or from the last
  *     successful run's crawl (SNAPSHOT, kept in the Actions cache while it
- *     lasts; until one succeeds, the "before" crawl stands in), and the pages they had that the sitemap no longer lists. With
- *     neither to compare against, record a baseline and submit nothing,
- *     unless SUBMIT_ALL.
+ *     lasts; until one succeeds, the "before" crawl stands in). Pages they
+ *     had that the sitemap no longer lists are submitted only when they
+ *     answer 404, 410, or a redirect: the SPA fallback's 200 would not make
+ *     engines drop them. With neither to compare against, record a baseline
+ *     and submit nothing, unless SUBMIT_ALL.
  *
  * Node built-ins only:
  *   COMMIT=abc1234 node build/indexnow.ts   after a deploy (pnpm run indexnow)
@@ -65,26 +67,33 @@ export function fingerprint(html: string, build: LiveBuild | null): string {
 }
 
 /**
- * The pages to submit: every page with SUBMIT_ALL, otherwise those that
- * differ from any reference crawl (a page missing from one counts as
- * changed). No references means nothing to compare with: none. Pages a
- * reference had that the sitemap no longer lists are submitted too, so
- * engines re-crawl and drop them.
+ * The listed pages to submit: every page with SUBMIT_ALL, otherwise those
+ * that differ from any reference crawl (a page missing from one counts as
+ * changed). No references means nothing to compare with: none.
  */
-export function pagesToSubmit(
+export function changedPages(
   urls: readonly string[],
   current: Fingerprints,
   references: readonly Fingerprints[],
   submitAll: boolean,
 ): string[] {
+  if (submitAll) return [...urls]
+  return urls.filter((url) => references.some((reference) => reference[url] !== current[url]))
+}
+
+/** Pages a reference crawl had that the sitemap no longer lists. */
+export function removedPages(urls: readonly string[], references: readonly Fingerprints[]): string[] {
   const listed = new Set(urls)
-  const removed = [...new Set(references.flatMap((reference) => Object.keys(reference)))].filter(
-    (url) => !listed.has(url),
-  )
-  const changed = submitAll
-    ? urls
-    : urls.filter((url) => references.some((reference) => reference[url] !== current[url]))
-  return [...changed, ...removed]
+  return [...new Set(references.flatMap((reference) => Object.keys(reference)))].filter((url) => !listed.has(url))
+}
+
+/**
+ * Whether a removed page's HTTP status tells engines to drop it: 404 or 410,
+ * or a redirect to its replacement. A 200 (the SPA fallback serving the app)
+ * would not, so such a page is not worth submitting.
+ */
+export function signalsRemoval(status: number): boolean {
+  return status === 404 || status === 410 || (status >= 300 && status < 400)
 }
 
 // ---------------------------------------------------------------------------
@@ -205,7 +214,16 @@ async function main(env: NodeJS.ProcessEnv): Promise<void> {
 
   const { urls, prints: current } = await crawl(origin, await liveBuild(origin))
   const references = [before, saved].filter((reference) => reference !== null)
-  const changed = pagesToSubmit(urls, current, references, submitAll)
+  const changed = changedPages(urls, current, references, submitAll)
+  for (const url of removedPages(urls, references)) {
+    const { status } = await fetch(url, { cache: 'no-store', redirect: 'manual' })
+    if (signalsRemoval(status)) changed.push(url)
+    else {
+      console.log(
+        `::warning::${url} left the sitemap but still answers ${status}, so it is not submitted. Serve 404 or 410, or redirect it, for engines to drop it.`,
+      )
+    }
+  }
 
   if (references.length === 0 && !submitAll) {
     console.log(`Nothing to compare with: crawled ${urls.length} pages as the baseline, submitted none.`)
