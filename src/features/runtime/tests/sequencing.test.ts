@@ -153,10 +153,12 @@ describe('SequencingConfigBuilder', () => {
 describe('Scorm2004Adapter with sequencing', () => {
   // Satisfied when every child is satisfied OR completed (IMS RB.1.4.1): child a
   // completed but failed, child b passed but incomplete. Only "any" lets each
-  // child's two conditions combine; "all" requires both of every child.
+  // child's two conditions combine; "all" requires both of every child, so the
+  // rule never fires. The module has a satisfied rule, so the rules alone decide
+  // (RB.1.5) and the status stays unknown rather than falling back to default rollup.
   it.each([
     ['any', 'passed'],
-    ['all', 'failed'],
+    ['all', 'unknown'],
   ] as const)('rolls up a rule whose conditions combine with "%s" for each child', (combination, moduleStatus) => {
     recordDeliveries()
     const adapter = new Scorm2004Adapter('s', undefined, {
