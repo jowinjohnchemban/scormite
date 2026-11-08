@@ -1,3 +1,6 @@
+import { readFileSync } from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import { bumpFor, commitBump, latestStableTag, nextVersion, promoteUnreleased, setPackageVersion } from './release.js'
 
@@ -92,5 +95,21 @@ describe('setPackageVersion', () => {
       '{\n  "name": "x",\n  "version": "1.1.0",\n  "a": 1\n}\n',
     )
     expect(() => setPackageVersion('{ "name": "x" }', '1.1.0')).toThrow(/version/)
+  })
+})
+
+// Versions are always major.minor.patch: release.yml refuses anything else after the merge, so this catches it on the pull request.
+describe('the package version', () => {
+  const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..')
+  const { version } = JSON.parse(readFileSync(path.join(root, 'package.json'), 'utf8')) as { version: string }
+
+  const plain = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/
+
+  it('is a plain major.minor.patch, with no pre-release part or leading zeros', () => {
+    expect(version).toMatch(plain)
+  })
+
+  it.each(['1.1', '1.1.0-rc.1', '01.1.0', 'v1.1.0', '1x1x0'])('rejects %s', (bad) => {
+    expect(bad).not.toMatch(plain)
   })
 })
