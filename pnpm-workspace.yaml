@@ -5,3 +5,8 @@ allowBuilds:
 # fixed in 4.7.10). Lint-time only; remove once the plugin moves past it.
 overrides:
   handlebars: ^4.7.10
+  # ESLint 10 pins minimatch ^10, affected by GHSA-g3hv-75wg-m249 (denial of
+  # service, fixed in 11.0.1). Lint-time only; the 3.x copy used by
+  # eslint-plugin-import is outside the affected range. Remove once ESLint
+  # moves past minimatch 10.
+  'minimatch@>=7.0.0 <11.0.1': ^11.0.1
