@@ -1,6 +1,6 @@
 {
   "name": "scormite",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Test, debug, and validate SCORM 1.2 and 2004 packages in your browser before uploading them to an LMS.",
   "license": "MIT",
   "author": {
