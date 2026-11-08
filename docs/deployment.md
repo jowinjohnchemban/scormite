@@ -90,8 +90,10 @@ gap: after each push to `main` it runs `build/githubDeployment.ts`, which
 waits until `/build.json` reports the pushed commit (the same wait IndexNow
 uses), then creates a GitHub deployment to the **Production** environment with
 the site's link and marks it successful. If the site has not reported the
-commit after 15 minutes, the deployment is marked failed and the run fails.
-A newer push cancels a run that is still waiting. Run it by hand from
+commit after 15 minutes, the deployment is marked failed and the run fails,
+unless `main` has moved on: a commit that a newer push replaced before it went
+live is skipped, not recorded as a failure. Each push is handled by its own
+run, so none is cancelled by the next. Run it by hand from
 **Actions → Deployment**. The job needs only `deployments: write`; it holds
 no hosting credentials.
 
