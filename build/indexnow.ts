@@ -120,7 +120,7 @@ async function liveBuild(origin: string): Promise<LiveBuild | null> {
   }
 }
 
-async function waitForDeploy(origin: string, commit: string, waitMs: number): Promise<void> {
+export async function waitForDeploy(origin: string, commit: string, waitMs: number): Promise<void> {
   const deadline = Date.now() + waitMs
   for (;;) {
     const live = (await liveBuild(origin))?.commit ?? null
