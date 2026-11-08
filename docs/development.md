@@ -206,6 +206,7 @@ updated in the same change. Debatable architectural choices get a
 | `prepare-release.yml`   | Run by hand (Actions tab)                    | Works out the next version from the Conventional Commits, bumps `package.json` and the CHANGELOG on a `release/vX.Y.Z` branch, and links the pull request to open       |
 | `release.yml`           | `package.json` changes on `main`             | When the version has no release yet: tests, builds, tags the commit, and publishes a GitHub release with the CHANGELOG notes and the built site as a zip                |
 | `indexnow.yml`          | Pushes to `main` that change the site        | Waits for the deploy, then tells IndexNow search engines which pages changed (see [Deployment](deployment.md#indexnow))                                                 |
+| `deployment.yml`        | Pushes to `main`                             | Waits for the host to serve the pushed commit, then records it as a GitHub deployment to Production (see [Deployment](deployment.md#github-deployments))                |
 | `dependency-check.yml`  | Daily                                        | Newer releases (`pnpm outdated`) and vulnerabilities (`pnpm audit`) in one "Dependency updates available" issue, updated each day and closed when everything is current |
 | Dependabot              | Mondays                                      | Grouped dependency and Actions updates (see [Setup](#setup))                                                                                                            |
 

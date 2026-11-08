@@ -1,0 +1,48 @@
+name: Deployment
+
+# After a push to main, the hosting platform builds and deploys the site. It
+# reports a check run, not a GitHub deployment, so this waits for the new
+# commit to go live and records it as a deployment to Production (see
+# build/githubDeployment.ts). That puts the environment and the live link on
+# the repository page.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# A newer push supersedes a deploy that is still being waited for.
+concurrency:
+  group: deployment
+  cancel-in-progress: true
+
+jobs:
+  record:
+    name: Record the deployment
+    # Only main is live; a manual run from another branch must not record.
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      deployments: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      # build/githubDeployment.ts uses Node built-ins only: no install needed.
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - name: Wait for the deploy, then record it
+        # Up to 15 minutes waiting for the deploy.
+        timeout-minutes: 17
+        run: node build/githubDeployment.ts
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          COMMIT: ${{ github.sha }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
