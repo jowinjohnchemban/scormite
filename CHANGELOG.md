@@ -6,6 +6,8 @@ All notable changes to SCORMite are recorded here. The format follows
 
 ## [Unreleased]
 
+## [1.1.0] — 2026-11-08
+
 ### Added
 
 - **IndexNow.** After each deploy of `main`, a workflow tells Bing, Yandex,
@@ -101,4 +103,5 @@ First public release, under the MIT licence.
 - **Accessibility:** WCAG 2.1 AA, audited with axe-core in unit and browser
   tests.
 
+[1.1.0]: https://github.com/jowinjohnchemban/scormite/releases/tag/v1.1.0
 [1.0.0]: https://github.com/jowinjohnchemban/scormite/releases/tag/v1.0.0
